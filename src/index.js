@@ -54,5 +54,5 @@ app.listen(port, async () => {
   const bal = eth.utils.formatEther(await config.wallet.getBalance())
   console.log(`TipDai eth balance: ${eth.constants.EtherSymbol} ${bal}`)
   await getChannel()
-  watchPendingDeposits()
+  //watchPendingDeposits()
 })

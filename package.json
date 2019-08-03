@@ -9,8 +9,8 @@
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "dependencies": {
-    "@connext/client": "0.0.6",
-    "@connext/types": "0.0.7",
+    "@connext/client": "0.0.8",
+    "@connext/types": "0.0.8",
     "@counterfactual/postgresql-node-connector": "0.0.3",
     "dotenv": "^8.0.0",
     "ethers": "^4.0.33",

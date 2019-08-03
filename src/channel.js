@@ -5,8 +5,8 @@ const tokenArtifacts = require('openzeppelin-solidity/build/contracts/ERC20Minta
 const config = require('./config')
 const store = require('./store')
 
-const { formatEther } = eth.utils
-const { AddressZero } = eth.constants
+const { formatEther, parseEther } = eth.utils
+const { AddressZero, Zero } = eth.constants
 
 var channel
 const getChannel = async () => {
@@ -22,6 +22,7 @@ const getChannel = async () => {
   console.log(`Client created successfully!`);
   console.log(` - Public Identifier: ${channel.publicIdentifier}`);
   console.log(` - Account multisig address: ${channel.opts.multisigAddress}`);
+  console.log(` - Free balance address: ${channel.freeBalanceAddress}`);
 
   // Save tokenAddress
   const tokenAddress = (await channel.config()).contractAddresses.Token;
@@ -30,7 +31,7 @@ const getChannel = async () => {
 
   // Save & subscribe to swapRate
   const swapRate = formatEther(await channel.getLatestSwapRate(AddressZero, tokenAddress));
-  await store.set('swapRate', formatEther(swapRate))
+  await store.set('swapRate', swapRate)
   channel.subscribeToSwapRates(AddressZero, tokenAddress, async (res) => {
     if (!res || !res.swapRate) return;
     const oldRate = await store.get('swapRate')
@@ -46,8 +47,16 @@ const getChannel = async () => {
     tokenAddress: tokenAddress,
   });
 
-  console.log(`Requesting collateral for token ${tokenAddress}`)
-  await channel.requestCollateral(tokenAddress);
+  const freeTokenBalance = await channel.getFreeBalance(tokenAddress);
+  console.log(`We have free balance of ${formatEther(freeTokenBalance[channel.freeBalanceAddress])} tokens`)
+
+  const hubFreeBalanceAddress = Object.keys(freeTokenBalance).filter(addr => addr.toLowerCase() !== channel.freeBalanceAddress)[0]
+  if (freeTokenBalance[hubFreeBalanceAddress].eq(Zero)) {
+    console.log(`Requesting collateral for token ${tokenAddress}`)
+    await channel.requestCollateral(tokenAddress);
+  } else {
+    console.log(`Hub has collateralized us with ${formatEther(freeTokenBalance[hubFreeBalanceAddress])} tokens`)
+  }
 
   return channel;
 }

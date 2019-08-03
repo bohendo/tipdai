@@ -48,7 +48,7 @@ module.exports = {
   },
   connext: {
     ethProviderUrl: process.env.ETH_PROVIDER,
-    logLevel: 5,
+    logLevel: 3,
     mnemonic,
     nodeUrl: `nats://indra-v2.connext.network:4222`,
     storeFactory,

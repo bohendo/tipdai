@@ -8,15 +8,13 @@ const app = express()
 
 const port = process.env.PORT || '8080'
 
-console.log(`Config: ${JSON.stringify(config, null, 2)}`)
-
 app.use(express.json())
 
 app.use((req, res, next) => {
   console.log(`=> ${req.method} ${req.path} -- ${JSON.stringify(req.query)}`)
   if (JSON.stringify(req.body) !== "{}") {
     if (req.path === '/webhooks/twitter') {
-      const keys = Object.keys(body).filter(key => key !== 'for_user_id')
+      const keys = Object.keys(req.body).filter(key => key !== 'for_user_id')
       console.log(`Events: ${JSON.stringify(keys)}`)
     } else {
       console.log(`Body: ${JSON.stringify(req.body)}`)

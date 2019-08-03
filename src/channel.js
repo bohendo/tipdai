@@ -48,7 +48,6 @@ const getChannel = async () => {
   });
 
   const freeTokenBalance = await channel.getFreeBalance(tokenAddress);
-  console.log(`We have free balance of ${formatEther(freeTokenBalance[channel.freeBalanceAddress])} tokens`)
 
   const hubFreeBalanceAddress = Object.keys(freeTokenBalance).filter(addr => addr.toLowerCase() !== channel.freeBalanceAddress)[0]
   if (freeTokenBalance[hubFreeBalanceAddress].eq(Zero)) {
@@ -56,6 +55,15 @@ const getChannel = async () => {
     await channel.requestCollateral(tokenAddress);
   } else {
     console.log(`Hub has collateralized us with ${formatEther(freeTokenBalance[hubFreeBalanceAddress])} tokens`)
+  }
+
+  const botFreeBalance = freeTokenBalance[channel.freeBalanceAddress]
+  // TODO: check bot's token & eth balance first
+  if (botFreeBalance.eq(Zero)) {
+    console.log(`Bot no tokens in its channel, depositing 10 now`)
+    await channel.deposit({ amount: parseEther('10'), assetId: tokenAddress })
+  } else {
+    console.log(`Bot has a free balance of ${formatEther(botFreeBalance)} tokens`)
   }
 
   return channel;

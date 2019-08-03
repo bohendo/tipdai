@@ -42,6 +42,7 @@ const handleMessage = async (event) => {
       pendingDeposits = []
       depositAddress = config.getWallet(1).address
     } else {
+      pendingDeposits = JSON.parse(pendingDeposits)
       const prevDeposit = pendingDeposits.filter(dep => dep.user === sender)
       if (prevDeposit[0]) {
         depositAddress = prevDeposit[0].address
@@ -63,6 +64,7 @@ const handleMessage = async (event) => {
   if (message.match(/^wait/i)) {
     let pendingDeposits = await store.get('pendingDeposits')
     if (!pendingDeposits) { return } // No prevDeposit, ignore
+    pendingDeposits = JSON.parse(pendingDeposits)
     const prevDeposit = pendingDeposits.filter(dep => dep.user === sender)
     if (!prevDeposit[0]) { return } // No prevDeposit, ignore
     pendingDeposits = pendingDeposits.filter(dep => dep.user !== sender)[0]

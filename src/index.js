@@ -8,6 +8,8 @@ const app = express()
 
 const port = process.env.PORT || '8080'
 
+console.log(`Config: ${JSON.stringify(config, null, 2)}`)
+
 app.use(express.json())
 
 app.use((req, res, next) => {

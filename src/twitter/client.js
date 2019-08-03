@@ -164,9 +164,10 @@ Twitter.prototype.activateWebhook = function (params, error, success) {
 }
 
 Twitter.prototype.triggerCRC = function (params, error, success) {
-    var env = params.env || 'prod'
-    if (params.env) delete params.env
-    var url = `${this.baseUrl}/account_activity/all/${env}/webhooks.json` + this.buildQS(params);
+    const { env, webhookId } = params
+    delete params.env
+    delete params.webhookId
+    var url = `${this.baseUrl}/account_activity/all/${env}/webhooks/${webhookId}.json` + this.buildQS(params);
     this.doPut(url, {}, error, success);
 }
 
@@ -219,7 +220,7 @@ Twitter.prototype.doPut = function (url, put_body, error, success) {
     //(url, oauth_token, oauth_token_secret, post_body, post_content_type, callback
     this.oauth.put(url, this.accessToken, this.accessTokenSecret, put_body, "application/json", function (err, body, response) {
         console.log('URL [%s]', url);
-        if (!err && response.statusCode == 200) {
+        if (!err && (response.statusCode == 200 || response.statusCode == 204)) {
             success(body);
         } else {
             error(err, response, body);

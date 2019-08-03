@@ -2,6 +2,7 @@ require('dotenv').config()
 
 const config = {
   webhookUrl: `${process.env.CALLBACK_URL}/webhooks/twitter`,
+  webhookId: process.env.WEBHOOK_ID,
   env: 'prod',
   hmac: process.env.CONSUMER_SECRET,
   twitter: {

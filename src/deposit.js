@@ -2,7 +2,7 @@ const eth = require('ethers')
 const config = require('./config')
 const store = require('./store')
 
-const timout = 1000 * 60 * 25
+const timeout = 1000 * 60 * 25
 const provider = config.provider
 const { parseEther } = eth.utils
 

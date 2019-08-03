@@ -1,5 +1,6 @@
 FROM node:10-alpine
 WORKDIR /root
 ENV HOME /root
+RUN npm install -g nodemon
 COPY src src
-ENTRYPOINT ["node", "src/index.js"]
+ENTRYPOINT ["nodemon", "-L", "src/index.js"]

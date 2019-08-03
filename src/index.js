@@ -1,8 +1,10 @@
 const crypto = require('crypto')
+const eth = require('ethers')
 const express = require('express')
 
 const { config } = require('./config')
 const { handleTweet, handleMessage } = require('./events')
+const store = require('./store')
 
 const app = express()
 
@@ -43,7 +45,10 @@ app.all('*', (req, res) => {
   res.status(200).send('Cool story, Bro')
 })
 
-app.listen(port, () => {
+app.listen(port, async () => {
+  await store.firstConnection
   console.log(`TipDai app listening on ${port}`)
   console.log(`TipDai address: ${config.wallet.address}`)
+  const bal = eth.utils.formatEther(await config.wallet.getBalance())
+  console.log(`TipDai eth balance: ${eth.constants.EtherSymbol} ${bal}`)
 })

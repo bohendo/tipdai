@@ -44,6 +44,9 @@ stop:
 restart: all stop
 	bash ops/start.sh
 
+reset: stop
+	docker volume rm $(project)_database 2> /dev/null || true
+
 ########################################
 ## Real Rules
 

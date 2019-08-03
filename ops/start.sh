@@ -10,6 +10,7 @@ docker swarm init 2> /dev/null || true
 ####################
 # External Env Vars
 
+TIPDAI_MODE="${TIPDAI_MODE:-development}"
 TIPDAI_DOMAINNAME="${TIPDAI_DOMAINNAME:-localhost}"
 TIPDAI_EMAIL="${TIPDAI_EMAIL:-noreply@gmail.com}" # for notifications when ssl certs expire
 
@@ -57,9 +58,24 @@ log_level="3" # set to 5 for all logs or to 0 for none
 version=latest
 proxy_image="${project}_proxy:$version"
 bot_image="${project}_bot:$version"
+database_image="postgres:9-alpine"
+
+# database connection settings
+postgres_db="$project"
+postgres_host="database"
+postgres_port="5432"
+postgres_user="$project"
+postgres_password_file="/run/secrets/${project}_db_password"
 
 ####################
 # Ethereum Config
+
+if [[ -z "`docker secret ls | grep "$mnemonic"`" ]]
+then
+  echo "Missing secret called: $mnemonic, create like with:"
+  echo "echo 'first word second etc' | tr -d '\n\r' | docker secret create $mnemonic -"
+  exit
+fi
 
 if [[ -z "$TIPDAI_ETH_PROVIDER" ]]
 then
@@ -82,27 +98,25 @@ mnemonic="${project}_mnemonic_${ethNetwork}"
 ####################
 # Deploy according to above configuration
 
-if [[ -z "`docker secret ls | grep "$mnemonic"`" ]]
-then
-  echo "Missing secret called: $mnemonic, create like with:"
-  echo "echo 'first word second etc' | tr -d '\n\r' | docker secret create $mnemonic -"
-  exit
-fi
-
+new_secret ${project}_db_password
 echo "Deploying proxy: $proxy_image and bot: $bot_image to $TIPDAI_DOMAINNAME"
 
-number_of_services=2 # NOTE: Gotta update this manually when adding/removing services :(
+number_of_services=3
 
 mkdir -p /tmp/$project
 cat - > /tmp/$project/docker-compose.yml <<EOF
 version: '3.4'
 
 secrets:
+  ${project}_db_password:
+    external: true
   $mnemonic:
     external: true
 
 volumes:
   certs:
+  ${project}_database:
+    external: true
 
 services:
   proxy:
@@ -120,6 +134,7 @@ services:
   bot:
     image: $bot_image
     environment:
+      NODE_ENV: $TIPDAI_MODE
       CALLBACK_URL: $TIPDAI_DOMAINNAME
       CONSUMER_KEY: $TIPDAI_CONSUMER_KEY
       CONSUMER_SECRET: $TIPDAI_CONSUMER_SECRET
@@ -130,10 +145,31 @@ services:
       WEBHOOK_ID: $TIPDAI_WEBHOOK_ID
       ETH_PROVIDER: $TIPDAI_ETH_PROVIDER
       MNEMONIC_FILE: /run/secrets/$mnemonic
+      PGDATABASE: $postgres_db
+      PGHOST: $postgres_host
+      PGPASSFILE: $postgres_password_file
+      PGPORT: $postgres_port
+      PGUSER: $postgres_user
     secrets:
       - $mnemonic
+      - ${project}_db_password
     volumes:
       - `pwd`/node_modules:/root/node_modules
+      - `pwd`/src:/root/src
+
+  database:
+    image: $database_image
+    deploy:
+      mode: global
+    environment:
+      POSTGRES_DB: $postgres_db
+      POSTGRES_PASSWORD_FILE: $postgres_password_file
+      POSTGRES_USER: $postgres_user
+    secrets:
+      - ${project}_db_password
+    volumes:
+      - ${project}_database:/var/lib/postgresql/data
+
 EOF
 
 docker stack deploy -c /tmp/$project/docker-compose.yml $project

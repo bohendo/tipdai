@@ -16,7 +16,7 @@ app.use((req, res, next) => {
   next()
 })
 
-app.all('/', (req, res, next) => {
+app.all('*', (req, res, next) => {
   const reply = 'Cool story, Bro'
   console.log(`Sending reply: ${reply}`)
   res.status(200).send(reply)

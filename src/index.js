@@ -1,7 +1,5 @@
 const express = require('express')
 
-const twitter = require('./twitter')
-
 const app = express()
 
 const port = process.env.PORT || '8080'

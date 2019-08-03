@@ -17,18 +17,14 @@ const twitter = new Twitter({
   callBackUrl: process.env.callBackUrl,
 })
 
-const authorize = () => {
+const tweet = (status) => {
   return new Promise((resolve, reject) => {
-    twitter.authorize(
-      { oauthCallback: 'https://tipdai.bohendo.com' },
-      handleError(reject),
-      (res) => {
-        console.log(`Success!`)
-        const data = qs.parse(res)
-        console.log(`Got auth data: ${JSON.stringify(data)}`)
-        resolve(data)
-      },
-    )
+    twitter.postTweet({ status }, handleError(reject), (res) => {
+      console.log(`Success!`)
+      const data = JSON.parse(res)
+      console.log(`Sent tweet: ${JSON.stringify(data, null, 2)}`)
+      resolve(data)
+    })
   })
 }
 
@@ -81,4 +77,4 @@ const sendDM = (recipient_id, message) => {
   })
 }
 
-module.exports = { authorize, getMentions, getUser, sendDM }
+module.exports = { getMentions, getUser, sendDM, tweet, twitter }

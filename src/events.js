@@ -33,10 +33,11 @@ Got a message event: {
 */
 
 const handleMessage = async (event) => {
+  if (sender === botId) return // ignore messages sent by the bot
   console.log(`Got a message event: ${JSON.stringify(event, null, 2)}`)
   const sender = event.message_create.sender_id
-  if (sender === botId) return // ignore messages sent by the bot
   const message = event.message_create.message_data.text
+
 
   if (message.match(/^deposit/i)) {
     let pendingDeposits = await store.get('pendingDeposits')
@@ -59,8 +60,8 @@ const handleMessage = async (event) => {
       startTime: Date.now(),
       user: sender,
     }, ...pendingDeposits]))
-    twitter.sendDM(sender, `Send (kovan) ETH to the following address to deposit. This address will be available for deposits for 10 minutes. If you send a transaction with low gas, reply "wait" and the timeout will be extended.`)
-    twitter.sendDM(sender, depositAddress)
+    await twitter.sendDM(sender, `Send (kovan) ETH to the following address to deposit. This address will be available for deposits for 10 minutes. If you send a transaction with low gas, reply "wait" and the timeout will be extended.`)
+    await twitter.sendDM(sender, depositAddress)
     return
   }
 
@@ -77,8 +78,8 @@ const handleMessage = async (event) => {
       startTime: Date.now(),
       user: sender,
     }, ...pendingDeposits]))
-    twitter.sendDM(sender, `Timeout extended, you have 10 more minutes to deposit (kovan) ETH to the below address. If you want to extend again, reply "wait" as many times as needed.`)
-    twitter.sendDM(sender, prevDeposit[0].address)
+    await twitter.sendDM(sender, `Timeout extended, you have 10 more minutes to deposit (kovan) ETH to the below address. If you want to extend again, reply "wait" as many times as needed.`)
+    await twitter.sendDM(sender, prevDeposit[0].address)
     return
   }
 

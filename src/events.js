@@ -3,6 +3,8 @@ const { getChannel } = require('./channel')
 const store = require('./store')
 const twitter = require('./twitter')
 
+const botId = "1154313992141099008"
+
 const handleTweet = async (tweet) => {
   console.log(`Got a tweet event: ${JSON.stringify(tweet, null, 2)}`)
 }
@@ -33,6 +35,7 @@ Got a message event: {
 const handleMessage = async (event) => {
   console.log(`Got a message event: ${JSON.stringify(event, null, 2)}`)
   const sender = event.message_create.sender_id
+  if (sender === botId) return // ignore messages sent by the bot
   const message = event.message_create.message_data.text
 
   if (message.match(/^deposit/i)) {
@@ -46,7 +49,7 @@ const handleMessage = async (event) => {
       const prevDeposit = pendingDeposits.filter(dep => dep.user === sender)
       if (prevDeposit[0]) {
         depositAddress = prevDeposit[0].address
-        pendingDeposits = pendingDeposits.filter(dep => dep.user !== sender)[0]
+        pendingDeposits = pendingDeposits.filter(dep => dep.user !== sender)
       } else {
         depositAddress = config.getWallet(pendingDeposits.length + 1).address
       }
@@ -56,7 +59,7 @@ const handleMessage = async (event) => {
       startTime: Date.now(),
       user: sender,
     }, ...pendingDeposits]))
-    twitter.sendDM(sender, `Send funds to the following address to deposit. This address will be available for deposits for 10 minutes. If you send a transaction with low gas, reply "wait" and the timeout will be extended.`)
+    twitter.sendDM(sender, `Send (kovan) ETH to the following address to deposit. This address will be available for deposits for 10 minutes. If you send a transaction with low gas, reply "wait" and the timeout will be extended.`)
     twitter.sendDM(sender, depositAddress)
     return
   }
@@ -68,13 +71,14 @@ const handleMessage = async (event) => {
     pendingDeposits = JSON.parse(pendingDeposits)
     const prevDeposit = pendingDeposits.filter(dep => dep.user === sender)
     if (!prevDeposit[0]) { return } // No prevDeposit, ignore
-    pendingDeposits = pendingDeposits.filter(dep => dep.user !== sender)[0]
+    pendingDeposits = pendingDeposits.filter(dep => dep.user !== sender)
     await store.set('pendingDeposits', JSON.stringify([{
       address: prevDeposit[0].address,
       startTime: Date.now(),
       user: sender,
     }, ...pendingDeposits]))
-    twitter.sendDM(sender, `Timeout extended, you have 10 more minutes to send funds to ${depositAddress} to deposit. If you want to extend again, reply "wait" as many times as needed.`)
+    twitter.sendDM(sender, `Timeout extended, you have 10 more minutes to deposit (kovan) ETH to the below address. If you want to extend again, reply "wait" as many times as needed.`)
+    twitter.sendDM(sender, prevDeposit[0].address)
     return
   }
 

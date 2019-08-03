@@ -1,7 +1,7 @@
 require('dotenv').config()
 
 const config = {
-  webhookUrl: `${process.env.callBackUrl}/webooks/twitter`,
+  webhookUrl: `${process.env.callBackUrl}/webhooks/twitter`,
   env: 'prod',
   hmac: process.env.consumerSecret,
   twitter: {

@@ -11,7 +11,8 @@ app.use(express.json())
 
 app.use((req, res, next) => {
   console.log(`=> ${req.method} ${req.path} -- ${JSON.stringify(req.query)}`)
-  if (JSON.stringify(req.body) !== "{}") console.log(`body: ${JSON.stringify(req.body)}`)
+  if (JSON.stringify(req.body) !== "{}") { console.log(`body: ${JSON.stringify(req.body)}`) }
+  next()
 })
 
 app.get('/webhooks/twitter', (req, res, next) => {

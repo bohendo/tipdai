@@ -33,6 +33,14 @@ clean:
 start: all
 	bash ops/start.sh
 
+stop:
+	docker container stop $(project)_builder 2> /dev/null || true
+	docker stack rm $(project) || true
+	@echo -n "Waiting for the $project stack to shutdown."
+	@while [[ -n "`docker container ls --quiet --filter label=com.docker.stack.namespace=$project`" ]]; do echo -n '.' && sleep 3; done
+	@while [[ -n "`docker network ls --quiet --filter label=com.docker.stack.namespace=$project`" ]]; do echo -n '.' && sleep 3; done
+	@echo ' Goodnight!'
+
 ########################################
 ## Real Rules
 

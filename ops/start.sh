@@ -10,9 +10,13 @@ docker swarm init 2> /dev/null || true
 ####################
 # External Env Vars
 
-# Config
 TIPDAI_DOMAINNAME="${TIPDAI_DOMAINNAME:-localhost}"
 TIPDAI_EMAIL="${TIPDAI_EMAIL:-noreply@gmail.com}" # for notifications when ssl certs expire
+
+TIPDAI_CONSUMER_KEY="${TIPDAI_CONSUMER_KEY}"
+TIPDAI_CONSUMER_SECRET="${TIPDAI_CONSUMER_SECRET}"
+TIPDAI_ACCESS_TOKEN="${TIPDAI_ACCESS_TOKEN}"
+TIPDAI_ACCESS_SECRET="${TIPDAI_ACCESS_SECRET}"
 
 ####################
 # Helper Functions
@@ -79,7 +83,11 @@ services:
   bot:
     image: $bot_image
     environment:
-      NODE_ENV: production
+      CALLBACK_URL=$TIPDAI_DOMAINNAME
+      CONSUMER_KEY=$TIPDAI_CONSUMER_KEY
+      CONSUMER_SECRET=$TIPDAI_CONSUMER_SECRET
+      ACCESS_TOKEN=$TIPDAI_ACCESS_TOKEN
+      ACCESS_SECRET=$TIPDAI_ACCESS_SECRET
     volumes:
       - `pwd`/node_modules:/root/node_modules
 EOF

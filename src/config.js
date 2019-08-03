@@ -1,15 +1,15 @@
 require('dotenv').config()
 
 const config = {
-  webhookUrl: `${process.env.callBackUrl}/webhooks/twitter`,
+  webhookUrl: `${process.env.CALLBACK_URL}/webhooks/twitter`,
   env: 'prod',
-  hmac: process.env.consumerSecret,
+  hmac: process.env.CONSUMER_SECRET,
   twitter: {
-    consumerKey: process.env.consumerKey,
-    consumerSecret: process.env.consumerSecret,
-    accessToken: process.env.accessToken,
-    accessTokenSecret: process.env.accessTokenSecret,
-    callBackUrl: process.env.callBackUrl,
+    consumerKey: process.env.CONSUMER_KEY,
+    consumerSecret: process.env.CONSUMER_SECRET,
+    accessToken: process.env.ACCESS_TOKEN,
+    accessTokenSecret: process.env.ACCESS_SECRET,
+    callBackUrl: process.env.CALLBACK_URL,
   }
 }
 

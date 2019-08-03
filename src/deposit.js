@@ -28,7 +28,9 @@ const watchPendingDeposits = () => {
     // Check the balance of each pending deposit address
     pendingDeposits = pendingDeposits.map(async dep => {
       const balance = await provider.getBalance(dep.address)
-      if (parseEther(dep.oldBalance).lt(balance)) {
+      if (!dep.oldBalance) {
+        dep.oldBalance = formatEther(balance.sub(parseEther(balance)))
+      } else if (parseEther(dep.oldBalance).lt(balance)) {
         dep.amount = formatEther(balance.sub(parseEther(dep.oldBalance)))
       }
       return dep
@@ -36,7 +38,7 @@ const watchPendingDeposits = () => {
 
     // Deal w completed deposits
     const completeDeposits = pendingDeposits.filter(dep => dep.amount)
-    if (expiredDeposits.length > 0) {
+    if (completeDeposits.length > 0) {
       console.log(`Completed deposits: ${JSON.stringify(completeDeposits)}`)
       completeDeposits.forEach(async dep => {
         pendingDeposits = pendingDeposits.filter(dep => !dep.amount)

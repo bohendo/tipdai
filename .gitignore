@@ -1,0 +1,37 @@
+# Cache
+.cache
+.config
+.node-gyp
+.npm
+
+# Compiled output
+build/
+dist/
+node_modules/
+.makeflags
+
+# Logs
+lerna-debug.log*
+npm-debug.log*
+package.json.lerna_backup
+yarn-debug.log*
+yarn-error.log*
+ops/*.log
+
+# OS
+.bash_history
+.DS_Store
+
+# IDEs and editors
+*.launch
+*.sublime-workspace
+*.sw[opq]
+.c9/
+.classpath
+.idea
+.project
+.settings/
+.vscode
+
+# Misc
+.env

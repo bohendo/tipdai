@@ -56,7 +56,8 @@ const handleMessage = async (event) => {
       startTime: Date.now(),
       user: sender,
     }, ...pendingDeposits]))
-    twitter.sendDM(sender, `Send funds to ${depositAddress} to deposit. This address will be available for deposits for 10 minutes. If you send a transaction with low gas, reply "wait" and the timeout will be extended.`)
+    twitter.sendDM(sender, `Send funds to the following address to deposit. This address will be available for deposits for 10 minutes. If you send a transaction with low gas, reply "wait" and the timeout will be extended.`)
+    twitter.sendDM(sender, depositAddress)
     return
   }
 

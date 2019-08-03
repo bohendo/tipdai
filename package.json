@@ -3,20 +3,22 @@
   "version": "1.0.0",
   "description": "Twitter tips powered by Connext",
   "main": "index.js",
-  "dependencies": {
-    "@connext/client": "0.0.6",
-    "dotenv": "^8.0.0",
-    "express": "^4.17.1",
-    "oauth": "^0.9.15",
-    "pg": "^7.12.0",
-    "qs": "^6.7.0"
-  },
-  "devDependencies": {
-    "ethers": "^4.0.33"
-  },
+  "author": "",
+  "license": "ISC",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "author": "",
-  "license": "ISC"
+  "dependencies": {
+    "@connext/client": "0.0.6",
+    "@connext/types": "0.0.7",
+    "@counterfactual/postgresql-node-connector": "0.0.3",
+    "dotenv": "^8.0.0",
+    "ethers": "^4.0.33",
+    "express": "^4.17.1",
+    "oauth": "^0.9.15",
+    "openzeppelin-solidity": "^2.3.0",
+    "pg": "^7.12.0",
+    "qs": "^6.7.0"
+  },
+  "devDependencies": {}
 }

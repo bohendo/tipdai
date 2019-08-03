@@ -1,20 +1,20 @@
 const { Pool } = require('pg')
 
-const { config } = require('./config')
+const config = require('./config')
 
 const pool = new Pool(config.postgres)
 
-const init = `CREATE TABLE IF NOT EXISTS tipdai (key VARCHAR PRIMARY KEY, value JSON NOT NULL);`
+const init = `CREATE TABLE IF NOT EXISTS tipdai (key VARCHAR PRIMARY KEY, value VARCHAR NOT NULL);`
 
 const firstConnection = new Promise((resolve, reject) => {
   pool.query(init, (err, res) => {
     if (err && err.code === 'ENOTFOUND') {
       console.log(`Database isn't awake yet, let's try again later..`)
-      process.exit()
+      process.exit(1)
     }
     if (err) {
       console.log(`Error: ${err}`)
-      process.exit()
+      process.exit(1)
     }
     console.log(`Successfully connected to data store!`)
     resolve(true)

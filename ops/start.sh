@@ -70,13 +70,6 @@ postgres_password_file="/run/secrets/${project}_db_password"
 ####################
 # Ethereum Config
 
-if [[ -z "`docker secret ls | grep "$mnemonic"`" ]]
-then
-  echo "Missing secret called: $mnemonic, create like with:"
-  echo "echo 'first word second etc' | tr -d '\n\r' | docker secret create $mnemonic -"
-  exit
-fi
-
 if [[ -z "$TIPDAI_ETH_PROVIDER" ]]
 then
   echo "An env var called TIPDAI_ETH_PROVIDER is required"
@@ -88,12 +81,22 @@ fi
 if [[ "$netId" == "4" ]]
 then
   ethNetwork="rinkeby"
+elif [[ "$netId" == "42" ]]
+then
+  ethNetwork="kovan"
 else
   echo "Ethereum chain $netId is not supported yet"
   exit
 fi
 
 mnemonic="${project}_mnemonic_${ethNetwork}"
+
+if [[ -z "`docker secret ls | grep "$mnemonic"`" ]]
+then
+  echo "Missing secret called: $mnemonic, create like with:"
+  echo "echo 'first word second etc' | tr -d '\n\r' | docker secret create $mnemonic -"
+  exit
+fi
 
 ####################
 # Deploy according to above configuration

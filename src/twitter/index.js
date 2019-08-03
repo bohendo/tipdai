@@ -1,13 +1,25 @@
 var qs = require('qs');
 
 const Twitter = require('./client').Twitter
-const { handleError } = require('../utils')
-const { config } = require('../config')
+const config = require('../config')
 
 /*
 const bohendo_id = '259539164'
 const tipdai_id = '1154313992141099008'
 */
+
+const handleError = (reject) => (error, response, body) => {
+  const replacer = (key, value) => {
+    if (!key) return value
+    if (typeof value === 'object') return 'object'
+    if (typeof value === 'function') return 'function'
+    return value ? value.toString() : value;
+  }
+  console.error(`Failure!`)
+  // console.error(`response: ${JSON.stringify(response, replacer, 2)}`)
+  console.error(`body: ${body}`)
+  reject(error)
+}
 
 const twitter = new Twitter(config.twitterBot)
 const twitterDev = new Twitter(config.twitterDev)

@@ -4,6 +4,7 @@ const express = require('express')
 
 const { getChannel } = require('./channel')
 const config = require('./config')
+const { watchPendingDeposits } = require('./deposit')
 const { handleTweet, handleMessage } = require('./events')
 const store = require('./store')
 
@@ -53,4 +54,5 @@ app.listen(port, async () => {
   const bal = eth.utils.formatEther(await config.wallet.getBalance())
   console.log(`TipDai eth balance: ${eth.constants.EtherSymbol} ${bal}`)
   await getChannel()
+  watchPendingDeposits()
 })

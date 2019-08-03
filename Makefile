@@ -1,5 +1,5 @@
 
-project="tipdai"
+project=tipdai
 registry=$(shell whoami)
 flags=.makeflags
 $(shell mkdir -p $(flags))
@@ -24,8 +24,10 @@ log_finish=@echo "[Makefile] => Finished building $@ in $$((`date "+%s"` - `cat 
 ########################################
 ## Phony Rules
 
-default: all
-all: tipdai proxy
+default: dev
+all: dev prod
+dev: tipdai proxy
+prod: tipdai-prod proxy
 
 clean:
 	rm $(flags)/*
@@ -66,6 +68,12 @@ proxy: $(proxy)/entry.sh $(proxy)/nginx.conf $(proxy)/nginx.dockerfile
 	$(log_finish) && touch $(flags)/$@
 
 tipdai: node-modules ops/bot.dockerfile $(shell find src $(find_options))
+	$(log_start)
+	docker build --file ops/bot-dev.dockerfile --tag tipdai_bot_dev:latest .
+	touch $(flags)/$@
+	$(log_finish) && touch $(flags)/$@
+
+tipdai-prod: node-modules ops/bot.dockerfile $(shell find src $(find_options))
 	$(log_start)
 	docker build --file ops/bot.dockerfile --tag tipdai_bot:latest .
 	touch $(flags)/$@

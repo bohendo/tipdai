@@ -57,7 +57,10 @@ function new_secret {
 log_level="3" # set to 5 for all logs or to 0 for none
 version=latest
 proxy_image="${project}_proxy:$version"
-bot_image="${project}_bot:$version"
+if [[ "$TIPDAI_MODE" == "development" ]]
+then bot_image="${project}_bot_dev:$version"
+else bot_image="${project}_bot:$version"
+fi
 database_image="postgres:9-alpine"
 
 # database connection settings

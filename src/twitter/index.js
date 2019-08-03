@@ -1,16 +1,13 @@
 require('dotenv').config()
+var qs = require('qs');
+
 const Twitter = require('./client').Twitter
 const { handleError } = require('../utils')
 
-console.log(`env: ${JSON.stringify({
-  consumerKey: process.env.consumerKey,
-  consumerSecret: process.env.consumerSecret,
-  accessToken: process.env.accessToken,
-  accessTokenSecret: process.env.accessTokenSecret,
-  callBackUrl: process.env.callBackUrl,
-}, null, 2)}`)
-
-
+/*
+const bohendo_id = '259539164'
+const tipdai_id = '1154313992141099008'
+*/
 
 const twitter = new Twitter({
   consumerKey: process.env.consumerKey,
@@ -19,6 +16,21 @@ const twitter = new Twitter({
   accessTokenSecret: process.env.accessTokenSecret,
   callBackUrl: process.env.callBackUrl,
 })
+
+const authorize = () => {
+  return new Promise((resolve, reject) => {
+    twitter.authorize(
+      { oauthCallback: 'https://tipdai.bohendo.com' },
+      handleError(reject),
+      (res) => {
+        console.log(`Success!`)
+        const data = qs.parse(res)
+        console.log(`Got auth data: ${JSON.stringify(data)}`)
+        resolve(data)
+      },
+    )
+  })
+}
 
 const getMentions = (options) => {
   return new Promise((resolve, reject) => {
@@ -69,4 +81,4 @@ const sendDM = (recipient_id, message) => {
   })
 }
 
-module.exports = { getMentions, getUser, sendDM }
+module.exports = { authorize, getMentions, getUser, sendDM }

@@ -1,8 +1,20 @@
+const express = require('express')
+
 const twitter = require('./twitter')
 
-/*
-const bohendo_id = '259539164'
-const tipdai_id = '1154313992141099008'
-*/
+const app = express()
 
-// twitter.getMentions({ count: '1' })
+const port = process.env.PORT || '8080'
+
+app.use(express.json())
+
+app.all('/', (req, res) => {
+  console.log(`${req.method} ${req.originalUrl}: ${JSON.stringify(req.body)}`)
+  console.log(`query: ${JSON.stringify(req.query)}`)
+})
+
+app.listen(port, () => {
+  console.log(`TipDai app listening on ${port}`)
+})
+
+twitter.authorize()

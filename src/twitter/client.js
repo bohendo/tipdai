@@ -146,6 +146,11 @@ Twitter.prototype.postCustomApiCall = function (url, params, error, success) {
     this.doPost(url, params, error, success);
 };
 
+Twitter.prototype.authorize = function (params, error, success) {
+    var url = 'https://api.twitter.com/oauth/request_token' + this.buildQS(params);
+    this.doPost(url, {}, error, success);
+}
+
 Twitter.prototype.doRequest = function (url, error, success) {
     // Fix the mismatch between OAuth's  RFC3986's and Javascript's beliefs in what is right and wrong ;)
     // From https://github.com/ttezel/twit/blob/master/lib/oarequest.js

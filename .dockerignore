@@ -1,0 +1,7 @@
+.cache
+.config
+.git
+.makeflags
+.node-gyp
+.npm
+node_modules

@@ -57,10 +57,20 @@ function new_secret {
 log_level="3" # set to 5 for all logs or to 0 for none
 version=latest
 proxy_image="${project}_proxy:$version"
+
 if [[ "$TIPDAI_MODE" == "development" ]]
-then bot_image="${project}_bot_dev:$version"
-else bot_image="${project}_bot:$version"
+then
+  bot_image="${project}_bot_dev:$version"
+  db_volume=${project}_database_dev
+elif [[ "$TIPDAI_MODE" == "production" ]]
+then
+  bot_image="${project}_bot:$version"
+  db_volume=${project}_database
+else
+  echo "Mode $TIPDAI_MODE not supported, aborting"
+  exit
 fi
+
 database_image="postgres:9-alpine"
 
 # database connection settings
@@ -121,7 +131,7 @@ secrets:
 
 volumes:
   certs:
-  ${project}_database:
+  $db_volume:
     external: true
 
 services:
@@ -174,7 +184,7 @@ services:
     secrets:
       - ${project}_db_password
     volumes:
-      - ${project}_database:/var/lib/postgresql/data
+      - $db_volume:/var/lib/postgresql/data
 
 EOF
 

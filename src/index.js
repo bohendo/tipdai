@@ -16,5 +16,3 @@ app.all('/', (req, res) => {
 app.listen(port, () => {
   console.log(`TipDai app listening on ${port}`)
 })
-
-twitter.authorize()

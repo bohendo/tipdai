@@ -9,9 +9,8 @@ const port = process.env.PORT || '8080'
 app.use(express.json())
 
 app.use((req, res, next) => {
-  console.log(`${req.method} ${req.path} query: ${JSON.stringify(req.query)}`)
-  if (req.body) console.log(`body: ${JSON.stringify(req.body)}`)
-  console.log(``)
+  console.log(`=> ${req.method} ${req.path} -- ${JSON.stringify(req.query)}`)
+  if (JSON.stringify(req.body) !== "{}") console.log(`body: ${JSON.stringify(req.body)}`)
   res.status(200).send('Cool story, Bro')
 })
 

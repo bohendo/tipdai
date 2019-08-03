@@ -8,9 +8,14 @@ const port = process.env.PORT || '8080'
 
 app.use(express.json())
 
-app.all('/', (req, res) => {
+app.use((req, res, next) => {
   console.log(`${req.method} ${req.originalUrl}: ${JSON.stringify(req.body)}`)
   console.log(`query: ${JSON.stringify(req.query)}`)
+  next()
+})
+
+app.all('/', (req, res, next) => {
+  res.status(200).send('Cool story, Bro')
 })
 
 app.listen(port, () => {

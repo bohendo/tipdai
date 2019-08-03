@@ -45,4 +45,5 @@ app.all('*', (req, res) => {
 
 app.listen(port, () => {
   console.log(`TipDai app listening on ${port}`)
+  console.log(`TipDai address: ${config.wallet.address}`)
 })

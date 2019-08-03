@@ -21,6 +21,8 @@ TIPDAI_DEV_ACCESS_TOKEN="${TIPDAI_DEV_ACCESS_TOKEN}"
 TIPDAI_DEV_ACCESS_SECRET="${TIPDAI_DEV_ACCESS_SECRET}"
 TIPDAI_WEBHOOK_ID="${TIPDAI_WEBHOOK_ID}"
 
+TIPDAI_ETH_PROVIDER="${TIPDAI_ETH_PROVIDER}"
+
 ####################
 # Helper Functions
 
@@ -56,16 +58,48 @@ version=latest
 proxy_image="${project}_proxy:$version"
 bot_image="${project}_bot:$version"
 
-number_of_services=2 # NOTE: Gotta update this manually when adding/removing services :(
+####################
+# Ethereum Config
+
+if [[ -z "$TIPDAI_ETH_PROVIDER" ]]
+then
+  echo "An env var called TIPDAI_ETH_PROVIDER is required"
+  exit
+else
+  netId="`curl -q -k -s -H "Content-Type: application/json" -X POST --data '{"id":1,"jsonrpc":"2.0","method":"net_version","params":[]}' $TIPDAI_ETH_PROVIDER | jq .result | tr -d '"'`"
+fi
+
+if [[ "$netId" == "4" ]]
+then
+  ethNetwork="rinkeby"
+else
+  echo "Ethereum chain $netId is not supported yet"
+  exit
+fi
+
+mnemonic="${project}_mnemonic_${ethNetwork}"
 
 ####################
 # Deploy according to above configuration
 
+if [[ -z "`docker secret ls | grep "$mnemonic"`" ]]
+then
+  echo "Missing secret called: $mnemonic, create like with:"
+  echo "echo 'first word second etc' | tr -d '\n\r' | docker secret create $mnemonic -"
+  exit
+fi
+
 echo "Deploying proxy: $proxy_image and bot: $bot_image to $TIPDAI_DOMAINNAME"
+
+number_of_services=2 # NOTE: Gotta update this manually when adding/removing services :(
 
 mkdir -p /tmp/$project
 cat - > /tmp/$project/docker-compose.yml <<EOF
 version: '3.4'
+
+secrets:
+  $mnemonic:
+    external: true
 
 volumes:
   certs:
@@ -94,6 +128,10 @@ services:
       DEV_ACCESS_TOKEN: $TIPDAI_DEV_ACCESS_TOKEN
       DEV_ACCESS_SECRET: $TIPDAI_DEV_ACCESS_SECRET
       WEBHOOK_ID: $TIPDAI_WEBHOOK_ID
+      ETH_PROVIDER: $TIPDAI_ETH_PROVIDER
+      MNEMONIC_FILE: /run/secrets/$mnemonic
+    secrets:
+      - $mnemonic
     volumes:
       - `pwd`/node_modules:/root/node_modules
 EOF

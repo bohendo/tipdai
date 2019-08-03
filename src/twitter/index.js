@@ -1,21 +1,15 @@
-require('dotenv').config()
 var qs = require('qs');
 
 const Twitter = require('./client').Twitter
 const { handleError } = require('../utils')
+const { config } = require('../config')
 
 /*
 const bohendo_id = '259539164'
 const tipdai_id = '1154313992141099008'
 */
 
-const twitter = new Twitter({
-  consumerKey: process.env.consumerKey,
-  consumerSecret: process.env.consumerSecret,
-  accessToken: process.env.accessToken,
-  accessTokenSecret: process.env.accessTokenSecret,
-  callBackUrl: process.env.callBackUrl,
-})
+const twitter = new Twitter(config.twitter)
 
 const tweet = (status) => {
   return new Promise((resolve, reject) => {

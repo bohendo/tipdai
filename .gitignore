@@ -35,3 +35,4 @@ ops/*.log
 
 # Misc
 .env
+src/scratch.js

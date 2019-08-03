@@ -33,11 +33,10 @@ Got a message event: {
 */
 
 const handleMessage = async (event) => {
-  if (sender === botId) return // ignore messages sent by the bot
-  console.log(`Got a message event: ${JSON.stringify(event, null, 2)}`)
   const sender = event.message_create.sender_id
   const message = event.message_create.message_data.text
-
+  if (sender === botId) return // ignore messages sent by the bot
+  console.log(`Processing message event: ${JSON.stringify(event, null, 2)}`)
 
   if (message.match(/^deposit/i)) {
     let pendingDeposits = await store.get('pendingDeposits')

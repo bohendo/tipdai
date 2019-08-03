@@ -156,6 +156,20 @@ Twitter.prototype.getAccessToken = function (params, error, success) {
     this.doPost(url, {}, error, success);
 }
 
+Twitter.prototype.activateWebhook = function (params, error, success) {
+    var env = params.env || 'prod'
+    if (params.env) delete params.env
+    var url = `${this.baseUrl}/account_activity/all/${env}/webhooks.json` + this.buildQS(params);
+    this.doPost(url, {}, error, success);
+}
+
+Twitter.prototype.triggerCRC = function (params, error, success) {
+    var env = params.env || 'prod'
+    if (params.env) delete params.env
+    var url = `${this.baseUrl}/account_activity/all/${env}/webhooks.json` + this.buildQS(params);
+    this.doPut(url, {}, error, success);
+}
+
 Twitter.prototype.doRequest = function (url, error, success) {
     // Fix the mismatch between OAuth's  RFC3986's and Javascript's beliefs in what is right and wrong ;)
     // From https://github.com/ttezel/twit/blob/master/lib/oarequest.js
@@ -183,8 +197,27 @@ Twitter.prototype.doPost = function (url, post_body, error, success) {
              .replace(/\(/g, "%28")
              .replace(/\)/g, "%29")
              .replace(/\*/g, "%2A");
-    //(url, oauth_token, oauth_token_secret, post_body, post_content_type, callback 
-    this.oauth.post(url, this.accessToken, this.accessTokenSecret, post_body, "application/x-www-form-urlencoded", function (err, body, response) {
+    //(url, oauth_token, oauth_token_secret, post_body, post_content_type, callback
+    this.oauth.post(url, this.accessToken, this.accessTokenSecret, post_body, "application/json", function (err, body, response) {
+        console.log('URL [%s]', url);
+        if (!err && response.statusCode == 200) {
+            success(body);
+        } else {
+            error(err, response, body);
+        }
+    });
+};
+
+Twitter.prototype.doPut = function (url, put_body, error, success) {
+    // Fix the mismatch between OAuth's  RFC3986's and Javascript's beliefs in what is right and wrong ;)
+    // From https://github.com/ttezel/twit/blob/master/lib/oarequest.js
+    url = url.replace(/\!/g, "%21")
+             .replace(/\'/g, "%27")
+             .replace(/\(/g, "%28")
+             .replace(/\)/g, "%29")
+             .replace(/\*/g, "%2A");
+    //(url, oauth_token, oauth_token_secret, post_body, post_content_type, callback
+    this.oauth.put(url, this.accessToken, this.accessTokenSecret, put_body, "application/json", function (err, body, response) {
         console.log('URL [%s]', url);
         if (!err && response.statusCode == 200) {
             success(body);

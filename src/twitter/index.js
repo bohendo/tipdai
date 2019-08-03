@@ -11,6 +11,31 @@ const tipdai_id = '1154313992141099008'
 
 const twitter = new Twitter(config.twitter)
 
+const activateWebhook = () => {
+  return new Promise((resolve, reject) => {
+    twitter.activateWebhook({
+      env: config.env,
+      url: config.webhookUrl,
+    }, handleError(reject), (res) => {
+      console.log(`Success!`)
+      const data = JSON.parse(res)
+      console.log(`Triggered CRC: ${JSON.stringify(data, null, 2)}`)
+      resolve(data)
+    })
+  })
+}
+
+const triggerCRC = () => {
+  return new Promise((resolve, reject) => {
+    twitter.triggerCRC({ env: config.env }, handleError(reject), (res) => {
+      console.log(`Success!`)
+      const data = JSON.parse(res)
+      console.log(`Triggered CRC: ${JSON.stringify(data, null, 2)}`)
+      resolve(data)
+    })
+  })
+}
+
 const tweet = (status) => {
   return new Promise((resolve, reject) => {
     twitter.postTweet({ status }, handleError(reject), (res) => {
@@ -71,4 +96,4 @@ const sendDM = (recipient_id, message) => {
   })
 }
 
-module.exports = { getMentions, getUser, sendDM, tweet, twitter }
+module.exports = { activateWebhook, getMentions, getUser, sendDM, triggerCRC, tweet, twitter }

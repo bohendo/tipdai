@@ -4,7 +4,7 @@ const store = require('./store')
 
 const timeout = 1000 * 60 * 25
 const provider = config.provider
-const { parseEther } = eth.utils
+const { formatEther, parseEther } = eth.utils
 
 /*
 pendingDeposits = [{

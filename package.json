@@ -4,7 +4,10 @@
   "description": "Twitter tips powered by Connext",
   "main": "index.js",
   "dependencies": {
-    "@connext/client": "0.0.6"
+    "@connext/client": "0.0.6",
+    "dotenv": "^8.0.0",
+    "oauth": "^0.9.15",
+    "qs": "^6.7.0"
   },
   "devDependencies": {
     "ethers": "^4.0.33"

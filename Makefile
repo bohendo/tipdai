@@ -30,6 +30,9 @@ all: tipdai proxy
 clean:
 	rm $(flags)/*
 
+start: all
+	bash ops/start.sh
+
 ########################################
 ## Real Rules
 

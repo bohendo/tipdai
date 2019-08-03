@@ -80,6 +80,8 @@ services:
     image: $bot_image
     environment:
       NODE_ENV: production
+    volumes:
+      - `pwd`/node_modules:/root/node_modules
 EOF
 
 docker stack deploy -c /tmp/$project/docker-compose.yml $project

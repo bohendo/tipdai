@@ -50,16 +50,6 @@ const handleMessage = async (event) => {
     user = JSON.parse(user)
   }
 
-  if (message.match(/^tip/i)) {
-    let tips = store.get(`unprocessedTips`)
-    if (!tips) {
-      tips = []
-    } else {
-      tips = JSON.parse(tips)
-    }
-    console.log(`Processing tips: ${JSON.stringify(tips)}`)
-  }
-
   if (message.match(/^balance/i) || message.match(/^refresh/i)) {
     if (user.balance) {
       if (!user.linkPayment) {
@@ -126,21 +116,178 @@ const handleMessage = async (event) => {
     await twitter.sendDM(sender, prevDeposit[0].address)
     return
   }
+
+
+  if (message.match(/^tip/i)) {
+    let tips = await store.get(`unprocessedTips`)
+    if (!tips) {
+      tips = []
+    } else {
+      tips = JSON.parse(tips)
+    }
+    console.log(`Processing tips: ${JSON.stringify(tips)}`)
+    await store.set('unprocessedTips', JSON.stringify(tips))
+  }
+
 }
 
 
 const handleTweet = async (tweet) => {
   console.log(`Got a tweet event: ${JSON.stringify(tweet, null, 2)}`)
-  let tips = await store.get(`unprocessedTips`)
-  console.log(`tips from store: ${tips}`)
+  const message = tweet.text
+  const fromUser = tweet.user.id_str
+  const mentionedUsers = tweet.entities.user_mentions.filter(ment => ment.id_str !== botId)
+  let amountMatch = message.match(/\$[0-9]\.?[0-9]*/)
+  if (!mentionedUsers.length || !amountMatch) {
+    // Improper tweet, ignore
+    return
+  }
+  const amount = amountMatch[0].replace('$', '')
+  const toUser = mentionedUsers[0].id_str
+  let tips = await store.get(`tipsArchive`)
   if (!tips) {
     tips = []
   } else {
     tips = JSON.parse(tips)
   }
-  tips.append(tweet)
-  console.log(`Processing tips: ${JSON.stringify(tips)}`)
-  store.set('unprocessedTips', JSON.stringify(tips))
+  tips.push({
+    amount,
+    fromUser,
+    message,
+    toUser,
+    tweetId: tweet.id_str,
+  })
+  console.log(`Archived tips: ${JSON.stringify(tips, null, 2)}`)
+  store.set('tipsArchive', JSON.stringify(tips))
+
+  let sender = await store.get(`user-${fromUser}`)
+  if (!sender) {
+    sender = { id: sender }
+  } else {
+    sender = JSON.parse(sender)
+  }
+
+  if (!sender.balance || parseEther(sender.balance).lt(parseEther(amount))) {
+    console.log(`sender balance ${sender.balance} is lower than ${amount}`)
+    return // TODO: twitter.tweet('hey sender you need more money')
+  }
+
+  let recipient = await store.get(`user-${toUser}`)
+  if (!recipient) {
+    recipient = { id: toUser }
+  } else {
+    recipient = JSON.parse(recipient)
+  }
+  if (!recipient.balance) {
+    recipient.balance = amount
+  } else {
+    recipient.balance = formatEther(parseEther(recipient.balance).add(parseEther(amount)))
+  }
+  console.log(`Recipient: ${JSON.stringify(recipient, null, 2)}`)
+  await store.set(`user-${toUser}`, JSON.stringify(recipient))
+
 }
+
+/*
+tweet event = {
+  "created_at": "Sun Aug 04 04:04:39 +0000 2019",
+  "id": 1157864903912255500,
+  "id_str": "1157864903912255488",
+  "text": "@shivhendo Here, have some fake $DAI :)\n\n@TipDai $1",
+  "truncated": false,
+  "in_reply_to_status_id": null,
+  "in_reply_to_status_id_str": null,
+  "in_reply_to_user_id": 799775632678916100,
+  "in_reply_to_user_id_str": "799775632678916096",
+  "in_reply_to_screen_name": "shivhendo",
+  "user": {
+    "id": 259539164,
+    "id_str": "259539164",
+    "name": "Bo",
+    "screen_name": "bohendo",
+    "location": "Earth",
+    "url": "http://bohendo.com",
+    "description": "Devops-focused engineer helping @ConnextNetwork bring p2p micropayments to Ethereum",
+    "translator_type": "none",
+    "protected": false,
+    "verified": false,
+    "followers_count": 196,
+    "friends_count": 99,
+    "listed_count": 2,
+    "favourites_count": 3863,
+    "statuses_count": 581,
+    "created_at": "Wed Mar 02 03:08:08 +0000 2011",
+    "utc_offset": null,
+    "time_zone": null,
+    "geo_enabled": false,
+    "lang": null,
+    "contributors_enabled": false,
+    "is_translator": false,
+    "profile_background_color": "000000",
+    "profile_background_image_url_https": "https://abs.twimg.com/images/themes/theme5/bg.gif",
+    "profile_background_tile": false,
+    "profile_link_color": "0B75C0",
+    "profile_sidebar_border_color": "000000",
+    "profile_sidebar_fill_color": "000000",
+    "profile_text_color": "000000",
+    "profile_use_background_image": false,
+    "profile_banner_url": "https://pbs.twimg.com/profile_banners/259539164/1485059643",
+    "default_profile": false,
+    "default_profile_image": false,
+    "following": null,
+    "follow_request_sent": null,
+    "notifications": null
+  },
+  "geo": null,
+  "coordinates": null,
+  "place": null,
+  "contributors": null,
+  "is_quote_status": false,
+  "quote_count": 0,
+  "reply_count": 0,
+  "retweet_count": 0,
+  "favorite_count": 0,
+  "entities": {
+    "hashtags": [],
+    "urls": [],
+    "user_mentions": [
+      {
+        "screen_name": "shivhendo",
+        "name": "Shivani",
+        "id": 799775632678916100,
+        "id_str": "799775632678916096",
+        "indices": [
+          0,
+          10
+        ]
+      },
+      {
+        "screen_name": "TipDai",
+        "name": "Dai Tip Bot",
+        "id": 1154313992141099000,
+        "id_str": "1154313992141099008",
+        "indices": [
+          41,
+          48
+        ]
+      }
+    ],
+    "symbols": [
+      {
+        "text": "DAI",
+        "indices": [
+          32,
+          36
+        ]
+      }
+    ]
+  },
+  "favorited": false,
+  "retweeted": false,
+  "filter_level": "low",
+  "lang": "en",
+  "timestamp_ms": "1564891479839"
+}
+*/
 
 module.exports = { handleMessage, handleTweet }

@@ -44,6 +44,8 @@ const handleMessage = async (event) => {
   if (!user) {
     user = { hasBeenWelcomed: true }
     await store.set(`user-${sender}`, JSON.stringify(user))
+  } else {
+    user = JSON.parse(user)
   }
 
 

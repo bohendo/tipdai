@@ -40,7 +40,7 @@ const handleMessage = async (event) => {
   if (sender === botId) return // ignore messages sent by the bot
   console.log(`Processing message event: ${JSON.stringify(event, null, 2)}`)
 
-  const user = await store.get(`user-${sender}`)
+  let user = await store.get(`user-${sender}`)
   if (!user) {
     user = { hasBeenWelcomed: true }
   }

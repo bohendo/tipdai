@@ -19,7 +19,7 @@ pendingDeposits = [{
 const watchPendingDeposits = () => {
   setInterval(async () => {
     var pendingDeposits = await store.get('pendingDeposits')
-    if (!pendingDeposits || !pendingDeposits.length) {
+    if (!pendingDeposits || pendingDeposits === "[]") {
       return // No pending deposits
     }
     console.log(`Found pending deposits: ${pendingDeposits}`)

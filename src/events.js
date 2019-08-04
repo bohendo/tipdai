@@ -7,10 +7,6 @@ const twitter = require('./twitter')
 const botId = "1154313992141099008"
 const { formatEther, parseEther } = eth.utils
 
-const handleTweet = async (tweet) => {
-  console.log(`Got a tweet event: ${JSON.stringify(tweet, null, 2)}`)
-}
-
 /*
 Got a message event: {
   "type": "message_create",
@@ -52,6 +48,16 @@ const handleMessage = async (event) => {
     await store.set(`user-${sender}`, JSON.stringify(user))
   } else {
     user = JSON.parse(user)
+  }
+
+  if (message.match(/^tip/i)) {
+    let tips = store.get(`unprocessedTips`)
+    if (!tips) {
+      tips = []
+    } else {
+      tips = JSON.parse(tips)
+    }
+    console.log(`Processing tips: ${JSON.stringify(tips)}`)
   }
 
   if (message.match(/^balance/i) || message.match(/^refresh/i)) {
@@ -120,8 +126,21 @@ const handleMessage = async (event) => {
     await twitter.sendDM(sender, prevDeposit[0].address)
     return
   }
+}
 
 
+const handleTweet = async (tweet) => {
+  console.log(`Got a tweet event: ${JSON.stringify(tweet, null, 2)}`)
+  let tips = await store.get(`unprocessedTips`)
+  console.log(`tips from store: ${tips}`)
+  if (!tips) {
+    tips = []
+  } else {
+    tips = JSON.parse(tips)
+  }
+  tips.append(tweet)
+  console.log(`Processing tips: ${JSON.stringify(tips)}`)
+  store.set('unprocessedTips', JSON.stringify(tips))
 }
 
 module.exports = { handleMessage, handleTweet }

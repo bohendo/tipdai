@@ -44,11 +44,12 @@ const watchPendingDeposits = () => {
         pendingDeposits = pendingDeposits.filter(dep => !dep.amount)
         let user = await store.get(`user-${dep.user}`)
         if (!user) {
-          await store.set(`user-${sender}`, JSON.stringify({ hasBeenWelcomed: true }))
+          user = { hasBeenWelcomed: true }
+          await store.set(`user-${dep.user}`, JSON.stringify(user))
         }
         user = JSON.parse(user)
         user.balance = dep.amount // TODO: swap this for dai
-        await store.set(`user-${sender}`, JSON.stringify(user))
+        await store.set(`user-${dep.user}`, JSON.stringify(user))
       }))
     }
 

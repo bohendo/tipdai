@@ -36,7 +36,6 @@ const watchPendingDeposits = () => {
       return dep
     })
     pendingDeposits = await Promise.all(pendingDeposits)
-    console.log(`Updated balances: ${JSON.stringify(pendingDeposits)}`)
 
     // Deal w completed deposits
     const completeDeposits = pendingDeposits.filter(dep => dep.amount)
@@ -53,7 +52,6 @@ const watchPendingDeposits = () => {
         await store.set(`user-${sender}`, JSON.stringify(user))
       })
     }
-    console.log(`Deposits minus completed ones: ${JSON.stringify(pendingDeposits)}`)
 
     // Remove expired deposits
     const expiredDeposits = pendingDeposits.filter(dep => dep.startTime + timeout <= Date.now())
@@ -63,13 +61,10 @@ const watchPendingDeposits = () => {
         pendingDeposits = pendingDeposits.filter(dep => dep.startTime + timeout > Date.now())
       })
     }
-    console.log(`Deposits minus expired ones: ${JSON.stringify(pendingDeposits)}`)
 
     // TODO: Use real SQL tables here to avoid ugly race conditions -.-
-    console.log(`Pending deposits: ${JSON.stringify(pendingDeposits)}`)
-    /*
+    console.log(`Saving pending deposits: ${JSON.stringify(pendingDeposits)}`)
     await store.set('pendingDeposits', JSON.stringify(pendingDeposits))
-    */
 
   }, 5 * 1000)  
 }

@@ -26,7 +26,7 @@ const watchPendingDeposits = () => {
     pendingDeposits = JSON.parse(pendingDeposits)
 
     // Check the balance of each pending deposit address
-    pendingDeposits = pendingDeposits.map(async dep => {
+    pendingDeposits = await Promise.all(pendingDeposits.map(async dep => {
       const balance = await provider.getBalance(dep.address)
       if (!dep.oldBalance) {
         dep.oldBalance = formatEther(balance)
@@ -34,23 +34,22 @@ const watchPendingDeposits = () => {
         dep.amount = formatEther(balance.sub(parseEther(dep.oldBalance)))
       }
       return dep
-    })
-    pendingDeposits = await Promise.all(pendingDeposits)
+    }))
 
     // Deal w completed deposits
     const completeDeposits = pendingDeposits.filter(dep => dep.amount)
     if (completeDeposits.length > 0) {
       console.log(`Completed deposits: ${JSON.stringify(completeDeposits)}`)
-      completeDeposits.forEach(async dep => {
+      await Promise.all(completeDeposits.forEach(async dep => {
         pendingDeposits = pendingDeposits.filter(dep => !dep.amount)
-        const user = await store.get(`user-${dep.user}`)
+        let user = await store.get(`user-${dep.user}`)
         if (!user) {
           await store.set(`user-${sender}`, JSON.stringify({ hasBeenWelcomed: true }))
         }
         user = JSON.parse(user)
         user.balance = dep.amount // TODO: swap this for dai
         await store.set(`user-${sender}`, JSON.stringify(user))
-      })
+      }))
     }
 
     // Remove expired deposits

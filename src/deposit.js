@@ -40,14 +40,15 @@ const watchPendingDeposits = () => {
     const completeDeposits = pendingDeposits.filter(dep => dep.amount)
     if (completeDeposits.length > 0) {
       console.log(`Completed deposits: ${JSON.stringify(completeDeposits)}`)
-      await Promise.all(completeDeposits.forEach(async dep => {
+      Promise.all(completeDeposits.map(async dep => {
         pendingDeposits = pendingDeposits.filter(dep => !dep.amount)
         let user = await store.get(`user-${dep.user}`)
         if (!user) {
           user = { hasBeenWelcomed: true }
           await store.set(`user-${dep.user}`, JSON.stringify(user))
+        } else {
+          user = JSON.parse(user)
         }
-        user = JSON.parse(user)
         user.balance = dep.amount // TODO: swap this for dai
         await store.set(`user-${dep.user}`, JSON.stringify(user))
       }))

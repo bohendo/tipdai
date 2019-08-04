@@ -29,7 +29,7 @@ const watchPendingDeposits = () => {
     pendingDeposits = pendingDeposits.map(async dep => {
       const balance = await provider.getBalance(dep.address)
       if (!dep.oldBalance) {
-        dep.oldBalance = formatEther(balance.sub(parseEther(balance)))
+        dep.oldBalance = formatEther(balance)
       } else if (parseEther(dep.oldBalance).lt(balance)) {
         dep.amount = formatEther(balance.sub(parseEther(dep.oldBalance)))
       }
@@ -66,16 +66,9 @@ const watchPendingDeposits = () => {
     console.log(`Deposits minus expired ones: ${JSON.stringify(pendingDeposits)}`)
 
     // TODO: Use real SQL tables here to avoid ugly race conditions -.-
-    // For now, add any new deposits that were submitted while we were checking balances above
-    const newDeposits = JSON.parse(await store.get('pendingDeposits'))
-      .filter(dep => !pendingDeposits.map(dep => dep.user).includes(dep.user))
-    console.log(`New deposits: ${JSON.stringify(newDeposits)}`)
     console.log(`Pending deposits: ${JSON.stringify(pendingDeposits)}`)
     /*
-    await store.set('pendingDeposits', JSON.stringify({
-      ...pendingDeposits,
-      ...newDeposits,
-    }))
+    await store.set('pendingDeposits', JSON.stringify(pendingDeposits))
     */
 
   }, 5 * 1000)  

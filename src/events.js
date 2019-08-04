@@ -43,6 +43,7 @@ const handleMessage = async (event) => {
   let user = await store.get(`user-${sender}`)
   if (!user) {
     user = { hasBeenWelcomed: true }
+    await store.set(`user-${sender}`, JSON.stringify(user))
   }
 
 
@@ -52,7 +53,6 @@ const handleMessage = async (event) => {
     }
     return await twitter.sendDM(sender, `Your balance is 0.0`)
   }
-  await store.set(`user-${sender}`, JSON.stringify())
 
 
   if (message.match(/^deposit/i)) {

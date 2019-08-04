@@ -68,6 +68,17 @@ const watchPendingDeposits = () => {
         tokenBalances = await channel.getFreeBalance(tokenAddress)
         let newChannelTokens = tokenBalances[channel.freeBalanceAddress]
         user.balance = formatEther(newChannelTokens.sub(oldChannelTokens))
+
+        if (!user.linkPayment) {
+          console.log(`Attempting to create link payment`)
+          const link = await channel.conditionalTransfer({
+            amount: parseEther(user.balance),
+            assetId: tokenAddress,
+            conditionType: "LINKED_TRANSFER",
+          })
+          console.log(`Link: ${JSON.stringify(link)}`)
+        }
+
         await store.set(`user-${dep.user}`, JSON.stringify(user))
       }))
     }

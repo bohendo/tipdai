@@ -5,7 +5,7 @@ const store = require('./store')
 const twitter = require('./twitter')
 
 const botId = "1154313992141099008"
-const { formatEther } = eth.utils
+const { formatEther, parseEther } = eth.utils
 
 const handleTweet = async (tweet) => {
   console.log(`Got a tweet event: ${JSON.stringify(tweet, null, 2)}`)
@@ -40,6 +40,11 @@ const handleMessage = async (event) => {
   if (sender === botId) return // ignore messages sent by the bot
   console.log(`Processing message event: ${JSON.stringify(event, null, 2)}`)
 
+  let swapRate = await store.get(`swapRate`)
+  console.log(`swap rate: ${swapRate}`)
+  const maxDeposit = formatEther(parseEther(parseEther('10').toString()).div(parseEther(swapRate)))
+  console.log(`maxDeposit: ${maxDeposit}`)
+
   let user = await store.get(`user-${sender}`)
   if (!user) {
     user = { hasBeenWelcomed: true }
@@ -51,9 +56,9 @@ const handleMessage = async (event) => {
 
   if (message.match(/^balance/i)) {
     if (user.balance) {
-      return await twitter.sendDM(sender, `Your balance is ${user.balance}`)
+      return await twitter.sendDM(sender, `Your balance is $${user.balance} (kovan) DAI`)
     }
-    return await twitter.sendDM(sender, `Your balance is 0.0`)
+    return await twitter.sendDM(sender, `Your balance is $0.00`)
   }
 
 
@@ -80,7 +85,7 @@ const handleMessage = async (event) => {
       user: sender,
     }, ...pendingDeposits]))
     // TODO: mention max deposit
-    await twitter.sendDM(sender, `Send (kovan) ETH to the following address to deposit. This address will be available for deposits for 10 minutes. If you send a transaction with low gas, reply "wait" and the timeout will be extended.`)
+    await twitter.sendDM(sender, `Send max of ${maxDeposit} kovan ETH to the following address to deposit. This address will be available for deposits for 10 minutes. If you send a transaction with low gas, reply "wait" and the timeout will be extended.`)
     await twitter.sendDM(sender, depositAddress)
     return
   }
@@ -97,7 +102,7 @@ const handleMessage = async (event) => {
       startTime: Date.now(),
       ...prevDeposit,
     }, ...pendingDeposits]))
-    await twitter.sendDM(sender, `Timeout extended, you have 10 more minutes to deposit (kovan) ETH to the below address. If you want to extend again, reply "wait" as many times as needed.`)
+    await twitter.sendDM(sender, `Timeout extended, you have 10 more minutes to deposit up to ${maxDeposit} kovan ETH to the below address. If you want to extend again, reply "wait" as many times as needed.`)
     await twitter.sendDM(sender, prevDeposit[0].address)
     return
   }

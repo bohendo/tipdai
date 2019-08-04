@@ -1,10 +1,12 @@
 const eth = require('ethers')
+const { getChannel } = require('./channel')
 const config = require('./config')
 const store = require('./store')
 
 const timeout = 1000 * 60 * 25
 const provider = config.provider
 const { formatEther, parseEther } = eth.utils
+const { AddressZero } = eth.constants
 
 /*
 pendingDeposits = [{
@@ -18,6 +20,7 @@ pendingDeposits = [{
 
 const watchPendingDeposits = () => {
   setInterval(async () => {
+    const channel = await getChannel()
     var pendingDeposits = await store.get('pendingDeposits')
     if (!pendingDeposits || pendingDeposits === "[]") {
       return // No pending deposits
@@ -40,7 +43,7 @@ const watchPendingDeposits = () => {
     const completeDeposits = pendingDeposits.filter(dep => dep.amount)
     if (completeDeposits.length > 0) {
       console.log(`Completed deposits: ${JSON.stringify(completeDeposits)}`)
-      Promise.all(completeDeposits.map(async dep => {
+      await Promise.all(completeDeposits.map(async dep => {
         pendingDeposits = pendingDeposits.filter(dep => !dep.amount)
         let user = await store.get(`user-${dep.user}`)
         if (!user) {
@@ -49,7 +52,22 @@ const watchPendingDeposits = () => {
         } else {
           user = JSON.parse(user)
         }
-        user.balance = dep.amount // TODO: swap this for dai
+        console.log(`Depositing this deposit into our channel`)
+        const tokenAddress = await store.get('tokenAddress')
+        const swapRate = await store.get('swapRate')
+        let tokenBalances = await channel.getFreeBalance(tokenAddress)
+        let oldChannelTokens = tokenBalances[channel.freeBalanceAddress]
+        console.log(`Old channel balance: ${oldChannelTokens}`)
+        await channel.deposit({ amount: parseEther(dep.amount), assetId: AddressZero })
+        await channel.swap({
+          amount: parseEther(dep.amount),
+          fromAssetId: AddressZero,
+          swapRate: parseEther(swapRate),
+          toAssetId: tokenAddress,
+        })
+        tokenBalances = await channel.getFreeBalance(tokenAddress)
+        let newChannelTokens = tokenBalances[channel.freeBalanceAddress]
+        user.balance = formatEther(newChannelTokens.sub(oldChannelTokens))
         await store.set(`user-${dep.user}`, JSON.stringify(user))
       }))
     }

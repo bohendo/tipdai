@@ -40,6 +40,7 @@ const handleMessage = async (event) => {
   if (sender === botId) return // ignore messages sent by the bot
   console.log(`Processing message event: ${JSON.stringify(event, null, 2)}`)
 
+  const tokenAddress = await store.get('tokenAddress')
   let swapRate = await store.get(`swapRate`)
   console.log(`swap rate: ${swapRate}`)
   const maxDeposit = formatEther(parseEther(parseEther('10').toString()).div(parseEther(swapRate)))
@@ -53,10 +54,23 @@ const handleMessage = async (event) => {
     user = JSON.parse(user)
   }
 
-
-  if (message.match(/^balance/i)) {
+  if (message.match(/^balance/i) || message.match(/^refresh/i)) {
     if (user.balance) {
-      return await twitter.sendDM(sender, `Your balance is $${user.balance} (kovan) DAI`)
+      if (!user.linkPayment) {
+        const channel = await getChannel()
+        console.log(`Attempting to create link payment`)
+        const link = await channel.conditionalTransfer({
+          amount: parseEther(user.balance),
+          assetId: tokenAddress,
+          conditionType: "LINKED_TRANSFER",
+        })
+        console.log(`Link: ${JSON.stringify(link)}`)
+        user.linkPayment = link
+        await store.set(`user-${sender}`, JSON.stringify(user))
+      } else {
+        console.log(`Link: ${JSON.stringify(user.linkPayment)}`)
+      }
+      return await twitter.sendDM(sender, `Your balance is $${user.balance} (kovan) DAI.\n\nLink payment id: ${user.linkPayment.paymentId}\n\nSecret: ${user.linkPayment.preImage}`)
     }
     return await twitter.sendDM(sender, `Your balance is $0.00`)
   }

@@ -55,30 +55,36 @@ const watchPendingDeposits = () => {
         console.log(`Depositing this deposit into our channel`)
         const tokenAddress = await store.get('tokenAddress')
         const swapRate = await store.get('swapRate')
+        let expectedDeposit = formatEther(parseEther(dep.amount).mul(parseEther(swapRate)))
+        expectedDeposit = formatEther(expectedDeposit.substring(0, expectedDeposit.indexOf('.')))
+        console.log(`expectedDeposit: ${expectedDeposit}`)
         let tokenBalances = await channel.getFreeBalance(tokenAddress)
         let oldChannelTokens = tokenBalances[channel.freeBalanceAddress]
         console.log(`Old channel balance: ${oldChannelTokens}`)
-        await channel.deposit({ amount: parseEther(dep.amount), assetId: AddressZero })
-        await channel.swap({
-          amount: parseEther(dep.amount),
-          fromAssetId: AddressZero,
-          swapRate: parseEther(swapRate),
-          toAssetId: tokenAddress,
-        })
-        tokenBalances = await channel.getFreeBalance(tokenAddress)
-        let newChannelTokens = tokenBalances[channel.freeBalanceAddress]
-        user.balance = formatEther(newChannelTokens.sub(oldChannelTokens))
+        try {
+          await channel.deposit({ amount: parseEther(dep.amount), assetId: AddressZero })
+          await channel.swap({
+            amount: parseEther(dep.amount),
+            fromAssetId: AddressZero,
+            swapRate: parseEther(swapRate),
+            toAssetId: tokenAddress,
+          })
+        } catch (e) {
+          console.error(`Deposit failed :( ${e.message}`)
+        }
 
-        if (!user.linkPayment) {
+        if (false && !user.linkPayment) {
           console.log(`Attempting to create link payment`)
           const link = await channel.conditionalTransfer({
             amount: parseEther(user.balance),
             assetId: tokenAddress,
             conditionType: "LINKED_TRANSFER",
           })
-          console.log(`Link: ${JSON.stringify(link)}`)
         }
 
+        tokenBalances = await channel.getFreeBalance(tokenAddress)
+        let newChannelTokens = tokenBalances[channel.freeBalanceAddress]
+        user.balance = user.balance.add(parseEther(expectedDeposit))
         await store.set(`user-${dep.user}`, JSON.stringify(user))
       }))
     }

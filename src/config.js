@@ -5,7 +5,7 @@ const fs = require('fs')
 
 const provider = new eth.providers.JsonRpcProvider(process.env.ETH_PROVIDER)
 const mnemonic = fs.readFileSync(process.env.MNEMONIC_FILE, 'utf8')
-const wallet = eth.Wallet.fromMnemonic(mnemonic).connect(provider)
+const wallet = eth.Wallet.fromMnemonic(mnemonic, "m/44'/60'/0'/25446").connect(provider)
 const getWallet = (index) =>
   eth.Wallet.fromMnemonic(mnemonic, `m/44'/60'/0'/0/${index}`).connect(provider)
 

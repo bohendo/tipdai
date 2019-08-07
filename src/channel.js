@@ -17,7 +17,7 @@ const getChannel = async () => {
 
   channel = await connext.connect({
     ...config.connext,
-    store: config.connext.storeFactory.createStoreService('TipDaiBot'),
+    store: config.connext.storeFactory.createStoreService('CF_NODE'),
   });
   console.log(`Client created successfully!`);
   console.log(` - Public Identifier: ${channel.publicIdentifier}`);

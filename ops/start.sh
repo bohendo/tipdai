@@ -23,6 +23,7 @@ TIPDAI_DEV_ACCESS_SECRET="${TIPDAI_DEV_ACCESS_SECRET}"
 TIPDAI_WEBHOOK_ID="${TIPDAI_WEBHOOK_ID}"
 
 TIPDAI_ETH_PROVIDER="${TIPDAI_ETH_PROVIDER}"
+TIPDAI_PAYMENT_HUB="${TIPDAI_PAYMENT_HUB:-nats://rinkeby.indra.connext.network:4222}"
 
 ####################
 # Helper Functions
@@ -162,6 +163,7 @@ services:
       WEBHOOK_ID: $TIPDAI_WEBHOOK_ID
       ETH_PROVIDER: $TIPDAI_ETH_PROVIDER
       MNEMONIC_FILE: /run/secrets/$mnemonic
+      PAYMENT_HUB: $TIPDAI_PAYMENT_HUB
       PGDATABASE: $postgres_db
       PGHOST: $postgres_host
       PGPASSFILE: $postgres_password_file

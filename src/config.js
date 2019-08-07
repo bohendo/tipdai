@@ -50,7 +50,7 @@ module.exports = {
     ethProviderUrl: process.env.ETH_PROVIDER,
     logLevel: 3,
     mnemonic,
-    nodeUrl: `nats://indra-v2.connext.network:4222`,
+    nodeUrl: process.env.PAYMENT_HUB,
     storeFactory,
     type: 'postgres',
   }

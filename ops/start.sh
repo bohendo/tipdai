@@ -62,8 +62,7 @@ proxy_image="${project}_proxy:$version"
 if [[ "$TIPDAI_MODE" == "development" ]]
 then
   bot_image="${project}_bot_dev:$version"
-  db_volume=${project}_database
-  # db_volume=${project}_database_dev
+  db_volume=${project}_database_dev
 elif [[ "$TIPDAI_MODE" == "production" ]]
 then
   bot_image="${project}_bot:$version"

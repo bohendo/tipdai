@@ -1,7 +1,7 @@
-const eth = require('ethers')
-const { getChannel } = require('./channel')
-const config = require('./config')
-const store = require('./store')
+import { ethers as eth } from 'ethers'
+import { getChannel } from './channel'
+import { config } from './config'
+import { db } from './db'
 
 const timeout = 1000 * 60 * 25
 const provider = config.provider
@@ -21,7 +21,7 @@ pendingDeposits = [{
 const watchPendingDeposits = () => {
   setInterval(async () => {
     const channel = await getChannel()
-    var pendingDeposits = await store.get('pendingDeposits')
+    var pendingDeposits = await db.get('pendingDeposits') as any
     if (!pendingDeposits || pendingDeposits === "[]") {
       return // No pending deposits
     }
@@ -45,16 +45,16 @@ const watchPendingDeposits = () => {
       console.log(`Completed deposits: ${JSON.stringify(completeDeposits)}`)
       await Promise.all(completeDeposits.map(async dep => {
         pendingDeposits = pendingDeposits.filter(dep => !dep.amount)
-        let user = await store.get(`user-${dep.user}`)
+        let user = await db.get(`user-${dep.user}`) as any
         if (!user) {
           user = { hasBeenWelcomed: true }
-          await store.set(`user-${dep.user}`, JSON.stringify(user))
+          await db.set(`user-${dep.user}`, JSON.stringify(user))
         } else {
           user = JSON.parse(user)
         }
         console.log(`Depositing this deposit into our channel`)
-        const tokenAddress = await store.get('tokenAddress')
-        const swapRate = await store.get('swapRate')
+        const tokenAddress = await db.get('tokenAddress') as any
+        const swapRate = await db.get('swapRate') as any
         let expectedDeposit = formatEther(parseEther(dep.amount).mul(parseEther(swapRate)))
         expectedDeposit = formatEther(expectedDeposit.substring(0, expectedDeposit.indexOf('.')))
         console.log(`expectedDeposit: ${expectedDeposit}`)
@@ -85,7 +85,7 @@ const watchPendingDeposits = () => {
         tokenBalances = await channel.getFreeBalance(tokenAddress)
         let newChannelTokens = tokenBalances[channel.freeBalanceAddress]
         user.balance = user.balance.add(parseEther(expectedDeposit))
-        await store.set(`user-${dep.user}`, JSON.stringify(user))
+        await db.set(`user-${dep.user}`, JSON.stringify(user))
       }))
     }
 
@@ -100,9 +100,9 @@ const watchPendingDeposits = () => {
 
     // TODO: Use real SQL tables here to avoid ugly race conditions -.-
     console.log(`Saving pending deposits: ${JSON.stringify(pendingDeposits)}`)
-    await store.set('pendingDeposits', JSON.stringify(pendingDeposits))
+    await db.set('pendingDeposits', JSON.stringify(pendingDeposits))
 
   }, 5 * 1000)  
 }
 
-module.exports = { watchPendingDeposits }
+export { watchPendingDeposits }

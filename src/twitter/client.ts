@@ -2,8 +2,8 @@
  Twitter client app
  */
 
-var OAuth = require('oauth').OAuth;
-var qs = require('qs');
+import { OAuth } from 'oauth';
+import qs from 'qs';
 
 function Twitter(config) {
     this.consumerKey = config.consumerKey;
@@ -30,7 +30,7 @@ Twitter.prototype.getOAuthRequestToken = function (next) {
             next();
         }
         else {
-            var oauth = {};
+            var oauth = {} as any;
             oauth.token = oauth_token;
             oauth.token_secret = oauth_token_secret;
             console.log('oauth.token: ' + oauth.token);
@@ -52,7 +52,7 @@ Twitter.prototype.getOAuthAccessToken = function (oauth, next) {
 
                 console.log('oauth.token: ' + oauth.token);
                 console.log('oauth.token_secret: ' + oauth.token_secret);
-                console.log('oauth.access_token: ' + access_token.token);
+                console.log('oauth.access_token: ' + oauth.access_token.token);
                 console.log('oauth.access_token_secret: ' + oauth.access_token_secret);
                 next(oauth);
             }
@@ -235,6 +235,4 @@ Twitter.prototype.buildQS = function (params) {
     return '';
 };
 
-if (!(typeof exports === 'undefined')) {
-    exports.Twitter = Twitter;
-}
+export { Twitter }

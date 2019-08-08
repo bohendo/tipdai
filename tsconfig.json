@@ -13,18 +13,17 @@
     "noImplicitAny": false,
     "noImplicitReturns": true,
     "noLib": false,
-    "noUnusedLocals": true,
-    "outDir": "build",
+    "noUnusedLocals": false,
+    "outDir": "dist",
     "removeComments": true,
     "resolveJsonModule": true,
     "skipLibCheck": true,
-    "sourceMap": true,
-    "strict": true,
+    "strict": false,
     "target": "es2017",
     "typeRoots": [
-      "./node_modules/@types"
+      "node_modules/@types"
     ]
   },
-  "exclude": ["./build", "./node_modules"],
-  "include": ["./src/**/*.ts"]
+  "exclude": ["dist", "./node_modules"],
+  "include": ["src/**/*.ts"]
 }

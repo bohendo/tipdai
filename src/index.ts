@@ -1,12 +1,12 @@
-const crypto = require('crypto')
-const eth = require('ethers')
-const express = require('express')
+import crypto from 'crypto'
+import { ethers as eth } from 'ethers'
+import express from 'express'
 
-const { getChannel } = require('./channel')
-const config = require('./config')
-const { watchPendingDeposits } = require('./deposit')
-const { handleTweet, handleMessage } = require('./events')
-const store = require('./store')
+import { getChannel } from './channel'
+import { config } from './config'
+import { watchPendingDeposits } from './deposit'
+import { handleTweet, handleMessage } from './events'
+import { db } from './db'
 
 const app = express()
 
@@ -48,7 +48,7 @@ app.all('*', (req, res) => {
 })
 
 app.listen(port, async () => {
-  await store.firstConnection
+  await db.firstConnection
   console.log(`TipDai app listening on ${port}`)
   console.log(`TipDai address: ${config.wallet.address}`)
   const bal = eth.utils.formatEther(await config.wallet.getBalance())

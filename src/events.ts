@@ -1,8 +1,8 @@
-const eth = require('ethers')
-const config = require('./config')
-const { getChannel } = require('./channel')
-const store = require('./store')
-const twitter = require('./twitter')
+import { ethers as eth } from 'ethers'
+import { config } from './config'
+import { getChannel } from './channel'
+import { db } from './db'
+import { twitter } from './twitter'
 
 const botId = "1154313992141099008"
 const { formatEther, parseEther } = eth.utils
@@ -36,16 +36,16 @@ const handleMessage = async (event) => {
   if (sender === botId) return // ignore messages sent by the bot
   console.log(`Processing message event: ${JSON.stringify(event, null, 2)}`)
 
-  const tokenAddress = await store.get('tokenAddress')
-  let swapRate = await store.get(`swapRate`)
+  const tokenAddress = await db.get('tokenAddress')
+  let swapRate = await db.get(`swapRate`) as any
   console.log(`swap rate: ${swapRate}`)
   const maxDeposit = formatEther(parseEther(parseEther('10').toString()).div(parseEther(swapRate)))
   console.log(`maxDeposit: ${maxDeposit}`)
 
-  let user = await store.get(`user-${sender}`)
+  let user = await db.get(`user-${sender}`) as any as any
   if (!user) {
     user = { hasBeenWelcomed: true }
-    await store.set(`user-${sender}`, JSON.stringify(user))
+    await db.set(`user-${sender}`, JSON.stringify(user))
   } else {
     user = JSON.parse(user)
   }
@@ -62,7 +62,7 @@ const handleMessage = async (event) => {
         })
         console.log(`Link: ${JSON.stringify(link)}`)
         user.linkPayment = link
-        await store.set(`user-${sender}`, JSON.stringify(user))
+        await db.set(`user-${sender}`, JSON.stringify(user))
       } else {
         console.log(`Link: ${JSON.stringify(user.linkPayment)}`)
       }
@@ -73,7 +73,7 @@ const handleMessage = async (event) => {
 
 
   if (message.match(/^deposit/i)) {
-    let pendingDeposits = await store.get('pendingDeposits')
+    let pendingDeposits = await db.get('pendingDeposits') as any
     let depositAddress
     if (!pendingDeposits) {
       pendingDeposits = []
@@ -88,7 +88,7 @@ const handleMessage = async (event) => {
         depositAddress = config.getWallet(pendingDeposits.length + 1).address
       }
     }
-    await store.set('pendingDeposits', JSON.stringify([{
+    await db.set('pendingDeposits', JSON.stringify([{
       address: depositAddress,
       oldBalance: formatEther(await config.provider.getBalance(depositAddress)),
       startTime: Date.now(),
@@ -102,13 +102,13 @@ const handleMessage = async (event) => {
 
 
   if (message.match(/^wait/i)) {
-    let pendingDeposits = await store.get('pendingDeposits')
+    let pendingDeposits = await db.get('pendingDeposits') as any
     if (!pendingDeposits) { return } // No prevDeposit, ignore
     pendingDeposits = JSON.parse(pendingDeposits)
     const prevDeposit = pendingDeposits.filter(dep => dep.user === sender)
     if (!prevDeposit[0]) { return } // No prevDeposit, ignore
     pendingDeposits = pendingDeposits.filter(dep => dep.user !== sender)
-    await store.set('pendingDeposits', JSON.stringify([{
+    await db.set('pendingDeposits', JSON.stringify([{
       startTime: Date.now(),
       ...prevDeposit,
     }, ...pendingDeposits]))
@@ -119,14 +119,14 @@ const handleMessage = async (event) => {
 
 
   if (message.match(/^tip/i)) {
-    let tips = await store.get(`unprocessedTips`)
+    let tips = await db.get(`unprocessedTips`) as any
     if (!tips) {
       tips = []
     } else {
       tips = JSON.parse(tips)
     }
     console.log(`Processing tips: ${JSON.stringify(tips)}`)
-    await store.set('unprocessedTips', JSON.stringify(tips))
+    await db.set('unprocessedTips', JSON.stringify(tips))
   }
 
 }
@@ -144,7 +144,7 @@ const handleTweet = async (tweet) => {
   }
   const amount = amountMatch[0].replace('$', '')
   const toUser = mentionedUsers[0].id_str
-  let tips = await store.get(`tipsArchive`)
+  let tips = await db.get(`tipsArchive`) as any
   if (!tips) {
     tips = []
   } else {
@@ -158,9 +158,9 @@ const handleTweet = async (tweet) => {
     tweetId: tweet.id_str,
   })
   console.log(`Archived tips: ${JSON.stringify(tips, null, 2)}`)
-  store.set('tipsArchive', JSON.stringify(tips))
+  db.set('tipsArchive', JSON.stringify(tips))
 
-  let sender = await store.get(`user-${fromUser}`)
+  let sender = await db.get(`user-${fromUser}`) as any
   if (!sender) {
     sender = { id: sender }
   } else {
@@ -172,7 +172,7 @@ const handleTweet = async (tweet) => {
     return // TODO: twitter.tweet('hey sender you need more money')
   }
 
-  let recipient = await store.get(`user-${toUser}`)
+  let recipient = await db.get(`user-${toUser}`) as any
   if (!recipient) {
     recipient = { id: toUser }
   } else {
@@ -184,7 +184,7 @@ const handleTweet = async (tweet) => {
     recipient.balance = formatEther(parseEther(recipient.balance).add(parseEther(amount)))
   }
   console.log(`Recipient: ${JSON.stringify(recipient, null, 2)}`)
-  await store.set(`user-${toUser}`, JSON.stringify(recipient))
+  await db.set(`user-${toUser}`, JSON.stringify(recipient))
 
 }
 
@@ -290,4 +290,4 @@ tweet event = {
 }
 */
 
-module.exports = { handleMessage, handleTweet }
+export { handleMessage, handleTweet }

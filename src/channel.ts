@@ -1,21 +1,19 @@
-const connext = require('@connext/client')
-const eth = require('ethers')
-const tokenArtifacts = require('openzeppelin-solidity/build/contracts/ERC20Mintable.json')
+import { connect as connext } from '@connext/client'
+import { AddressZero, Zero } from 'ethers/constants'
+import { formatEther, parseEther } from 'ethers/utils'
+import tokenArtifacts from 'openzeppelin-solidity/build/contracts/ERC20Mintable.json'
 
-const config = require('./config')
-const store = require('./store')
-
-const { formatEther, parseEther } = eth.utils
-const { AddressZero, Zero } = eth.constants
+import { config } from './config'
+import { db } from './db'
 
 var channel
 const getChannel = async () => {
   if (channel) { return channel }
-  await store.firstConnection
+  await db.firstConnection
 
   await config.connext.storeFactory.connectDb()
 
-  channel = await connext.connect({
+  channel = await connext({
     ...config.connext,
     store: config.connext.storeFactory.createStoreService('CF_NODE'),
   });
@@ -26,17 +24,17 @@ const getChannel = async () => {
 
   // Save tokenAddress
   const tokenAddress = (await channel.config()).contractAddresses.Token;
-  await store.set('tokenAddress', tokenAddress)
+  await db.set('tokenAddress', tokenAddress)
   console.log(` - Token address: ${tokenAddress}`);
 
   // Save & subscribe to swapRate
   const swapRate = formatEther(await channel.getLatestSwapRate(AddressZero, tokenAddress));
-  await store.set('swapRate', swapRate)
+  await db.set('swapRate', swapRate)
   channel.subscribeToSwapRates(AddressZero, tokenAddress, async (res) => {
     if (!res || !res.swapRate) return;
-    const oldRate = await store.get('swapRate')
+    const oldRate = await db.get('swapRate')
     console.log(`Got swap rate upate: ${oldRate} -> ${formatEther(res.swapRate)}`);
-    store.set('swapRate', formatEther(swapRate))
+    db.set('swapRate', formatEther(swapRate))
   })
   console.log(` - Swap rate: ${swapRate}`)
 
@@ -69,4 +67,4 @@ const getChannel = async () => {
   return channel;
 }
 
-module.exports = { getChannel }
+export { getChannel }

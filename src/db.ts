@@ -1,6 +1,6 @@
-const { Pool } = require('pg')
+import { Pool } from 'pg'
 
-const config = require('./config')
+import { config } from './config'
 
 const pool = new Pool(config.postgres)
 
@@ -51,4 +51,4 @@ const set = async (key, value) => {
   })
 }
 
-module.exports = { get, set, firstConnection }
+export const db = { get, set, firstConnection }

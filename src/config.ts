@@ -1,7 +1,7 @@
-require('dotenv').config()
-const { PostgresServiceFactory } = require("@counterfactual/postgresql-node-connector")
-const eth = require('ethers')
-const fs = require('fs')
+import 'dotenv'
+import { PostgresServiceFactory } from '@counterfactual/postgresql-node-connector'
+import { ethers as eth } from 'ethers'
+import fs from 'fs'
 
 const provider = new eth.providers.JsonRpcProvider(process.env.ETH_PROVIDER)
 const mnemonic = fs.readFileSync(process.env.MNEMONIC_FILE, 'utf8')
@@ -20,9 +20,9 @@ const databaseConfig = {
 const storeFactory = new PostgresServiceFactory({
   ...databaseConfig,
   user: process.env.PGUSER,
-})
+} as any)
 
-module.exports = {
+export const config = {
   provider,
   wallet,
   getWallet,

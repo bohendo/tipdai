@@ -4,7 +4,7 @@ registry=$(shell whoami)
 flags=.makeflags
 $(shell mkdir -p $(flags))
 
-VPATH=$(flags):build
+VPATH=$(flags):dist
 SHELL=/bin/bash
 
 cwd=$(shell pwd)
@@ -30,7 +30,7 @@ dev: tipdai-image-dev proxy
 prod: tipdai-image-prod proxy
 
 clean:
-	rm -rf build/*
+	rm -rf dist/*
 	rm -rf $(flags)/*
 
 start: all
@@ -77,7 +77,7 @@ tipdai-image-prod: tipdai-js node-modules ops/bot.dockerfile $(shell find src $(
 	touch $(flags)/$@
 	$(log_finish) && touch $(flags)/$@
 
-tipdai-js: node-modules $(shell find src $(find_options))
+tipdai-js: node-modules tsconfig.json $(shell find src $(find_options))
 	$(log_start)
 	$(docker_run) "tsc --project tsconfig.json"
 	$(log_finish) && touch $(flags)/$@

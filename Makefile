@@ -4,7 +4,7 @@ registry=$(shell whoami)
 flags=.makeflags
 $(shell mkdir -p $(flags))
 
-VPATH=$(flags)
+VPATH=$(flags):build
 SHELL=/bin/bash
 
 cwd=$(shell pwd)
@@ -26,11 +26,12 @@ log_finish=@echo "[Makefile] => Finished building $@ in $$((`date "+%s"` - `cat 
 
 default: dev
 all: dev prod
-dev: tipdai proxy
-prod: tipdai-prod proxy
+dev: tipdai-image-dev proxy
+prod: tipdai-image-prod proxy
 
 clean:
-	rm $(flags)/*
+	rm -rf build/*
+	rm -rf $(flags)/*
 
 start: all
 	bash ops/start.sh
@@ -64,14 +65,19 @@ proxy: $(proxy)/entry.sh $(proxy)/nginx.conf $(proxy)/nginx.dockerfile
 	docker build --file $(proxy)/nginx.dockerfile --tag tipdai_proxy:latest .
 	$(log_finish) && touch $(flags)/$@
 
-tipdai: node-modules ops/bot.dockerfile $(shell find src $(find_options))
+tipdai-image-dev: tipdai-js ops/bot.dockerfile 
 	$(log_start)
 	docker build --file ops/bot-dev.dockerfile --tag tipdai_bot_dev:latest .
 	touch $(flags)/$@
 	$(log_finish) && touch $(flags)/$@
 
-tipdai-prod: node-modules ops/bot.dockerfile $(shell find src $(find_options))
+tipdai-image-prod: tipdai-js node-modules ops/bot.dockerfile $(shell find src $(find_options))
 	$(log_start)
 	docker build --file ops/bot.dockerfile --tag tipdai_bot:latest .
 	touch $(flags)/$@
+	$(log_finish) && touch $(flags)/$@
+
+tipdai-js: node-modules $(shell find src $(find_options))
+	$(log_start)
+	$(docker_run) "tsc --project tsconfig.json"
 	$(log_finish) && touch $(flags)/$@

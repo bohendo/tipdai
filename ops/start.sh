@@ -26,6 +26,12 @@ TIPDAI_ETH_PROVIDER="${TIPDAI_ETH_PROVIDER}"
 TIPDAI_PAYMENT_HUB="${TIPDAI_PAYMENT_HUB:-nats://rinkeby.indra.connext.network:4222}"
 
 ####################
+# Internal Config
+
+log_level="3" # set to 5 for all logs or to 0 for none
+version=latest
+
+####################
 # Helper Functions
 
 # Get images that we aren't building locally
@@ -51,35 +57,6 @@ function new_secret {
     echo "Created secret called $1 with id $id"
   fi
 }
-
-####################
-# Internal Config
-
-log_level="3" # set to 5 for all logs or to 0 for none
-version=latest
-proxy_image="${project}_proxy:$version"
-
-if [[ "$TIPDAI_MODE" == "development" ]]
-then
-  bot_image="${project}_bot_dev:$version"
-  db_volume=${project}_database_dev
-elif [[ "$TIPDAI_MODE" == "production" ]]
-then
-  bot_image="${project}_bot:$version"
-  db_volume=${project}_database
-else
-  echo "Mode $TIPDAI_MODE not supported, aborting"
-  exit
-fi
-
-database_image="postgres:9-alpine"
-
-# database connection settings
-postgres_db="$project"
-postgres_host="database"
-postgres_port="5432"
-postgres_user="$project"
-postgres_password_file="/run/secrets/${project}_db_password"
 
 ####################
 # Ethereum Config
@@ -111,6 +88,39 @@ then
   echo "echo 'first word second etc' | tr -d '\n\r' | docker secret create $mnemonic -"
   exit
 fi
+
+####################
+# Database Config
+
+if [[ "$TIPDAI_MODE" == "production" ]]
+then db_volume=${project}_database
+else db_volume=${project}_database_dev
+fi
+
+# database connection settings
+postgres_db="$project"
+postgres_host="database"
+postgres_port="5432"
+postgres_user="$project"
+postgres_password_file="/run/secrets/${project}_db_password"
+
+####################
+# Docker Image Config
+
+database_image="postgres:9-alpine"
+
+if [[ "$TIPDAI_MODE" == "production" ]]
+then
+  bot_image="$registry/${project}_bot:$version"
+  proxy_image="$registry/${project}_proxy:$version"
+else
+  bot_image="${project}_bot_dev:$version"
+  proxy_image="${project}_proxy:$version"
+fi
+
+pull_if_unavailable $bot_image
+pull_if_unavailable $database_image
+pull_if_unavailable $proxy_image
 
 ####################
 # Deploy according to above configuration

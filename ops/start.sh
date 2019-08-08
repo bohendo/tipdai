@@ -2,7 +2,7 @@
 set -e
 
 project="tipdai"
-registry="`whoami`"
+registry="bohendo"
 
 # turn on swarm mode if it's not already on
 docker swarm init 2> /dev/null || true

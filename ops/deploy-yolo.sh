@@ -24,13 +24,13 @@ echo;echo
 sleep 2 # Give the user one last chance to ctrl-c before we pull the trigger
 
 ssh -i $ssh_key $user@$prod_server "bash -c '
-  git clone https://github.com/ConnextProject/card.git 2> /dev/null || true
+  git clone https://github.com/bohendo/tipdai.git 2> /dev/null || true
 '"
 
 ssh -i $ssh_key $user@$prod_server "bash -c '
-  cd card && git fetch && git checkout --force $branch && git reset --hard origin/$branch
+  cd tipdai && git fetch && git checkout --force $branch && git reset --hard origin/$branch
 '"
 
 ssh -i $ssh_key $user@$prod_server "bash -c '
-  cd card && DAICARD_DOMAINNAME=$prod_server DAICARD_MODE=staging $rinkeby_hub bash ops/start.sh
+  cd tipdai && DAICARD_DOMAINNAME=$prod_server DAICARD_MODE=staging $rinkeby_hub bash ops/start.sh
 '"

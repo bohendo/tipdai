@@ -2,7 +2,7 @@
 set -e
 
 project="tipdai"
-organization="`whoami`"
+organization="bohendo"
 registry=docker.io/$organization
 registry_url="https://index.docker.io/v1/repositories/$organization"
 version="$1"

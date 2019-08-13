@@ -86,5 +86,5 @@ tipdai-image-prod: tipdai-js node-modules ops/bot.dockerfile $(shell find src $(
 
 tipdai-js: node-modules tsconfig.json $(shell find src $(find_options))
 	$(log_start)
-	$(docker_run) "rm -rf dist && tsc --project tsconfig.build.json"
+	$(docker_run) "tsc --project tsconfig.build.json"
 	$(log_finish) && touch $(flags)/$@

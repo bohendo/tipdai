@@ -1,3 +1,4 @@
+import { PostgresServiceFactory } from '@counterfactual/postgresql-node-connector';
 import { Injectable } from '@nestjs/common';
 import { JsonRpcProvider } from 'ethers/providers';
 import { Wallet } from 'ethers';
@@ -27,14 +28,15 @@ const cfIndex = '25446';
 
 @Injectable()
 export class ConfigService {
-
   getEthProvider(): JsonRpcProvider {
     return new JsonRpcProvider(env.ethProvider);
   }
 
-  getWallet(index: number|string = cfIndex): Wallet {
+  getWallet(index: number | string = cfIndex): Wallet {
     const mnemonic = fs.readFileSync(env.mnemonicFile, 'utf8');
-    return Wallet.fromMnemonic(mnemonic, `m/44'/60'/0'/0/${index}`).connect(this.getEthProvider());
+    return Wallet.fromMnemonic(mnemonic, `m/44'/60'/0'/0/${index}`).connect(
+      this.getEthProvider(),
+    );
   }
 
   get isDevMode(): boolean {
@@ -42,26 +44,26 @@ export class ConfigService {
   }
 
   get webhook(): any {
-    return ({
+    return {
       id: env.twitterWebhookId,
       url: `${env.twitterCallbackUrl}/webhooks/twitter`,
-    });
+    };
   }
 
   get twitterDev(): TwitterAppConfig {
-    return ({
+    return {
       callbackUrl: env.twitterCallbackUrl,
       consumerKey: env.twitterConsumerKey,
       consumerSecret: env.twitterConsumerSecret,
-    });
+    };
   }
 
   get twitterBot(): TwitterUserConfig {
-    return ({
+    return {
       accessSecret: env.twitterBotAccessSecret,
       accessToken: env.twitterBotAccessToken,
       ...this.twitterDev,
-    });
+    };
   }
 
   get twitterHmac(): string {
@@ -69,23 +71,28 @@ export class ConfigService {
   }
 
   get database(): PostgresConfig {
-    return ({
+    return {
       database: env.pgDatabase,
       host: env.pgHost,
       password: fs.readFileSync(env.pgPassFile, 'utf8'),
       port: parseInt(env.pgPort, 10),
       username: env.pgUser,
-    });
+    };
   }
 
   async getChannelConfig(): ConnextConfig {
-    return ({
-      ethProviderUrl: env.ethProvider
+    const storeFactory = new PostgresServiceFactory({
+      ...this.database,
+      user: process.env.PGUSER,
+    } as any);
+    await storeFactory.connectDb();
+    return {
+      ethProviderUrl: env.ethProvider,
       logLevel: 3,
       mnemonic: fs.readFileSync(env.mnemonicFile, 'utf8'),
       nodeUrl: env.paymentHub,
+      store: storeFactory.createStoreService('TIPDAI_CF_NODE'),
       type: 'postgres',
-    });
+    };
   }
-
 }

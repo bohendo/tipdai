@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
-import { TypeOrmModuleOptions, TypeOrmOptionsFactory } from "@nestjs/typeorm";
+import { TypeOrmModuleOptions, TypeOrmOptionsFactory } from '@nestjs/typeorm';
 
-import { ConfigService } from "../config/config.service";
+import { ConfigService } from '../config/config.service';
 
 export const entities = [];
 export const viewEntites = [];
@@ -13,10 +13,9 @@ export class TypeOrmConfigService implements TypeOrmOptionsFactory {
     return {
       ...this.config.database,
       entities: [...entities, ...viewEntites],
-      logging: ["error"],
+      logging: ['error'],
       synchronize: this.config.isDevMode,
-      type: "postgres",
+      type: 'postgres',
     };
   }
 }
-

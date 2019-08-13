@@ -5,14 +5,16 @@
     "no-unused-expression": true
   },
   "rules": {
-    "quotemark": [true, "single"],
-    "member-access": [false],
-    "ordered-imports": [false],
-    "max-line-length": [true, 150],
-    "member-ordering": [false],
-    "interface-name": [false],
     "arrow-parens": false,
-    "object-literal-sort-keys": false
+    "interface-name": [false],
+    "max-line-length": [true, 150],
+    "member-access": [false],
+    "member-ordering": [false],
+    "no-console": false,
+    "object-literal-sort-keys": false,
+    "ordered-imports": [false],
+    "quotemark": [true, "single"],
+    "variable-name": false
   },
   "rulesDirectory": []
 }

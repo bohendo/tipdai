@@ -10,7 +10,15 @@ import { DepositModule } from './deposit/deposit.module';
 import { MessageModule } from './message/message.module';
 
 @Module({
-  imports: [TwitterModule, WebhooksModule, ConfigModule, DatabaseModule, ChannelModule, DepositModule, MessageModule],
+  imports: [
+    TwitterModule,
+    WebhooksModule,
+    ConfigModule,
+    DatabaseModule,
+    ChannelModule,
+    DepositModule,
+    MessageModule,
+  ],
   controllers: [AppController],
   providers: [AppService],
 })

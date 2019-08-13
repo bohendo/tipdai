@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import qs from 'qs';
+import * as qs from 'qs';
 
 import { ConfigService } from '../config/config.service';
 

@@ -3,7 +3,7 @@
  */
 
 import { OAuth } from 'oauth';
-import qs from 'qs';
+import * as qs from 'qs';
 
 function Twitter(config) {
   this.consumerKey = config.consumerKey;

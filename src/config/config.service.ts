@@ -81,7 +81,7 @@ export class ConfigService {
     };
   }
 
-  async getChannelConfig(): ConnextConfig {
+  async getChannelConfig(): Promise<any> {
     const storeFactory = new PostgresServiceFactory({
       ...this.database,
       user: process.env.PGUSER,

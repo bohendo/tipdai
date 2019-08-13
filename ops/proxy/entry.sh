@@ -3,9 +3,13 @@
 # Set default email & domain name
 domain="${DOMAINNAME:-localhost}"
 email="${EMAIL:-noreply@gmail.com}"
-upstream_url="${UPSTREAM_URL:-http://bot:8080}"
+upstream_url="${UPSTREAM_URL}"
 mode="${MODE:-dev}"
 echo "domain=$domain email=$email upstream=$upstream_url mode=$mode"
+
+if [[ -z "$upstream_url" ]]
+then echo "Aborting: please supply an upstream url" && exit 1
+fi
 
 # Provide a message indicating that we're still waiting for everything to wake up
 function loading_msg {

@@ -44,6 +44,10 @@ stop:
 	@while [[ -n "`docker network ls --quiet --filter label=com.docker.stack.namespace=$(project)`" ]]; do echo -n '.' && sleep 3; done
 	@echo ' Goodnight!'
 
+reset: stop
+	docker container prune -f
+	docker volume rm tipdai_database_dev 2> /dev/null || true
+
 restart: all stop
 	bash ops/start.sh
 

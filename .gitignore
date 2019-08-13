@@ -37,4 +37,4 @@ ops/*.log
 .env
 src/scratch.js
 .pgpass
-.tipdai_mnemonic*
+.*mnemonic*

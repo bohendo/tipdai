@@ -69,7 +69,7 @@ export class TwitterService {
         res => {
           console.log(`Success!`);
           const data = JSON.parse(res);
-          console.log(`Triggered CRC: ${JSON.stringify(data, null, 2)}`);
+          console.log(`Activated webhook: ${JSON.stringify(data, null, 2)}`);
           resolve(data);
         },
       );

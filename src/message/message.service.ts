@@ -21,6 +21,11 @@ export class MessageService {
     if (sender === botId) { return; } // ignore messages sent by the bot
     console.log(`Processing message event: ${JSON.stringify(event, null, 2)}`);
 
+    if (message.match(/^crc/i)) {
+      await this.twitter.triggerCRC();
+      return;
+    }
+
     const tokenAddress = ''; // await db.get('tokenAddress');
     const swapRate = '100'; // (await db.get(`swapRate`)) as any;
     console.log(`swap rate: ${swapRate}`);

@@ -8,5 +8,6 @@ import { TwitterModule } from '../twitter/twitter.module';
 @Module({
   providers: [MessageService],
   imports: [ConfigModule, ChannelModule, TwitterModule],
+  exports: [MessageService],
 })
 export class MessageModule {}

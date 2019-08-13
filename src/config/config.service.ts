@@ -9,7 +9,7 @@ const env = {
   ethProvider: process.env.ETH_PROVIDER,
   mnemonicFile: process.env.MNEMONIC_FILE,
   nodeEnv: process.env.NODE_ENV,
-  paymentHubUrl: process.env.PAYMENT_HUB,
+  paymentHub: process.env.PAYMENT_HUB,
   pgDatabase: process.env.PGDATABASE,
   pgHost: process.env.PGHOST,
   pgPassFile: process.env.PGPASSFILE,
@@ -27,10 +27,6 @@ const cfIndex = '25446';
 
 @Injectable()
 export class ConfigService {
-
-  get(key: string): string {
-    return process.env[key];
-  }
 
   getEthProvider(): JsonRpcProvider {
     return new JsonRpcProvider(env.ethProvider);
@@ -79,6 +75,16 @@ export class ConfigService {
       password: fs.readFileSync(env.pgPassFile, 'utf8'),
       port: parseInt(env.pgPort, 10),
       username: env.pgUser,
+    });
+  }
+
+  async getChannelConfig(): ConnextConfig {
+    return ({
+      ethProviderUrl: env.ethProvider
+      logLevel: 3,
+      mnemonic: fs.readFileSync(env.mnemonicFile, 'utf8'),
+      nodeUrl: env.paymentHub,
+      type: 'postgres',
     });
   }
 

@@ -3,7 +3,7 @@
 # Set default email & domain name
 domain="${DOMAINNAME:-localhost}"
 email="${EMAIL:-noreply@gmail.com}"
-upstream_url="${upstream_URL:-http://bot:8080}"
+upstream_url="${UPSTREAM_URL:-http://bot:8080}"
 mode="${MODE:-dev}"
 echo "domain=$domain email=$email upstream=$upstream_url mode=$mode"
 

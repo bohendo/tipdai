@@ -13,7 +13,7 @@ export class ChannelService {
 
   constructor(private readonly config: ConfigService) {}
 
-  public async getChannel() {
+  public async getChannel(): Promise<any> {
     this.channel = await connext(await this.config.getChannelConfig());
     this.tokenAddress = (await this.channel.config()).contractAddresses.Token;
     this.swapRate = formatEther(

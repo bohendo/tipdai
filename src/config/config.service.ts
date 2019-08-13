@@ -45,6 +45,7 @@ export class ConfigService {
 
   get webhook(): any {
     return {
+      env: 'prod',
       id: env.twitterWebhookId,
       url: `${env.twitterCallbackUrl}/webhooks/twitter`,
     };

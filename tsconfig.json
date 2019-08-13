@@ -9,6 +9,7 @@
     "moduleResolution": "node",
     "outDir": "./dist",
     "removeComments": true,
+    "resolveJsonModule": true,
     "skipLibCheck": true,
     "sourceMap": true,
     "target": "es2017",

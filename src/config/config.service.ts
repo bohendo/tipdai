@@ -9,7 +9,7 @@ const env = {
   ethProvider: process.env.ETH_PROVIDER,
   mnemonicFile: process.env.MNEMONIC_FILE,
   nodeEnv: process.env.NODE_ENV,
-  paymentHubUrl: process.env.PAYMENT_HUB_URL,
+  paymentHubUrl: process.env.PAYMENT_HUB,
   pgDatabase: process.env.PGDATABASE,
   pgHost: process.env.PGHOST,
   pgPassFile: process.env.PGPASSFILE,
@@ -21,9 +21,9 @@ const env = {
   twitterConsumerKey: process.env.TWITTER_CONSUMER_KEY,
   twitterConsumerSecret: process.env.TWITTER_CONSUMER_SECRET,
   twitterWebhookId: process.env.TWITTER_WEBHOOK_ID,
-}
+};
 
-const cfIndex = "25446"
+const cfIndex = '25446';
 
 @Injectable()
 export class ConfigService {
@@ -37,19 +37,19 @@ export class ConfigService {
   }
 
   getWallet(index: number|string = cfIndex): Wallet {
-    const mnemonic = fs.readFileSync(env.mnemonicFile, 'utf8')
+    const mnemonic = fs.readFileSync(env.mnemonicFile, 'utf8');
     return Wallet.fromMnemonic(mnemonic, `m/44'/60'/0'/0/${index}`).connect(this.getEthProvider());
   }
 
   get isDevMode(): boolean {
-    return env.nodeEnv === "development"
+    return env.nodeEnv === 'development';
   }
 
   get webhook(): any {
     return ({
       id: env.twitterWebhookId,
       url: `${env.twitterCallbackUrl}/webhooks/twitter`,
-    })
+    });
   }
 
   get twitterDev(): TwitterAppConfig {
@@ -57,7 +57,7 @@ export class ConfigService {
       callbackUrl: env.twitterCallbackUrl,
       consumerKey: env.twitterConsumerKey,
       consumerSecret: env.twitterConsumerSecret,
-    })
+    });
   }
 
   get twitterBot(): TwitterUserConfig {
@@ -65,7 +65,7 @@ export class ConfigService {
       accessSecret: env.twitterBotAccessSecret,
       accessToken: env.twitterBotAccessToken,
       ...this.twitterDev,
-    })
+    });
   }
 
   get twitterHmac(): string {
@@ -79,7 +79,7 @@ export class ConfigService {
       password: fs.readFileSync(env.pgPassFile, 'utf8'),
       port: parseInt(env.pgPort, 10),
       username: env.pgUser,
-    })
+    });
   }
 
 }

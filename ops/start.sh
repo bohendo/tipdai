@@ -22,8 +22,8 @@ TIPDAI_DEV_ACCESS_TOKEN="${TIPDAI_DEV_ACCESS_TOKEN}"
 TIPDAI_DEV_ACCESS_SECRET="${TIPDAI_DEV_ACCESS_SECRET}"
 TIPDAI_WEBHOOK_ID="${TIPDAI_WEBHOOK_ID}"
 
-TIPDAI_ETH_PROVIDER="${TIPDAI_ETH_PROVIDER}"
-TIPDAI_PAYMENT_HUB_URL="${TIPDAI_PAYMENT_HUB_URL:-nats://rinkeby.indra.connext.network:4222}"
+TIPDAI_ETH_PROVIDER="${TIPDAI_ETH_PROVIDER:-http://localhost:8545}"
+TIPDAI_PAYMENT_HUB="${TIPDAI_PAYMENT_HUB:-nats://localhost:4222}"
 
 ####################
 # Internal Config
@@ -61,22 +61,26 @@ function new_secret {
 ####################
 # Ethereum Config
 
+echo "Checking $TIPDAI_ETH_PROVIDER"
+
 if [[ -z "$TIPDAI_ETH_PROVIDER" ]]
 then
   echo "An env var called TIPDAI_ETH_PROVIDER is required"
   exit
 else
-  netId="`curl -q -k -s -H "Content-Type: application/json" -X POST --data '{"id":1,"jsonrpc":"2.0","method":"net_version","params":[]}' $TIPDAI_ETH_PROVIDER | jq .result | tr -d '"'`"
+  chainId="`curl -q -k -s -H "Content-Type: application/json" -X POST --data '{"id":1,"jsonrpc":"2.0","method":"net_version","params":[]}' $TIPDAI_ETH_PROVIDER | jq .result | tr -d '"'`"
 fi
 
-if [[ "$netId" == "4" ]]
-then
-  ethNetwork="rinkeby"
-elif [[ "$netId" == "42" ]]
-then
-  ethNetwork="kovan"
+echo "Got chain id: $chainId"
+
+if [[ "$chainId" == "4" ]]
+then ethNetwork="rinkeby"
+elif [[ "$chainId" == "42" ]]
+then ethNetwork="kovan"
+elif [[ "$chainId" == "4447" ]]
+then ethNetwork="ganache"
 else
-  echo "Ethereum chain $netId is not supported yet"
+  echo "Ethereum chain \"$chainId\" is not supported yet"
   exit
 fi
 
@@ -164,7 +168,7 @@ services:
       ETH_PROVIDER: $TIPDAI_ETH_PROVIDER
       MNEMONIC_FILE: /run/secrets/$mnemonic
       NODE_ENV: $TIPDAI_MODE
-      PAYMENT_HUB_URL: $TIPDAI_PAYMENT_HUB_URL
+      PAYMENT_HUB: $TIPDAI_PAYMENT_HUB
       PGDATABASE: $postgres_db
       PGHOST: $postgres_host
       PGPASSFILE: $postgres_password_file

@@ -21,9 +21,22 @@ export class MessageService {
     if (sender === botId) { return; } // ignore messages sent by the bot
     console.log(`Processing message event: ${JSON.stringify(event, null, 2)}`);
 
-    if (message.match(/^crc/i)) {
-      await this.twitter.triggerCRC();
-      return;
+    if (message.match(/^trigger crc/i)) {
+      try {
+        await this.twitter.triggerCRC();
+        return await this.twitter.sendDM(sender, 'Successfully triggered CRC!');
+      } catch (e) {
+        return await this.twitter.sendDM(sender, `CRC didn't go so well..`);
+      }
+    }
+
+    if (message.match(/^activate webhook/i)) {
+      try {
+        await this.twitter.activateWebhook();
+        return await this.twitter.sendDM(sender, 'Successfully activated webhook!');
+      } catch (e) {
+        return await this.twitter.sendDM(sender, `Webhook activation didn't go so well..`);
+      }
     }
 
     const tokenAddress = ''; // await db.get('tokenAddress');

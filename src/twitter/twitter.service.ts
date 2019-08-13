@@ -20,10 +20,14 @@ export class TwitterService {
     this.twitterDev = new Twitter(this.config.twitterDev);
   }
 
-  private handleError = reject => (error, response, body) => {
-    console.error(`Failure!`);
-    console.error(`body: ${body}`);
-    return reject(error);
+  public triggerCRC = () => {
+    return new Promise((resolve, reject) => {
+      const { env, id } = this.config.webhook;
+      this.twitter.triggerCRC({ env, webhookId: id }, this.handleError(reject), res => {
+        console.log(`Success fully triggered a CRC!`);
+        resolve();
+      });
+    });
   }
 
   public getSubscriptions = () => {
@@ -73,16 +77,6 @@ export class TwitterService {
           resolve(data);
         },
       );
-    });
-  }
-
-  public triggerCRC = () => {
-    return new Promise((resolve, reject) => {
-      const { env, id } = this.config.webhook;
-      this.twitter.triggerCRC({ env, webhookId: id }, this.handleError(reject), res => {
-        console.log(`Success fully triggered a CRC!`);
-        resolve();
-      });
     });
   }
 
@@ -191,6 +185,12 @@ export class TwitterService {
         },
       );
     });
+  }
+
+  private handleError = reject => (error, response, body) => {
+    console.error(`Failure!`);
+    console.error(`body: ${body}`);
+    return reject(error);
   }
 
 }

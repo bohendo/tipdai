@@ -51,6 +51,9 @@ reset: stop
 restart: all stop
 	bash ops/start.sh
 
+restart-prod: stop
+	bash ops/start.sh
+
 push-latest: prod
 	bash ops/push-images.sh latest bot proxy
 

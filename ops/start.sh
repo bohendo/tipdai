@@ -155,7 +155,7 @@ services:
     environment:
       DOMAINNAME: $TIPDAI_DOMAINNAME
       EMAIL: $TIPDAI_EMAIL
-      UPSTREAM_URL: http://bot:8080
+      UPSTREAM_URL: http://bot:3000
     ports:
       - "80:80"
       - "443:443"

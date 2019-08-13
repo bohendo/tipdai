@@ -12,11 +12,8 @@ fi
 
 echo "Deploying to server at: $prod_server"
 
-echo;echo "Rebuilding a production-version of the app & pushing images to our container registry"
-make prod && make push-latest
-if [[ "$?" != "0" ]]
-then echo "Make sure you're logged into docker & have push permissions: docker login" && exit
-fi
+# echo;echo "Rebuilding a production-version of the app & pushing images to our container registry"
+# make push-latest
 
 echo;echo
 echo "Preparing to re-deploy this app to $prod_server. Without running any tests. Good luck."
@@ -32,5 +29,8 @@ ssh -i $ssh_key $user@$prod_server "bash -c '
 '"
 
 ssh -i $ssh_key $user@$prod_server "bash -c '
-  cd tipdai && DAICARD_DOMAINNAME=$prod_server DAICARD_MODE=staging $rinkeby_hub bash ops/start.sh
+  cd tipdai && make push-latest
+'"
+ssh -i $ssh_key $user@$prod_server "bash -c '
+  cd tipdai && make restart-prod
 '"

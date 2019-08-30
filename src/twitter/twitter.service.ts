@@ -29,7 +29,8 @@ export class TwitterService {
     } else {
       this.twitter = new Twitter(this.config.twitterBot);
       this.botId = this.config.twitterBotUserId;
-      this.reSubscribe(this.botId);
+      // this.reSubscribe(this.botId);
+      this.getMentions({});
     }
   }
 
@@ -76,8 +77,8 @@ export class TwitterService {
             accessSecret: data.oauth_token_secret,
           });
           console.log(`Twitter bot successfully connected!`);
-          await this.reSubscribe(this.botId);
-          console.log(`Account activity subscription successfully configured!`);
+          // await this.reSubscribe(this.botId);
+          // console.log(`Account activity subscription successfully configured!`);
           resolve();
         },
       );
@@ -95,6 +96,7 @@ export class TwitterService {
           const webhooks = JSON.parse(rawWebhooks);
           console.log(`Got webhooks: ${JSON.stringify(webhooks, null, 2)}`);
 
+          /*
           // 2. Remove all webhook subscriptions
           await Promise.all(webhooks.environments.map(async env => {
             return Promise.all(env.webhooks.map(async wh => {
@@ -113,6 +115,7 @@ export class TwitterService {
             }));
           }));
           console.log(`Done unsubscribing, time to do some subscribing`);
+          */
 
           // 3. Create a new webhook
           this.twitterApp.activateWebhook(

@@ -18,6 +18,7 @@ const env = {
   pgUser: process.env.PGUSR,
   twitterBotAccessSecret: process.env.TWITTER_BOT_ACCESS_SECRET,
   twitterBotAccessToken: process.env.TWITTER_BOT_ACCESS_TOKEN,
+  twitterBotUserId: process.env.TWITTER_BOT_USER_ID,
   twitterCallbackUrl: process.env.TWITTER_CALLBACK_URL,
   twitterConsumerKey: process.env.TWITTER_CONSUMER_KEY,
   twitterConsumerSecret: process.env.TWITTER_CONSUMER_SECRET,
@@ -73,6 +74,10 @@ export class ConfigService {
       accessToken: env.twitterBotAccessToken,
       ...this.twitterDev,
     };
+  }
+
+  get twitterBotUserId(): string {
+    return env.twitterBotUserId;
   }
 
   get twitterHmac(): string {

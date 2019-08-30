@@ -17,6 +17,7 @@ export class TwitterService {
   private twitterDev: any;
   private webookId: string | undefined;
   public authUrl: string | undefined;
+  public botId: string;
 
   constructor(private readonly config: ConfigService) {
     this.twitterDev = new Twitter(this.config.twitterDev);
@@ -25,7 +26,8 @@ export class TwitterService {
       this.requestToken();
     } else {
       this.twitter = new Twitter(this.config.twitterBot);
-      this.reSubscribe();
+      this.botId = this.config.twitterBotUserId;
+      this.reSubscribe(this.botId);
     }
   }
 
@@ -57,48 +59,44 @@ export class TwitterService {
           oauth_verifier: verifier,
         },
         this.handleError(reject),
-        res => {
+        async (res) => {
           const data = qs.parse(res);
           console.log(`Authentication Success!`);
-          console.log(`Got access tokens for ${data.screen_name} (id: ${data.user_id})`);
+          console.log(`Got access tokens for ${data.screen_name}`);
           console.log(`Access tokens (You should save these for later):`);
           console.log(`TWITTER_BOT_ACCESS_SECRET="${data.oauth_token}"`);
           console.log(`TWITTER_BOT_ACCESS_TOKEN="${data.oauth_token_secret}"`);
+          console.log(`TWITTER_BOT_USER_ID="${data.user_id}"`);
+          this.botId = data.user_id;
           this.twitter = new Twitter({
             ...this.config.twitterBot,
             accessToken: data.oauth_token,
             accessSecret: data.oauth_token_secret,
           });
           console.log(`Twitter bot successfully connected!`);
+          await this.reSubscribe(this.botId);
+          console.log(`Account activity subscription successfully configured!`);
           resolve();
         },
       );
     });
   }
 
-  public triggerCRC = () => {
-    return new Promise((resolve, reject) => {
-      const { env, id } = this.config.webhooks.twitter;
-      this.twitter.triggerCRC({ env, webhookId: id }, this.handleError(reject), res => {
-        console.log(`Success fully triggered a CRC!`);
-        resolve();
-      });
-    });
-  }
-
-  public reSubscribe = () => {
+  public reSubscribe = (botId) => {
     return new Promise((resolve, reject) => {
       // 1. Get all subscriptions
       this.twitterDev.getCustomApiCall(
-        `/account_activity/all/${this.config.webhooks.twitter.env}/subscriptions/list.json`,
+        `/account_activity/webhooks.json`,
         {},
         this.handleError(reject),
         res => {
           const data = JSON.parse(res);
-          console.log(`Got subscriptions: ${JSON.stringify(data, null, 2)}`);
+          console.log(`Got webhooks: ${JSON.stringify(data, null, 2)}`);
 
           // 2. Remove all webhook subscriptions
+
           // 3. Subscribe to the one webhook we want
+
           /*
           this.twitter.postCustomApiCall(
             `/account_activity/all/${this.config.webhooks.twitter.env}/subscriptions.json`,
@@ -115,6 +113,16 @@ export class TwitterService {
 
         },
       );
+    });
+  }
+
+  public triggerCRC = () => {
+    return new Promise((resolve, reject) => {
+      const { env, id } = this.config.webhooks.twitter;
+      this.twitter.triggerCRC({ env, webhookId: id }, this.handleError(reject), res => {
+        console.log(`Success fully triggered a CRC!`);
+        resolve();
+      });
     });
   }
 

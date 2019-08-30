@@ -15,17 +15,18 @@ const tipdai_reborn_id = '1167103783056367616'
 export class TwitterService {
   private twitter: any;
   private twitterApp: any;
+  private twitterDev: any;
   private webookId: string | undefined;
   public authUrl: string | undefined;
   public botId: string;
 
   constructor(private readonly config: ConfigService) {
+    this.twitterDev = new Twitter(this.config.twitterDev);
     this.twitterApp = new Twitter(this.config.twitterApp);
     if (!config.twitterBot.accessToken) {
       console.log(`Bot credentials not found, requesting a new access token..`);
       this.requestToken();
     } else {
-      console.log(`Creating twitter bot from config: ${JSON.stringify(this.config.twitterBot)}`);
       this.twitter = new Twitter(this.config.twitterBot);
       this.botId = this.config.twitterBotUserId;
       this.reSubscribe(this.botId);
@@ -202,7 +203,7 @@ export class TwitterService {
 
   public getUser = (screen_name) => {
     return new Promise((resolve, reject) => {
-      this.twitter.getCustomApiCall(
+      this.twitterDev.getCustomApiCall(
         '/users/lookup.json',
         { screen_name },
         this.handleError(reject),
@@ -244,7 +245,7 @@ export class TwitterService {
   }
 
   private handleError = reject => (error, response, body) => {
-    console.error(`Error ${error.statusCode}: ${error.data}!`);
+    console.error(`Error ${error.statusCode}: ${error.data}`);
     return reject(error);
   }
 

@@ -9,7 +9,7 @@ function Twitter(config) {
   this.consumerKey = config.consumerKey;
   this.consumerSecret = config.consumerSecret;
   this.accessToken = config.accessToken;
-  this.accessTokenSecret = config.accessTokenSecret;
+  this.accessTokenSecret = config.accessSecret;
   this.callBackUrl = config.callBackUrl;
   this.baseUrl = 'https://api.twitter.com/1.1';
   this.oauth = new OAuth(
@@ -56,7 +56,6 @@ Twitter.prototype.getOAuthAccessToken = function(oauth, next) {
       } else {
         oauth.access_token = oauth_access_token;
         oauth.access_token_secret = oauth_access_token_secret;
-
         console.log('oauth.token: ' + oauth.token);
         console.log('oauth.token_secret: ' + oauth.token_secret);
         console.log('oauth.access_token: ' + oauth.access_token.token);

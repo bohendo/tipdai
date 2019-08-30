@@ -169,7 +169,7 @@ export class TwitterService {
     };
     console.log(`requestToken success: ${typeof success(() => {/**/})}`);
     return new Promise((resolve, reject) => {
-      this.twitter.requestToken(
+      this.twitterDev.requestToken(
         { oauthCallback: 'https://tipdai.bohendo.com' },
         this.handleError(reject),
         success(resolve),

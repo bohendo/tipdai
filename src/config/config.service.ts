@@ -18,6 +18,8 @@ const env = {
   pgUser: process.env.PGUSR,
   twitterBotAccessSecret: process.env.TWITTER_BOT_ACCESS_SECRET,
   twitterBotAccessToken: process.env.TWITTER_BOT_ACCESS_TOKEN,
+  twitterAppAccessSecret: process.env.TWITTER_APP_ACCESS_SECRET,
+  twitterAppAccessToken: process.env.TWITTER_APP_ACCESS_TOKEN,
   twitterBotUserId: process.env.TWITTER_BOT_USER_ID,
   twitterCallbackUrl: process.env.TWITTER_CALLBACK_URL,
   twitterConsumerKey: process.env.TWITTER_CONSUMER_KEY,
@@ -60,11 +62,11 @@ export class ConfigService {
     };
   }
 
-  get twitterDev(): TwitterAppConfig {
+  get twitterApp(): TwitterUserConfig {
     return {
-      callbackUrl: env.twitterCallbackUrl,
-      consumerKey: env.twitterConsumerKey,
-      consumerSecret: env.twitterConsumerSecret,
+      accessSecret: env.twitterAppAccessSecret,
+      accessToken: env.twitterAppAccessToken,
+      ...this.twitterDev,
     };
   }
 
@@ -73,6 +75,14 @@ export class ConfigService {
       accessSecret: env.twitterBotAccessSecret,
       accessToken: env.twitterBotAccessToken,
       ...this.twitterDev,
+    };
+  }
+
+  get twitterDev(): TwitterAppConfig {
+    return {
+      callbackUrl: env.twitterCallbackUrl,
+      consumerKey: env.twitterConsumerKey,
+      consumerSecret: env.twitterConsumerSecret,
     };
   }
 

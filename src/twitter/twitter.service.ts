@@ -14,13 +14,13 @@ const tipdai_reborn_id = '1167103783056367616'
 @Injectable()
 export class TwitterService {
   private twitter: any;
-  private twitterDev: any;
+  private twitterApp: any;
   private webookId: string | undefined;
   public authUrl: string | undefined;
   public botId: string;
 
   constructor(private readonly config: ConfigService) {
-    this.twitterDev = new Twitter(this.config.twitterDev);
+    this.twitterApp = new Twitter(this.config.twitterApp);
     if (!config.twitterBot.accessToken) {
       console.log(`Bot credentials not found, requesting a new access token..`);
       this.requestToken();
@@ -35,7 +35,7 @@ export class TwitterService {
   // First step of 3-leg oauth process
   public requestToken = () => {
     return new Promise((resolve, reject) => {
-      this.twitterDev.requestToken(
+      this.twitterApp.requestToken(
         { oauthCallback: this.config.callbacks.twitter },
         this.handleError(reject),
         (res) => {
@@ -53,7 +53,7 @@ export class TwitterService {
   public connectBot = (consumer_key, token, verifier): Promise<void> => {
     this.authUrl = undefined; // this url has been used & can't be used again
     return new Promise((resolve, reject) => {
-      this.twitterDev.getAccessToken(
+      this.twitterApp.getAccessToken(
         {
           oauth_consumer_key: consumer_key,
           oauth_token: token,
@@ -86,7 +86,7 @@ export class TwitterService {
   public reSubscribe = (botId) => {
     return new Promise((resolve, reject) => {
       // 1. Get all subscriptions
-      this.twitterDev.getCustomApiCall(
+      this.twitterApp.getCustomApiCall(
         `/account_activity/all/webhooks.json`,
         {},
         this.handleError(reject),
@@ -100,7 +100,7 @@ export class TwitterService {
             return Promise.all(env.webhooks.map(async wh => {
               return new Promise((res, rej) => {
                 console.log(`Unsubscribing from ${env.environment_name} webhook: ${wh.id}..`);
-                this.twitterDev.deleteCustomApiCall(
+                this.twitterApp.deleteCustomApiCall(
                   `/account_activity/all/${env.environment_name}/webhooks/${wh.id}.json`,
                   {},
                   this.handleError(rej),
@@ -158,7 +158,7 @@ export class TwitterService {
 
   public getSubscriptions = () => {
     return new Promise((resolve, reject) => {
-      this.twitterDev.getCustomApiCall(
+      this.twitterApp.getCustomApiCall(
         `/account_activity/all/${this.config.webhooks.twitter.env}/subscriptions/list.json`,
         {},
         this.handleError(reject),

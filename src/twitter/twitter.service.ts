@@ -29,8 +29,7 @@ export class TwitterService {
     } else {
       this.twitter = new Twitter(this.config.twitterBot);
       this.botId = this.config.twitterBotUserId;
-      // this.reSubscribe(this.botId);
-      this.getMentions({});
+      this.reSubscribe(this.botId);
     }
   }
 
@@ -67,8 +66,8 @@ export class TwitterService {
           console.log(`Authentication Success!`);
           console.log(`Got access tokens for ${data.screen_name}`);
           console.log(`Access tokens (You should save these for later):`);
-          console.log(`TWITTER_BOT_ACCESS_SECRET=${data.oauth_token}`);
-          console.log(`TWITTER_BOT_ACCESS_TOKEN=${data.oauth_token_secret}`);
+          console.log(`TWITTER_BOT_ACCESS_SECRET=${data.oauth_token_secret}`);
+          console.log(`TWITTER_BOT_ACCESS_TOKEN=${data.oauth_token}`);
           console.log(`TWITTER_BOT_USER_ID=${data.user_id}`);
           this.botId = data.user_id;
           this.twitter = new Twitter({

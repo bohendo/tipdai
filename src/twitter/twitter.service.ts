@@ -15,7 +15,7 @@ const tipdai_reborn_id = 'tbd'
 export class TwitterService {
   private twitter: any;
   private twitterDev: any;
-  private authUrl: string | undefined;
+  public authUrl: string | undefined;
 
   constructor(private readonly config: ConfigService) {
     this.twitterDev = new Twitter(this.config.twitterDev);
@@ -25,6 +25,17 @@ export class TwitterService {
     } else {
       this.twitter = new Twitter(this.config.twitterBot);
     }
+  }
+
+  public connectBot = (accessToken, accessSecret) => {
+    return new Promise((resolve, reject) => {
+      this.twitter = new Twitter({
+        ...this.config.twitterBot,
+        accessToken,
+        accessSecret,
+      });
+      console.log(`Twitter bot successfully connected!`);
+    });
   }
 
   // First step of 3-leg oauth process
@@ -46,7 +57,8 @@ export class TwitterService {
     });
   }
 
-  public getAccessToken = (consumer_key, token, verifier) => {
+  public getAccessToken = (consumer_key, token, verifier): Promise<any> => {
+    this.authUrl = undefined; // this url has been used & can't be used again
     return new Promise((resolve, reject) => {
       this.twitter.getAccessToken(
         {

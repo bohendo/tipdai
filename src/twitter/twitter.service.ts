@@ -25,6 +25,7 @@ export class TwitterService {
       console.log(`Bot credentials not found, requesting a new access token..`);
       this.requestToken();
     } else {
+      console.log(`Creating twitter bot from config: ${JSON.stringify(this.config.twitterBot)}`);
       this.twitter = new Twitter(this.config.twitterBot);
       this.botId = this.config.twitterBotUserId;
       this.reSubscribe(this.botId);
@@ -64,9 +65,9 @@ export class TwitterService {
           console.log(`Authentication Success!`);
           console.log(`Got access tokens for ${data.screen_name}`);
           console.log(`Access tokens (You should save these for later):`);
-          console.log(`TWITTER_BOT_ACCESS_SECRET="${data.oauth_token}"`);
-          console.log(`TWITTER_BOT_ACCESS_TOKEN="${data.oauth_token_secret}"`);
-          console.log(`TWITTER_BOT_USER_ID="${data.user_id}"`);
+          console.log(`TWITTER_BOT_ACCESS_SECRET=${data.oauth_token}`);
+          console.log(`TWITTER_BOT_ACCESS_TOKEN=${data.oauth_token_secret}`);
+          console.log(`TWITTER_BOT_USER_ID=${data.user_id}`);
           this.botId = data.user_id;
           this.twitter = new Twitter({
             ...this.config.twitterBot,
@@ -93,6 +94,7 @@ export class TwitterService {
           const webhooks = JSON.parse(rawWebhooks);
           console.log(`Got webhooks: ${JSON.stringify(webhooks, null, 2)}`);
 
+          /* TODO: getting 404s and idk why
           // 2. Remove all webhook subscriptions
           await Promise.all(webhooks.environments.map(async env => {
             return Promise.all(env.webhooks.map(async wh => {
@@ -100,6 +102,7 @@ export class TwitterService {
                 console.log(`Unsubscribing from ${env.environment_name} webhook: ${wh.id}..`);
                 this.twitterDev.deleteCustomApiCall(
                   `/account_activity/all/${env.environment_name}/webhooks/${wh.id}.json`,
+                  {},
                   this.handleError(rej),
                   (delRes) => {
                     console.log(`Unsubscribed successfully! ${JSON.stringify(delRes)}`);
@@ -110,6 +113,7 @@ export class TwitterService {
             }));
           }));
           console.log(`Done unsubscribing, time to do some subscribing`);
+          */
 
           await this.getUser('tip_dai');
 
@@ -240,8 +244,7 @@ export class TwitterService {
   }
 
   private handleError = reject => (error, response, body) => {
-    console.error(`Failure!`);
-    console.error(`body: ${body}`);
+    console.error(`Error ${error.statusCode}: ${error.data}!`);
     return reject(error);
   }
 

@@ -60,7 +60,7 @@ export class TwitterService {
   public getAccessToken = (consumer_key, token, verifier): Promise<any> => {
     this.authUrl = undefined; // this url has been used & can't be used again
     return new Promise((resolve, reject) => {
-      this.twitter.getAccessToken(
+      this.twitterDev.getAccessToken(
         {
           oauth_consumer_key: consumer_key,
           oauth_token: token,

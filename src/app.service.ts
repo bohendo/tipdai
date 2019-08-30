@@ -10,9 +10,7 @@ export class AppService {
     private readonly twitter: TwitterService,
   ) {}
   async getHello(query: any): Promise<string> {
-
     console.log(`Query: ${JSON.stringify(query)}`);
-    console.log(`Twitter: ${typeof this.twitter}`);
     if (query.oauth_token && query.oauth_verifier) {
       console.log(`Oauth response detected`);
       const tokenRes = await this.twitter.getAccessToken(
@@ -29,7 +27,7 @@ export class AppService {
     }
 
     if (this.twitter.authUrl) {
-      return `Hello World!<br/>Join the tip bot army: ${this.twitter.authUrl}`;
+      return `Hello World!<br/><a href="${this.twitter.authUrl}">Click to join the tip bot army</a>`;
     }
     return 'Hello World!';
   }

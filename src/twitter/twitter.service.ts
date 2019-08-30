@@ -119,7 +119,7 @@ export class TwitterService {
           await this.getUser('tip_dai');
 
           // 3. Create a new webhook
-          this.twitter.activateWebhook(
+          this.twitterApp.activateWebhook(
             {
               env: this.config.webhooks.twitter.env,
               url: this.config.webhooks.twitter.url,
@@ -203,7 +203,7 @@ export class TwitterService {
 
   public getUser = (screen_name) => {
     return new Promise((resolve, reject) => {
-      this.twitterDev.getCustomApiCall(
+      this.twitter.getCustomApiCall(
         '/users/lookup.json',
         { screen_name },
         this.handleError(reject),

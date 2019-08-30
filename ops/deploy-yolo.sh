@@ -32,5 +32,5 @@ ssh -i $ssh_key $user@$prod_server "bash -c '
   cd tipdai && make push-latest
 '"
 ssh -i $ssh_key $user@$prod_server "bash -c '
-  cd tipdai && make restart-prod
+  cd tipdai && make restart-prod && logs bot
 '"

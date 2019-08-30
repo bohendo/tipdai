@@ -95,7 +95,6 @@ export class TwitterService {
           const webhooks = JSON.parse(rawWebhooks);
           console.log(`Got webhooks: ${JSON.stringify(webhooks, null, 2)}`);
 
-          /* TODO: getting 404s and idk why
           // 2. Remove all webhook subscriptions
           await Promise.all(webhooks.environments.map(async env => {
             return Promise.all(env.webhooks.map(async wh => {
@@ -114,7 +113,6 @@ export class TwitterService {
             }));
           }));
           console.log(`Done unsubscribing, time to do some subscribing`);
-          */
 
           await this.getUser('tip_dai');
 

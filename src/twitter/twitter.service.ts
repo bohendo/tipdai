@@ -8,7 +8,7 @@ import { Twitter } from './client';
 /*
 const bohendo_id = '259539164'
 const tipdai_id = '1154313992141099008'
-const tipdai_reborn_id = 'tbd'
+const tipdai_reborn_id = '1167103783056367616'
 */
 
 @Injectable()
@@ -27,14 +27,31 @@ export class TwitterService {
     }
   }
 
-  public connectBot = (accessToken, accessSecret) => {
+  public connectBot = (consumer_key, token, verifier): Promise<void> => {
+    this.authUrl = undefined; // this url has been used & can't be used again
     return new Promise((resolve, reject) => {
-      this.twitter = new Twitter({
-        ...this.config.twitterBot,
-        accessToken,
-        accessSecret,
-      });
-      console.log(`Twitter bot successfully connected!`);
+      this.twitterDev.getAccessToken(
+        {
+          oauth_consumer_key: consumer_key,
+          oauth_token: token,
+          oauth_verifier: verifier,
+        },
+        this.handleError(reject),
+        res => {
+          console.log(`Success!`);
+          const data = qs.parse(res);
+          console.log(`Got access tokens for ${res.screen_name} (id: ${res.user_id})`);
+          console.log(`Access tokens (You should save this for later):`);
+          console.log(`TWITTER_BOT_ACCESS_SECRET="${res.oauth_token}"`);
+          console.log(`TWITTER_BOT_ACCESS_TOKEN="${res.oauth_token_secret}"`);
+          this.twitter = new Twitter({
+            ...this.config.twitterBot,
+            accessToken: res.oauth_token,
+            accessSecret: res.oauth_token_secret,
+          });
+          console.log(`Twitter bot successfully connected!`);
+        },
+      );
     });
   }
 
@@ -52,26 +69,6 @@ export class TwitterService {
           this.authUrl = `${baseUrl}?oauth_token=${data.oauth_token}`;
           console.log(`Login at: ${this.authUrl}`);
           resolve(this.authUrl);
-        },
-      );
-    });
-  }
-
-  public getAccessToken = (consumer_key, token, verifier): Promise<any> => {
-    this.authUrl = undefined; // this url has been used & can't be used again
-    return new Promise((resolve, reject) => {
-      this.twitterDev.getAccessToken(
-        {
-          oauth_consumer_key: consumer_key,
-          oauth_token: token,
-          oauth_verifier: verifier,
-        },
-        this.handleError(reject),
-        res => {
-          console.log(`Success!`);
-          const data = qs.parse(res);
-          console.log(`Got access token: ${JSON.stringify(data)}`);
-          resolve(data);
         },
       );
     });

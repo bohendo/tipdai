@@ -11,21 +11,16 @@ export class AppService {
   ) {}
   async getHello(query: any): Promise<string> {
     console.log(`Query: ${JSON.stringify(query)}`);
-    if (query.oauth_token && query.oauth_verifier) {
-      console.log(`Oauth response detected`);
-      const tokenRes = await this.twitter.getAccessToken(
+    // If we have an authUrl saved, then we have a 3-leg auth in-progress
+    if (this.twitter.authUrl && query.oauth_token && query.oauth_verifier) {
+      console.log(`Oauth response detected! Connecting new tip bot.`);
+      await this.twitter.connectBot(
         this.config.twitterDev.consumerKey,
         query.oauth_token,
         query.oauth_verifier,
       );
-      console.log(`Got access token: ${JSON.stringify(tokenRes)}`);
-      console.log(`(You should save this for later)`);
-      await this.twitter.connectBot(
-        tokenRes.oauth_token,
-        tokenRes.oauth_token_secret,
-      );
+      return 'Hello new tip bot minion!';
     }
-
     if (this.twitter.authUrl) {
       return `Hello World!<br/><a href="${this.twitter.authUrl}">Click to join the tip bot army</a>`;
     }

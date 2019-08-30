@@ -193,7 +193,6 @@ Twitter.prototype.doRequest = function(url, error, success) {
     .replace(/\(/g, '%28')
     .replace(/\)/g, '%29')
     .replace(/\*/g, '%2A');
-
   this.oauth.get(url, this.accessToken, this.accessTokenSecret, function(
     err,
     body,
@@ -244,7 +243,7 @@ Twitter.prototype.doPut = function(url, put_body, error, success) {
     .replace(/\(/g, '%28')
     .replace(/\)/g, '%29')
     .replace(/\*/g, '%2A');
-  //(url, oauth_token, oauth_token_secret, post_body, post_content_type, callback
+  //(url, oauth_token, oauth_token_secret, put_body, post_content_type, callback
   this.oauth.put(
     url,
     this.accessToken,
@@ -260,6 +259,29 @@ Twitter.prototype.doPut = function(url, put_body, error, success) {
       }
     },
   );
+};
+
+Twitter.prototype.doDelete = function(url, error, success) {
+  // Fix the mismatch between OAuth's  RFC3986's and Javascript's beliefs in what is right and wrong ;)
+  // From https://github.com/ttezel/twit/blob/master/lib/oarequest.js
+  url = url
+    .replace(/\!/g, '%21')
+    .replace(/\'/g, '%27')
+    .replace(/\(/g, '%28')
+    .replace(/\)/g, '%29')
+    .replace(/\*/g, '%2A');
+  this.oauth.get(url, this.accessToken, this.accessTokenSecret, function(
+    err,
+    body,
+    response,
+  ) {
+    console.log('DELETE URL [%s]', url);
+    if (!err && (response.statusCode == 200 || response.statusCode == 204)) {
+      success(body);
+    } else {
+      error(err, response, body);
+    }
+  });
 };
 
 Twitter.prototype.buildQS = function(params) {

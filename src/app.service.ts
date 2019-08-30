@@ -9,6 +9,7 @@ export class AppService {
     private readonly config: ConfigService,
     private readonly twitter: TwitterService,
   ) {}
+
   async getHello(query: any): Promise<string> {
     // If we have an authUrl saved, then we have a 3-leg auth in-progress
     if (this.twitter.authUrl && query.oauth_token && query.oauth_verifier) {

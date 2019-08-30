@@ -45,15 +45,17 @@ export class ConfigService {
 
   get callbacks(): any {
     return {
-      twitter: `${env.twitterCallbackUrl}/callback/twitter`,
+      twitter: env.twitterCallbackUrl,
     };
   }
 
   get webhooks(): any {
     return {
-      env: 'prod',
-      id: env.twitterWebhookId,
-      url: `${env.twitterCallbackUrl}/webhooks/twitter`,
+      twitter: {
+        env: 'prod',
+        id: env.twitterWebhookId,
+        url: `${env.twitterCallbackUrl}/webhooks/twitter`,
+      },
     };
   }
 

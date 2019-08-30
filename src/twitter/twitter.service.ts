@@ -86,7 +86,7 @@ export class TwitterService {
     return new Promise((resolve, reject) => {
       // 1. Get all subscriptions
       this.twitterDev.getCustomApiCall(
-        `/account_activity/webhooks.json`,
+        `/account_activity/all/webhooks.json`,
         {},
         this.handleError(reject),
         res => {

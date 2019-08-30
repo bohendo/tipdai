@@ -90,9 +90,9 @@ export class TwitterService {
         {},
         this.handleError(reject),
         async (rawWebhooks) => {
-
           const webhooks = JSON.parse(rawWebhooks);
           console.log(`Got webhooks: ${JSON.stringify(webhooks, null, 2)}`);
+
           // 2. Remove all webhook subscriptions
           await Promise.all(webhooks.environments.map(async env => {
             return Promise.all(env.webhooks.map(async wh => {
@@ -101,8 +101,8 @@ export class TwitterService {
                 this.twitterDev.deleteCustomApiCall(
                   `/account_activity/all/${env.environment_name}/webhooks/${wh.id}.json`,
                   this.handleError(rej),
-                  () => {
-                    console.log(`Unsubscribed successfully!`);
+                  (delRes) => {
+                    console.log(`Unsubscribed successfully! ${JSON.stringify(delRes)}`);
                     res();
                   },
                 );
@@ -110,6 +110,8 @@ export class TwitterService {
             }));
           }));
           console.log(`Done unsubscribing, time to do some subscribing`);
+
+          await this.getUser('tip_dai');
 
           // 3. Create a new webhook
           this.twitter.activateWebhook(

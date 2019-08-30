@@ -19,6 +19,7 @@ export class TwitterService {
   constructor(private readonly config: ConfigService) {
     this.twitterDev = new Twitter(this.config.twitterDev);
     if (!config.twitterBot.accessToken) {
+      console.log(`Bot credentials not found, requesting a new access token..`);
       this.twitterDev.requestToken();
     } else {
       this.twitter = new Twitter(this.config.twitterBot);
@@ -158,18 +159,20 @@ export class TwitterService {
 
   // First step of 3-leg oauth process
   public requestToken = () => {
+    const success = (resolve) => (res) => {
+      console.log(`Success!`);
+      const data = qs.parse(res);
+      console.log(`Got auth data: ${JSON.stringify(data)}`);
+      const baseUrl = 'https://api.twitter.com/oauth/authorize';
+      console.log(`Login at: ${baseUrl}?oauth_token=${data.oauth_token}`);
+      resolve(data);
+    };
+    console.log(`requestToken success: ${typeof success(() => {/**/})}`);
     return new Promise((resolve, reject) => {
       this.twitter.requestToken(
         { oauthCallback: 'https://tipdai.bohendo.com' },
         this.handleError(reject),
-        res => {
-          console.log(`Success!`);
-          const data = qs.parse(res);
-          console.log(`Got auth data: ${JSON.stringify(data)}`);
-          const baseUrl = 'https://api.twitter.com/oauth/authorize';
-          console.log(`Login at: ${baseUrl}?oauth_token=${data.oauth_token}`);
-          resolve(data);
-        },
+        success(resolve),
       );
     });
   }

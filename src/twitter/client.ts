@@ -157,7 +157,6 @@ Twitter.prototype.postCustomApiCall = function(url, params, error, success) {
 Twitter.prototype.requestToken = function(params, error, success) {
   var url =
     'https://api.twitter.com/oauth/request_token' + this.buildQS(params);
-  console.log(`Twitter.prototype.requestToken success: ${typeof success}`);
   this.doPost(url, {}, error, success);
 };
 
@@ -219,7 +218,6 @@ Twitter.prototype.doPost = function(url, post_body, error, success) {
     .replace(/\)/g, '%29')
     .replace(/\*/g, '%2A');
   //(url, oauth_token, oauth_token_secret, post_body, post_content_type, callback
-  console.log(`doPost success: ${typeof success}`);
   this.oauth.post(
     url,
     this.accessToken,
@@ -228,7 +226,6 @@ Twitter.prototype.doPost = function(url, post_body, error, success) {
     'application/json',
     function(err, body, response) {
       console.log('POST URL [%s]', url);
-      console.log(`doPost callback success: ${typeof success}`);
       if (!err && (response.statusCode == 200 || response.statusCode == 204)) {
         success(body);
       } else {

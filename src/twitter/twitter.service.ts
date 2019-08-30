@@ -15,6 +15,7 @@ const tipdai_reborn_id = 'tbd'
 export class TwitterService {
   private twitter: any;
   private twitterDev: any;
+  private authUrl: string | undefined;
 
   constructor(private readonly config: ConfigService) {
     this.twitterDev = new Twitter(this.config.twitterDev);
@@ -28,27 +29,45 @@ export class TwitterService {
 
   // First step of 3-leg oauth process
   public requestToken = () => {
-    const success = (resolve) => (res) => {
-      console.log(`Success!`);
-      const data = qs.parse(res);
-      console.log(`Got auth data: ${JSON.stringify(data)}`);
-      const baseUrl = 'https://api.twitter.com/oauth/authorize';
-      console.log(`Login at: ${baseUrl}?oauth_token=${data.oauth_token}`);
-      resolve(data);
-    };
-    console.log(`requestToken success: ${typeof success(() => {/**/})}`);
     return new Promise((resolve, reject) => {
       this.twitterDev.requestToken(
-        { oauthCallback: 'https://tipdai.bohendo.com' },
+        { oauthCallback: this.config.callbacks.twitter },
         this.handleError(reject),
-        success(resolve),
+        (res) => {
+          console.log(`Success!`);
+          const data = qs.parse(res);
+          console.log(`Got auth data: ${JSON.stringify(data)}`);
+          const baseUrl = 'https://api.twitter.com/oauth/authorize';
+          this.authUrl = `${baseUrl}?oauth_token=${data.oauth_token}`;
+          console.log(`Login at: ${this.authUrl}`);
+          resolve(this.authUrl);
+        },
+      );
+    });
+  }
+
+  public getAccessToken = (consumer_key, token, verifier) => {
+    return new Promise((resolve, reject) => {
+      this.twitter.getAccessToken(
+        {
+          oauth_consumer_key: consumer_key,
+          oauth_token: token,
+          oauth_verifier: verifier,
+        },
+        this.handleError(reject),
+        res => {
+          console.log(`Success!`);
+          const data = qs.parse(res);
+          console.log(`Got access token: ${JSON.stringify(data)}`);
+          resolve(data);
+        },
       );
     });
   }
 
   public triggerCRC = () => {
     return new Promise((resolve, reject) => {
-      const { env, id } = this.config.webhook;
+      const { env, id } = this.config.webhooks;
       this.twitter.triggerCRC({ env, webhookId: id }, this.handleError(reject), res => {
         console.log(`Success fully triggered a CRC!`);
         resolve();
@@ -59,7 +78,7 @@ export class TwitterService {
   public getSubscriptions = () => {
     return new Promise((resolve, reject) => {
       this.twitterDev.getCustomApiCall(
-        `/account_activity/all/${this.config.webhook.env}/subscriptions/list.json`,
+        `/account_activity/all/${this.config.webhooks.env}/subscriptions/list.json`,
         {},
         this.handleError(reject),
         res => {
@@ -75,7 +94,7 @@ export class TwitterService {
   public subscribe = () => {
     return new Promise((resolve, reject) => {
       this.twitter.postCustomApiCall(
-        `/account_activity/all/${this.config.webhook.env}/subscriptions.json`,
+        `/account_activity/all/${this.config.webhooks.env}/subscriptions.json`,
         JSON.stringify({}),
         this.handleError(reject),
         res => {
@@ -92,8 +111,8 @@ export class TwitterService {
     return new Promise((resolve, reject) => {
       this.twitter.activateWebhook(
         {
-          env: this.config.webhook.env,
-          url: this.config.webhook.url,
+          env: this.config.webhooks.env,
+          url: this.config.webhooks.url,
         },
         this.handleError(reject),
         res => {
@@ -171,25 +190,6 @@ export class TwitterService {
         data => {
           console.log(`Success!`);
           console.log(`Sent DM: ${data}`);
-          resolve(data);
-        },
-      );
-    });
-  }
-
-  public getAccessToken = (consumer_key, token, verifier) => {
-    return new Promise((resolve, reject) => {
-      this.twitter.getAccessToken(
-        {
-          oauth_consumer_key: consumer_key,
-          oauth_token: token,
-          oauth_verifier: verifier,
-        },
-        this.handleError(reject),
-        res => {
-          console.log(`Success!`);
-          const data = qs.parse(res);
-          console.log(`Got access token: ${JSON.stringify(data)}`);
           resolve(data);
         },
       );

@@ -43,7 +43,13 @@ export class ConfigService {
     return env.nodeEnv === 'development';
   }
 
-  get webhook(): any {
+  get callbacks(): any {
+    return {
+      twitter: `${env.twitterCallbackUrl}/callback/twitter`,
+    };
+  }
+
+  get webhooks(): any {
     return {
       env: 'prod',
       id: env.twitterWebhookId,

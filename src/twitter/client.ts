@@ -154,7 +154,7 @@ Twitter.prototype.postCustomApiCall = function(url, params, error, success) {
   this.doPost(url, params, error, success);
 };
 
-Twitter.prototype.authorize = function(params, error, success) {
+Twitter.prototype.requestToken = function(params, error, success) {
   var url =
     'https://api.twitter.com/oauth/request_token' + this.buildQS(params);
   this.doPost(url, {}, error, success);

@@ -8,6 +8,7 @@ import { Twitter } from './client';
 /*
 const bohendo_id = '259539164'
 const tipdai_id = '1154313992141099008'
+const tipdai_reborn_id = 'tbd'
 */
 
 @Injectable()
@@ -16,8 +17,12 @@ export class TwitterService {
   private twitterDev: any;
 
   constructor(private readonly config: ConfigService) {
-    this.twitter = new Twitter(this.config.twitterBot);
     this.twitterDev = new Twitter(this.config.twitterDev);
+    if (!config.twitterBotAccessToken) {
+      this.twitterDev.requestToken();
+    } else {
+      this.twitter = new Twitter(this.config.twitterBot);
+    }
   }
 
   public triggerCRC = () => {
@@ -151,9 +156,10 @@ export class TwitterService {
     });
   }
 
-  public authorize = () => {
+  // First step of 3-leg oauth process
+  public requestToken = () => {
     return new Promise((resolve, reject) => {
-      this.twitter.authorize(
+      this.twitter.requestToken(
         { oauthCallback: 'https://tipdai.bohendo.com' },
         this.handleError(reject),
         res => {

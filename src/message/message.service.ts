@@ -30,15 +30,6 @@ export class MessageService {
       }
     }
 
-    if (message.match(/^activate webhook/i)) {
-      try {
-        await this.twitter.activateWebhook();
-        return await this.twitter.sendDM(sender, 'Successfully activated webhook!');
-      } catch (e) {
-        return await this.twitter.sendDM(sender, `Webhook activation didn't go so well..`);
-      }
-    }
-
     const tokenAddress = ''; // await db.get('tokenAddress');
     const swapRate = '100'; // (await db.get(`swapRate`)) as any;
     console.log(`swap rate: ${swapRate}`);

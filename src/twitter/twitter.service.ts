@@ -89,28 +89,50 @@ export class TwitterService {
         `/account_activity/all/webhooks.json`,
         {},
         this.handleError(reject),
-        res => {
-          const data = JSON.parse(res);
-          console.log(`Got webhooks: ${JSON.stringify(data, null, 2)}`);
+        async (rawWebhooks) => {
 
+          const webhooks = JSON.parse(rawWebhooks);
+          console.log(`Got webhooks: ${JSON.stringify(webhooks, null, 2)}`);
           // 2. Remove all webhook subscriptions
+          await Promise.all(webhooks.environments.map(async env => {
+            return Promise.all(env.webhooks.map(async wh => {
+              return new Promise((res, rej) => {
+                this.twitterDev.deleteCustomApiCall(
+                  `/account_activity/all/${env.environment_name}/webhooks/${wh.id}.json`,
+                  this.handleError(reject),
+                  () => {
+                    console.log(`Unsubscribed from ${env.environment_name} webhook: ${wh.id}`);
+                    res();
+                  },
+                );
+              });
+            }));
+          }));
 
-          // 3. Subscribe to the one webhook we want
-
-          /*
-          this.twitter.postCustomApiCall(
-            `/account_activity/all/${this.config.webhooks.twitter.env}/subscriptions.json`,
-            JSON.stringify({}),
+          // 3. Create a new webhook
+          this.twitter.activateWebhook(
+            {
+              env: this.config.webhooks.twitter.env,
+              url: this.config.webhooks.twitter.url,
+            },
             this.handleError(reject),
-            res => {
+            newWebhookRes => {
               console.log(`Success!`);
-              const data = JSON.parse(res);
-              console.log(`Subscribed: ${JSON.stringify(data, null, 2)}`);
-              resolve(data);
+              const data = JSON.parse(newWebhookRes);
+              console.log(`Activated webhook: ${JSON.stringify(data, null, 2)}`);
+              // 3. Create a new subscription
+              this.twitter.postCustomApiCall(
+                `/account_activity/all/${this.config.webhooks.twitter.env}/subscriptions.json`,
+                this.handleError(reject),
+                newSubscriptionRes => {
+                  console.log(`Success!`);
+                  const innerData = JSON.parse(newWebhookRes);
+                  console.log(`Activated subscription: ${JSON.stringify(innerData, null, 2)}`);
+                  resolve(data);
+                },
+              );
             },
           );
-          */
-
         },
       );
     });
@@ -136,24 +158,6 @@ export class TwitterService {
           console.log(`Success!`);
           const data = JSON.parse(res);
           console.log(`Got subscriptions: ${JSON.stringify(data, null, 2)}`);
-          resolve(data);
-        },
-      );
-    });
-  }
-
-  public activateWebhook = () => {
-    return new Promise((resolve, reject) => {
-      this.twitter.activateWebhook(
-        {
-          env: this.config.webhooks.twitter.env,
-          url: this.config.webhooks.twitter.url,
-        },
-        this.handleError(reject),
-        res => {
-          console.log(`Success!`);
-          const data = JSON.parse(res);
-          console.log(`Activated webhook: ${JSON.stringify(data, null, 2)}`);
           resolve(data);
         },
       );

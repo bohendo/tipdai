@@ -142,6 +142,12 @@ Twitter.prototype.getFollowersIds = function(params, error, success) {
   this.doRequest(url, error, success);
 };
 
+Twitter.prototype.deleteCustomApiCall = function(url, params, error, success) {
+  var path = url + this.buildQS(params);
+  var url = this.baseUrl + path;
+  this.doDelete(url, error, success);
+};
+
 Twitter.prototype.getCustomApiCall = function(url, params, error, success) {
   var path = url + this.buildQS(params);
   var url = this.baseUrl + path;
@@ -166,7 +172,7 @@ Twitter.prototype.getAccessToken = function(params, error, success) {
 };
 
 Twitter.prototype.activateWebhook = function(params, error, success) {
-  var env = params.env || 'prod';
+  var env = params.env;
   if (params.env) delete params.env;
   var url =
     `${this.baseUrl}/account_activity/all/${env}/webhooks.json` +

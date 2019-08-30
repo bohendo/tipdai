@@ -27,6 +27,24 @@ export class TwitterService {
     }
   }
 
+  // First step of 3-leg oauth process
+  public requestToken = () => {
+    return new Promise((resolve, reject) => {
+      this.twitterDev.requestToken(
+        { oauthCallback: this.config.callbacks.twitter },
+        this.handleError(reject),
+        (res) => {
+          const data = qs.parse(res);
+          const baseUrl = 'https://api.twitter.com/oauth/authorize';
+          this.authUrl = `${baseUrl}?oauth_token=${data.oauth_token}`;
+          console.log(`Login at: ${this.authUrl}`);
+          resolve(this.authUrl);
+        },
+      );
+    });
+  }
+
+  // Third step of 3-leg oauth (2nd step is the user clicking the authUrl)
   public connectBot = (consumer_key, token, verifier): Promise<void> => {
     this.authUrl = undefined; // this url has been used & can't be used again
     return new Promise((resolve, reject) => {
@@ -38,37 +56,19 @@ export class TwitterService {
         },
         this.handleError(reject),
         res => {
-          console.log(`Success!`);
           const data = qs.parse(res);
-          console.log(`Got access tokens for ${res.screen_name} (id: ${res.user_id})`);
+          console.log(`Authentication Success!`);
+          console.log(`Got access tokens for ${data.screen_name} (id: ${data.user_id})`);
           console.log(`Access tokens (You should save this for later):`);
-          console.log(`TWITTER_BOT_ACCESS_SECRET="${res.oauth_token}"`);
-          console.log(`TWITTER_BOT_ACCESS_TOKEN="${res.oauth_token_secret}"`);
+          console.log(`TWITTER_BOT_ACCESS_SECRET="${data.oauth_token}"`);
+          console.log(`TWITTER_BOT_ACCESS_TOKEN="${data.oauth_token_secret}"`);
           this.twitter = new Twitter({
             ...this.config.twitterBot,
-            accessToken: res.oauth_token,
-            accessSecret: res.oauth_token_secret,
+            accessToken: data.oauth_token,
+            accessSecret: data.oauth_token_secret,
           });
           console.log(`Twitter bot successfully connected!`);
-        },
-      );
-    });
-  }
-
-  // First step of 3-leg oauth process
-  public requestToken = () => {
-    return new Promise((resolve, reject) => {
-      this.twitterDev.requestToken(
-        { oauthCallback: this.config.callbacks.twitter },
-        this.handleError(reject),
-        (res) => {
-          console.log(`Success!`);
-          const data = qs.parse(res);
-          console.log(`Got auth data: ${JSON.stringify(data)}`);
-          const baseUrl = 'https://api.twitter.com/oauth/authorize';
-          this.authUrl = `${baseUrl}?oauth_token=${data.oauth_token}`;
-          console.log(`Login at: ${this.authUrl}`);
-          resolve(this.authUrl);
+          resolve();
         },
       );
     });

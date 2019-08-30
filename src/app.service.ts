@@ -10,7 +10,6 @@ export class AppService {
     private readonly twitter: TwitterService,
   ) {}
   async getHello(query: any): Promise<string> {
-    console.log(`Query: ${JSON.stringify(query)}`);
     // If we have an authUrl saved, then we have a 3-leg auth in-progress
     if (this.twitter.authUrl && query.oauth_token && query.oauth_verifier) {
       console.log(`Oauth response detected! Connecting new tip bot.`);

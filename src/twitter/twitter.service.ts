@@ -18,7 +18,7 @@ export class TwitterService {
 
   constructor(private readonly config: ConfigService) {
     this.twitterDev = new Twitter(this.config.twitterDev);
-    if (!config.twitterBotAccessToken) {
+    if (!config.twitterBot.accessToken) {
       this.twitterDev.requestToken();
     } else {
       this.twitter = new Twitter(this.config.twitterBot);

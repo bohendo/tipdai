@@ -114,8 +114,6 @@ export class TwitterService {
           }));
           console.log(`Done unsubscribing, time to do some subscribing`);
 
-          await this.getUser('tip_dai');
-
           // 3. Create a new webhook
           this.twitterApp.activateWebhook(
             {

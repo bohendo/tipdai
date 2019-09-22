@@ -99,8 +99,6 @@ export class TwitterService {
 
           await this.getSubscriptions();
 
-          await this.triggerCRC();
-
           console.log(`Ok let's try to remove the old webhook subscriptions`);
 
           // 2. Remove all webhook subscriptions

@@ -27,6 +27,8 @@ const env = {
   twitterWebhookId: process.env.TWITTER_WEBHOOK_ID,
 };
 
+console.log(`Starting app in env: ${JSON.stringify(env, null, 2)}`);
+
 const cfIndex = '25446';
 
 @Injectable()

@@ -28,7 +28,7 @@ type OAuthResponse = {
   url: any;
 };
 
-export class TwitterClient {
+export class Twitter {
   accessSecret: string;
   accessToken: string;
   baseUrl: string = 'https://api.twitter.com/1.1';

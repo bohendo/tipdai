@@ -4,8 +4,7 @@ import * as qs from 'qs';
 
 import { ConfigService } from '../config/config.service';
 
-import { TwitterClient } from './twitter.client';
-import { Twitter } from './client';
+import { Twitter } from './twitter.client';
 
 /*
 const bohendo_id = '259539164'
@@ -24,13 +23,13 @@ export class TwitterService {
   public botId: string;
 
   constructor(private readonly config: ConfigService) {
-    this.twitterDev = new TwitterClient(this.config.twitterDev);
-    this.twitterApp = new TwitterClient(this.config.twitterApp);
+    this.twitterDev = new Twitter(this.config.twitterDev);
+    this.twitterApp = new Twitter(this.config.twitterApp);
     if (!config.twitterBot.accessToken) {
       console.log(`Bot credentials not found, requesting a new access token..`);
       this.botLogin();
     } else {
-      this.twitterBot = new TwitterClient(this.config.twitterBot);
+      this.twitterBot = new Twitter(this.config.twitterBot);
       this.botId = this.config.twitterBotUserId;
       this.subscribe(this.botId);
     }
@@ -62,7 +61,7 @@ export class TwitterService {
     console.log(`TWITTER_BOT_ACCESS_TOKEN=${data.oauth_token}`);
     console.log(`TWITTER_BOT_USER_ID=${data.user_id}`);
     this.botId = data.user_id;
-    this.twitterBot = new TwitterClient({
+    this.twitterBot = new Twitter({
       ...this.config.twitterBot,
       accessToken: data.oauth_token,
       accessSecret: data.oauth_token_secret,

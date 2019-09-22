@@ -4,7 +4,7 @@ import { JsonRpcProvider } from 'ethers/providers';
 import { Wallet } from 'ethers';
 import * as fs from 'fs';
 
-import { PostgresConfig, TwitterAppConfig, TwitterUserConfig } from '../types';
+import { PostgresConfig, TwitterConfig } from '../types';
 
 const env = {
   ethProvider: process.env.ETH_PROVIDER,
@@ -64,7 +64,7 @@ export class ConfigService {
     };
   }
 
-  get twitterApp(): TwitterUserConfig {
+  get twitterApp(): TwitterConfig {
     return {
       accessSecret: env.twitterAppAccessSecret,
       accessToken: env.twitterAppAccessToken,
@@ -72,7 +72,7 @@ export class ConfigService {
     };
   }
 
-  get twitterBot(): TwitterUserConfig {
+  get twitterBot(): TwitterConfig {
     return {
       accessSecret: env.twitterBotAccessSecret,
       accessToken: env.twitterBotAccessToken,
@@ -80,11 +80,12 @@ export class ConfigService {
     };
   }
 
-  get twitterDev(): TwitterAppConfig {
+  get twitterDev(): TwitterConfig {
     return {
       callbackUrl: env.twitterCallbackUrl,
       consumerKey: env.twitterConsumerKey,
       consumerSecret: env.twitterConsumerSecret,
+      webhook: this.webhooks.twitter,
     };
   }
 

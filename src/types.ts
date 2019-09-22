@@ -1,12 +1,14 @@
-export type TwitterAppConfig = {
+export type TwitterConfig = {
+  accessToken?: string;
+  accessSecret?: string;
   consumerKey: string;
   consumerSecret: string;
   callbackUrl: string;
-};
-
-export type TwitterUserConfig = TwitterAppConfig & {
-  accessToken: string;
-  accessSecret: string;
+  webhook: {
+    env: string;
+    id: string;
+    url: string;
+  };
 };
 
 export type PostgresConfig = {

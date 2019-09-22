@@ -16,25 +16,7 @@ export class DepositService {
     private readonly config: ConfigService,
     private readonly channel: ChannelService,
     private readonly depositRepository: DepositRepository,
-  ) {
-    this.test();
-  }
-
-  public test = async () => {
-    let deposit = await this.depositRepository.findByUser('1');
-    if (!deposit) {
-      deposit = new Deposit();
-      deposit.address = AddressZero;
-      deposit.amount = '0.00';
-      deposit.startTime = new Date();
-      deposit.user = '1';
-      deposit.oldBalance = '0.00';
-      this.depositRepository.save(deposit);
-      console.log(`Created new deposit: ${JSON.stringify(deposit)}`);
-    } else {
-      console.log(`Found deposit in db: ${JSON.stringify(deposit)}`);
-    }
-  }
+  ) {}
 
   public watchForDeposits = () => {
     setInterval(async () => {
@@ -131,9 +113,7 @@ export class DepositService {
         });
       }
 
-      // TODO: Use real SQL tables here to avoid ugly race conditions -.-
       console.log(`Saving pending deposits: ${JSON.stringify(pendingDeposits)}`);
-      // await db.set('pendingDeposits', JSON.stringify(pendingDeposits));
     }, 5 * 1000);
 
   }

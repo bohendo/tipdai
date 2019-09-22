@@ -101,6 +101,8 @@ export class TwitterService {
 
           await this.triggerCRC();
 
+          console.log(`Ok let's try to remove the old webhook subscriptions`);
+
           // 2. Remove all webhook subscriptions
           await Promise.all(webhooks.environments.map(async env => {
             return Promise.all(env.webhooks.map(async wh => {

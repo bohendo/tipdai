@@ -9,7 +9,11 @@ if [[ -z "$name" ]]
 then echo "Provide a name for this migration as the first & only arg" && exit
 fi
 
-docker exec $container bash -c '
+id=$(if [[ "`uname`" == "Darwin" ]]; then echo 0:0; else echo `id -u`:`id -g`; fi)
+
+echo "my id: $id"
+
+docker exec $container bash ops/permissions-fixer.sh $id '
   export TYPEORM_CONNECTION="postgres"
   export TYPEORM_DATABASE="$PGDATABASE"
   export TYPEORM_ENTITIES=dist/deposit/deposit.entity.js

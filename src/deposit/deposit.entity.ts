@@ -12,7 +12,7 @@ export class Deposit {
   amount!: string;
 
   @Column('citext')
-  startTime!: string;
+  startTime!: Date;
 
   @Column('citext')
   user!: string;

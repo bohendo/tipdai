@@ -5,24 +5,36 @@ import { formatEther, parseEther } from 'ethers/utils';
 import { ChannelService } from '../channel/channel.service';
 import { ConfigService } from '../config/config.service';
 
-const timeout = 1000 * 60 * 25;
+import { Deposit } from './deposit.entity';
+import { DepositRepository } from './deposit.repository';
 
-/*
-pendingDeposits = [{
-  "address": "0x2960dB45c8a02F9b373DEFAFc6Ac42B1aE3847Fa",
-  "amount": "0.00168"
-  "startTime": 1564865493796,
-  "user": "259539164"
-  "oldBalance": "0.4567"
-}]
-*/
+const timeout = 1000 * 60 * 25;
 
 @Injectable()
 export class DepositService {
   constructor(
     private readonly config: ConfigService,
     private readonly channel: ChannelService,
-  ) {}
+    private readonly depositRepository: DepositRepository,
+  ) {
+    this.test();
+  }
+
+  public test = async () => {
+    let deposit = await this.depositRepository.findByUser('1');
+    if (!deposit) {
+      deposit = new Deposit();
+      deposit.address = AddressZero;
+      deposit.amount = '0.00';
+      deposit.startTime = new Date();
+      deposit.user = '1';
+      deposit.oldBalance = '0.00';
+      this.depositRepository.save(deposit);
+      console.log(`Created new deposit: ${JSON.stringify(deposit)}`);
+    } else {
+      console.log(`Found deposit in db: ${JSON.stringify(deposit)}`);
+    }
+  }
 
   public watchForDeposits = () => {
     setInterval(async () => {

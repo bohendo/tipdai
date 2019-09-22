@@ -2,9 +2,11 @@ import { Injectable } from '@nestjs/common';
 import { TypeOrmModuleOptions, TypeOrmOptionsFactory } from '@nestjs/typeorm';
 
 import { ConfigService } from '../config/config.service';
+import { Deposit } from '../deposit/deposit.entity';
+import { InitDeposit1569186916275 } from '../migrations/1569186916275-InitDeposit';
 
-export const entities = [];
-export const viewEntites = [];
+const migrations = [InitDeposit1569186916275];
+const entities = [Deposit];
 
 @Injectable()
 export class TypeOrmConfigService implements TypeOrmOptionsFactory {
@@ -12,9 +14,11 @@ export class TypeOrmConfigService implements TypeOrmOptionsFactory {
   createTypeOrmOptions(): TypeOrmModuleOptions {
     return {
       ...this.config.database,
-      entities: [...entities, ...viewEntites],
+      entities,
       logging: ['error'],
-      synchronize: this.config.isDevMode,
+      migrations,
+      migrationsRun: true,
+      synchronize: false,
       type: 'postgres',
     };
   }

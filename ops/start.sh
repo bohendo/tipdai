@@ -191,8 +191,7 @@ services:
       - $mnemonic
       - ${project}_db_password
     volumes:
-      - `pwd`/node_modules:/root/node_modules
-      - `pwd`/dist:/root/dist
+      - `pwd`:/root
 
   database:
     image: $database_image

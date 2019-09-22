@@ -14,6 +14,7 @@ const tipdai_reborn_id = '1167103783056367616'
 
 @Injectable()
 export class TwitterService {
+  private invalid: boolean = false;
   private twitterApp: any;
   private twitterBot: any;
   private twitterDev: any;
@@ -23,19 +24,25 @@ export class TwitterService {
   public botId: string;
 
   constructor(private readonly config: ConfigService) {
-    this.twitterDev = new Twitter(this.config.twitterDev);
-    this.twitterApp = new Twitter(this.config.twitterApp);
-    if (!config.twitterBot.accessToken) {
-      console.log(`Bot credentials not found, requesting a new access token..`);
-      this.botLogin();
+    if (!this.config.consumerKey || !this.config.consumerSecret) {
+      console.warn(`[Twitter] Missing consumer token and/or secret, twitter stuff won't work.`);
+      this.invalid = true;
     } else {
-      this.twitterBot = new Twitter(this.config.twitterBot);
-      this.botId = this.config.twitterBotUserId;
-      this.subscribe(this.botId);
+      this.twitterDev = new Twitter(this.config.twitterDev);
+      this.twitterApp = new Twitter(this.config.twitterApp);
+      if (!config.twitterBot.accessToken) {
+        console.log(`Bot credentials not found, requesting a new access token..`);
+        this.botLogin();
+      } else {
+        this.twitterBot = new Twitter(this.config.twitterBot);
+        this.botId = this.config.twitterBotUserId;
+        this.subscribe(this.botId);
+      }
     }
   }
 
   public botLogin = async () => {
+    if (this.invalid) { return; }
     const res = await this.twitterApp.requestToken();
     const data = qs.parse(res);
     console.log(`Got token data: ${JSON.stringify(data)}`);
@@ -47,6 +54,7 @@ export class TwitterService {
 
   // Third step of 3-leg oauth (2nd step is the user clicking the authUrl)
   public connectBot = async (consumer_key, token, verifier): Promise<void> => {
+    if (this.invalid) { return; }
     this.authUrl = undefined; // this url has been used & can't be used again
     const res = await this.twitterApp.getAccessToken({
       oauth_consumer_key: consumer_key,
@@ -73,6 +81,7 @@ export class TwitterService {
   }
 
   public subscribe = async (botId) => {
+    if (this.invalid) { return; }
     const webhooks = await this.twitterApp.getWebhooks();
     console.log(`Got webhooks: ${JSON.stringify(webhooks, null, 2)}`);
     const subscriptions = await this.twitterDev.getSubscriptions();
@@ -105,22 +114,26 @@ export class TwitterService {
   }
 
   public triggerCRC = async () => {
+    if (this.invalid) { return; }
     await this.twitterApp.triggerCRC(this.webhookId);
   }
 
   public tweet = async (status) => {
+    if (this.invalid) { return; }
     const res = this.twitterBot.tweet(status);
     console.log(`Sent tweet: ${JSON.stringify(res, null, 2)}`);
     return res;
   }
 
   public getUser = async (screen_name) => {
+    if (this.invalid) { return; }
     const res = await this.twitterBot.getUser(screen_name);
     console.log(`Got user: ${JSON.stringify(res, null, 2)}`);
     return res;
   }
 
   public getMentions = async (options) => {
+    if (this.invalid) { return; }
     const defaults = { count: '5', trim_user: true, include_entities: true };
     const res = await this.twitterBot.getMentions({ ...defaults, ...options });
     const mentions = res.map(tweet => tweet.text);
@@ -129,6 +142,7 @@ export class TwitterService {
   }
 
   public sendDM = async (recipient_id, message) => {
+    if (this.invalid) { return; }
     const res = await this.twitterBot.sendDM(recipient_id, message);
     console.log(`Sent DM: ${res}`);
     return res;

@@ -31,7 +31,7 @@ export class DepositService {
       // Check the balance of each pending deposit address
       pendingDeposits = await Promise.all(
         pendingDeposits.map(async dep => {
-          const balance = await this.config.getEthProvider().getBalance(dep.address);
+          const balance = await this.config.ethProvider.getBalance(dep.address);
           if (!dep.oldBalance) {
             dep.oldBalance = formatEther(balance);
           } else if (parseEther(dep.oldBalance).lt(balance)) {

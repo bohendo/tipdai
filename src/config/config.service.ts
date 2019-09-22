@@ -32,15 +32,17 @@ const cfIndex = '25446';
 
 @Injectable()
 export class ConfigService {
-  getEthProvider(): JsonRpcProvider {
+  get ethProvider(): JsonRpcProvider {
     return new JsonRpcProvider(env.ethProvider);
   }
 
-  getWallet(index: number | string = cfIndex): Wallet {
+  public getWallet(index: number | string = cfIndex): Wallet {
     const mnemonic = fs.readFileSync(env.mnemonicFile, 'utf8');
-    return Wallet.fromMnemonic(mnemonic, `m/44'/60'/0'/0/${index}`).connect(
-      this.getEthProvider(),
-    );
+    return Wallet.fromMnemonic(mnemonic, `m/44'/60'/0'/0/${index}`).connect(this.ethProvider);
+  }
+
+  get wallet(): Wallet {
+    return this.getWallet(0);
   }
 
   get isDevMode(): boolean {
@@ -109,7 +111,7 @@ export class ConfigService {
   get channel(): any {
     return {
       ethProviderUrl: env.ethProvider,
-      logLevel: 3,
+      logLevel: 2,
       mnemonic: fs.readFileSync(env.mnemonicFile, 'utf8'),
       nodeUrl: env.paymentHub,
       type: 'postgres',

@@ -16,62 +16,62 @@ export class ChannelService {
   constructor(
     private readonly config: ConfigService,
     private readonly channelRecords: ChannelRecordRepository,
-  ) {}
+  ) {
+    this.connectChannel();
+  }
 
   public async getChannel(): Promise<any> {
-    this.channel = await connext({ ...this.config.channel, store: this.channelRecords });
-    this.tokenAddress = (await this.channel.config()).contractAddresses.Token;
-    this.swapRate = formatEther(
-      await this.channel.getLatestSwapRate(AddressZero, this.tokenAddress),
-    );
+    return await this.channel;
+  }
 
-    this.channel.subscribeToSwapRates(AddressZero, this.tokenAddress, async res => {
-      if (!res || !res.swapRate) { return; }
-      const oldRate = this.swapRate;
-      this.swapRate = formatEther(res.swapRate);
-      console.log(`Got swap rate upate: ${oldRate} -> ${this.swapRate}`);
+  public async connectChannel(): Promise<any> {
+    this.channel = new Promise(async (resolve, reject) => {
+      const channel = await connext({ ...this.config.channel, store: this.channelRecords });
+      this.tokenAddress = (await channel.config()).contractAddresses.Token;
+      this.swapRate = await channel.getLatestSwapRate(AddressZero, this.tokenAddress),
+
+      channel.subscribeToSwapRates(AddressZero, this.tokenAddress, async res => {
+        if (!res || !res.swapRate) { return; }
+        const oldRate = this.swapRate;
+        this.swapRate = res.swapRate;
+        console.log(`Got swap rate upate: ${oldRate} -> ${this.swapRate}`);
+      });
+
+      console.log(`Client created successfully!`);
+      console.log(` - Public Identifier: ${channel.publicIdentifier}`);
+      console.log(` - Account multisig address: ${channel.opts.multisigAddress}`);
+      console.log(` - Free balance address: ${channel.freeBalanceAddress}`);
+      console.log(` - Token address: ${this.tokenAddress}`);
+      console.log(` - Swap rate: ${this.swapRate}`);
+
+      console.log(`Creating a payment profile..`);
+      await channel.addPaymentProfile({
+        amountToCollateralize: parseEther('10').toString(),
+        minimumMaintainedCollateral: parseEther('5').toString(),
+        assetId: this.tokenAddress,
+      });
+
+      const freeTokenBalance = await channel.getFreeBalance(this.tokenAddress);
+      const hubFreeBalanceAddress = Object.keys(freeTokenBalance).filter(
+        addr => addr.toLowerCase() !== channel.freeBalanceAddress,
+      )[0];
+
+      if (freeTokenBalance[hubFreeBalanceAddress].eq(Zero)) {
+        console.log(`Requesting collateral for token ${this.tokenAddress}`);
+        await channel.requestCollateral(this.tokenAddress);
+      } else {
+        console.log(
+          `Hub has collateralized us with ${formatEther(
+            freeTokenBalance[hubFreeBalanceAddress],
+          )} tokens`,
+        );
+      }
+
+      const botFreeBalance = freeTokenBalance[channel.freeBalanceAddress];
+      console.log(`Bot has a free balance of ${formatEther(botFreeBalance)} tokens`);
+
+      // TODO: check bot's token & eth balance first and maybe deposit a bit?
+      return resolve(channel);
     });
-
-    console.log(`Client created successfully!`);
-    console.log(` - Public Identifier: ${this.channel.publicIdentifier}`);
-    console.log(` - Account multisig address: ${this.channel.opts.multisigAddress}`);
-    console.log(` - Free balance address: ${this.channel.freeBalanceAddress}`);
-    console.log(` - Token address: ${this.tokenAddress}`);
-    console.log(` - Swap rate: ${this.swapRate}`);
-
-    console.log(`Creating a payment profile..`);
-    await this.channel.addPaymentProfile({
-      amountToCollateralize: parseEther('10').toString(),
-      minimumMaintainedCollateral: parseEther('5').toString(),
-      tokenAddress: this.tokenAddress,
-    });
-
-    const freeTokenBalance = await this.channel.getFreeBalance(this.tokenAddress);
-    const hubFreeBalanceAddress = Object.keys(freeTokenBalance).filter(
-      addr => addr.toLowerCase() !== this.channel.freeBalanceAddress,
-    )[0];
-
-    if (freeTokenBalance[hubFreeBalanceAddress].eq(Zero)) {
-      console.log(`Requesting collateral for token ${this.tokenAddress}`);
-      await this.channel.requestCollateral(this.tokenAddress);
-    } else {
-      console.log(
-        `Hub has collateralized us with ${formatEther(
-          freeTokenBalance[hubFreeBalanceAddress],
-        )} tokens`,
-      );
-    }
-
-    const botFreeBalance = freeTokenBalance[this.channel.freeBalanceAddress];
-    // TODO: check bot's token & eth balance first
-    if (botFreeBalance.eq(Zero)) {
-      console.log(`Bot no tokens in its channel, depositing 10 now`);
-      await this.channel.deposit({ amount: parseEther('10'), assetId: this.tokenAddress });
-    } else {
-      console.log(
-        `Bot has a free balance of ${formatEther(botFreeBalance)} tokens`,
-      );
-    }
-
   }
 }

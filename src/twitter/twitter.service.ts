@@ -135,6 +135,7 @@ export class TwitterService {
               // 3. Create a new subscription
               this.twitter.postCustomApiCall(
                 `/account_activity/all/${this.config.webhooks.twitter.env}/subscriptions.json`,
+                {},
                 this.handleError(reject),
                 newSubscriptionRes => {
                   const innerData = JSON.parse(newWebhookRes);

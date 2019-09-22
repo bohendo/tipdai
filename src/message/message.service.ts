@@ -4,6 +4,8 @@ import { formatEther, parseEther } from 'ethers/utils';
 import { ChannelService } from '../channel/channel.service';
 import { ConfigService } from '../config/config.service';
 import { TwitterService } from '../twitter/twitter.service';
+import { User } from '../user/user.entity';
+import { UserRepository } from '../user/user.repository';
 
 const botId = '1154313992141099008';
 
@@ -13,6 +15,7 @@ export class MessageService {
     private readonly config: ConfigService,
     private readonly channel: ChannelService,
     private readonly twitter: TwitterService,
+    private readonly userRepo: UserRepository,
   ) {}
 
   public handleMessage = async (event) => {
@@ -38,12 +41,15 @@ export class MessageService {
     );
     console.log(`maxDeposit: ${maxDeposit}`);
 
-    let user = '' as any; // ((await db.get(`user-${sender}`)) as any) as any;
+    let user = await this.userRepo.findByTwitterId(sender);
     if (!user) {
-      user = { hasBeenWelcomed: true };
-      // await db.set(`user-${sender}`, JSON.stringify(user));
+      user = new User();
+      user.twitterId = sender;
+      user.balance = '0.00';
+      await this.userRepo.save(user);
+      console.log(`Saved new user: ${JSON.stringify(user)}`);
     } else {
-      user = JSON.parse(user);
+      console.log(`Found user: ${JSON.stringify(user)}`);
     }
 
     if (message.match(/^balance/i) || message.match(/^refresh/i)) {
@@ -64,7 +70,7 @@ export class MessageService {
         }
         return await this.twitter.sendDM(
           sender,
-          `Your balance is $${user.balance} (kovan) DAI.\n\nLink payment id: ${user.linkPayment.paymentId}\n\nSecret: ${user.linkPayment.preImage}`,
+          `Your balance is $${user.balance} (rinkeby) DAI.\n\nLink: ${user.linkPayment}`,
         );
       }
       return await this.twitter.sendDM(sender, `Your balance is $0.00`);
@@ -105,7 +111,7 @@ export class MessageService {
       // TODO: mention max deposit
       await this.twitter.sendDM(
         sender,
-        `Send max of ${maxDeposit} kovan ETH to the following address to deposit. This address will be available for deposits for 10 minutes. ` +
+        `Send max of ${maxDeposit} rinkeby ETH to the following address to deposit. This address will be available for deposits for 10 minutes. ` +
         `If you send a transaction with low gas, reply "wait" and the timeout will be extended.`,
       );
       await this.twitter.sendDM(sender, depositAddress);
@@ -137,7 +143,7 @@ export class MessageService {
       */
       await this.twitter.sendDM(
         sender,
-        `Timeout extended, you have 10 more minutes to deposit up to ${maxDeposit} kovan ETH to the below address. ` +
+        `Timeout extended, you have 10 more minutes to deposit up to ${maxDeposit} rinkeby ETH to the below address. ` +
         `If you want to extend again, reply "wait" as many times as needed.`,
       );
       await this.twitter.sendDM(sender, prevDeposit[0].address);

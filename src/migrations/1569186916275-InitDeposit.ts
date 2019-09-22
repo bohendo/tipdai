@@ -6,11 +6,11 @@ export class InitDeposit1569186916275 implements MigrationInterface {
     await queryRunner.query(`
       CREATE TABLE "deposit" (
         "id" SERIAL NOT NULL,
-        "address" citext NOT NULL,
-        "amount" citext NOT NULL,
-        "startTime" citext NOT NULL,
-        "user" citext NOT NULL,
-        "oldBalance" citext NOT NULL,
+        "address" text NOT NULL,
+        "amount" text NOT NULL,
+        "startTime" text NOT NULL,
+        "user" text NOT NULL,
+        "oldBalance" text NOT NULL,
         CONSTRAINT "PK_6654b4be449dadfd9d03a324b61" PRIMARY KEY ("id")
       )
     `);

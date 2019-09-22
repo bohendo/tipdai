@@ -5,18 +5,18 @@ export class Deposit {
   @PrimaryGeneratedColumn()
   id!: number;
 
-  @Column('citext')
+  @Column('text')
   address!: string;
 
-  @Column('citext')
+  @Column('text')
   amount!: string;
 
-  @Column('citext')
+  @Column('text')
   startTime!: Date;
 
-  @Column('citext')
+  @Column('text')
   user!: string;
 
-  @Column('citext')
+  @Column('text')
   oldBalance!: string;
 }

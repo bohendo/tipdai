@@ -10,8 +10,8 @@ import { ChannelRecordRepository } from './channel.repository';
 @Injectable()
 export class ChannelService {
   private channel: any;
-  private tokenAddress: string;
-  private swapRate: string;
+  public tokenAddress: string;
+  public swapRate: string;
 
   constructor(
     private readonly config: ConfigService,

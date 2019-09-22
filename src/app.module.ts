@@ -8,6 +8,7 @@ import { DatabaseModule } from './database/database.module';
 import { ChannelModule } from './channel/channel.module';
 import { DepositModule } from './deposit/deposit.module';
 import { MessageModule } from './message/message.module';
+import { UserModule } from './user/user.module';
 
 @Module({
   imports: [
@@ -18,6 +19,7 @@ import { MessageModule } from './message/message.module';
     ChannelModule,
     DepositModule,
     MessageModule,
+    UserModule,
   ],
   controllers: [AppController],
   providers: [AppService],

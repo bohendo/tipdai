@@ -168,7 +168,7 @@ export class TwitterService {
     return new Promise((resolve, reject) => {
       const { env, id } = this.config.webhooks.twitter;
       this.twitterApp.triggerCRC({ env, webhookId: id }, this.handleError(reject), res => {
-        console.log(`Success fully triggered a CRC!`);
+        console.log(`Successfully triggered a CRC!`);
         resolve();
       });
     });

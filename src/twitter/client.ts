@@ -12,8 +12,6 @@ function Twitter(config) {
   this.accessTokenSecret = config.accessSecret;
   this.callBackUrl = config.callBackUrl;
   this.baseUrl = 'https://api.twitter.com/1.1';
-  console.log(`Consumer auth: ${this.consumerKey}, ${this.consumerSecret}`);
-  console.log(`Access auth: ${this.accessToken}, ${this.accessTokenSecret}`);
   this.oauth = new OAuth(
     'https://api.twitter.com/oauth/request_token',
     'https://api.twitter.com/oauth/access_token',

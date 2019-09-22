@@ -99,11 +99,12 @@ fi
 ####################
 # Database Config
 
-db_volume=${project}_database
 #if [[ "$TIPDAI_MODE" == "production" ]]
 #then db_volume=${project}_database
 #else db_volume=${project}_database_dev
 #fi
+
+db_volume=${project}_database
 
 # database connection settings
 postgres_db="$project"

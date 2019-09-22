@@ -59,30 +59,62 @@ export class TwitterClient {
     );
   }
 
-  /*
-  return new Promise((resolve, reject) => {
-    this.twitterDev.getCustomApiCall(
-      `/account_activity/all/${this.config.webhooks.twitter.env}/subscriptions/list.json`,
-      {},
-      this.handleError(reject),
-      res => {
-        const data = JSON.parse(res);
-        resolve(callback ? callback(data) : data);
-      },
-    );
-  });
-  */
+  createWebhook = async (params): Promise<any> => {
+    /*
+    params = {
+      env: this.config.webhooks.twitter.env,
+      url: this.config.webhooks.twitter.url,
+    }
+    */
+    const path = `/account_activity/all/${this.webhook.env}/webhooks.json`;
+    return this._post(this._encodeUrl(this.baseUrl + path + this._buildQS(params)));
+  }
 
-  getSubscriptions = async (): Promise<void> => {
-    console.log(`Auth stuff getSubscriptions: ${this.accessToken} and ${this.accessSecret}`);
-    return this._get(`/account_activity/all/${this.webhook.env}/subscriptions/list.json`);
+  createSubscription = async (): Promise<any> => {
+    const path = `/account_activity/all/${this.webhook.env}/subscriptions.json`;
+    return this._post(this._encodeUrl(this.baseUrl + path));
+  }
+
+  removeWebhook = async (webhookId: string|number): Promise<any> => {
+    const path = `/account_activity/all/${this.webhook.env}/webhooks/${webhookId}.json`;
+    return this._delete(this._encodeUrl(this.baseUrl + path));
+  }
+
+  getAccessToken = async (params: any): Promise<any> => {
+    /*
+    params = {
+      oauth_consumer_key: consumer_key,
+      oauth_token: token,
+      oauth_verifier: verifier,
+    }
+    */
+    const url = `https://api.twitter.com/oauth/access_token`;
+    return this._post(url + this._buildQS(params));
+  }
+
+  getWebhooks = async (): Promise<any> => {
+    return this._get(`/account_activity/all/webhooks.json`);
+  }
+
+  getSubscriptions = async (): Promise<any> => {
+    const path = `/account_activity/all/${this.webhook.env}/subscriptions/list.json`;
+    return this._get(this._encodeUrl(this.baseUrl + path));
+  }
+
+  requestToken = async (): Promise<any> => {
+    const url = `https://api.twitter.com/oauth/request_token`;
+    return this._post(url);
+  }
+
+  triggerCRC = async (webhookId): Promise<any> => {
+    const path = `/account_activity/all/${this.webhook.env}/webhooks/${webhookId}.json`;
+    return this._put(this._encodeUrl(this.baseUrl + path));
   }
 
   ////////////////////////////////////////
   // Private Methods
 
-  _get = (path: string, params: any = {}): Promise<any> => {
-    const url = this._encodeUrl(this.baseUrl + path + this._buildQS(params));
+  _get = (url: string): Promise<any> => {
     console.log(`GET URL: ${url}`);
     return new Promise((resolve, reject) => {
       this.oauth.get(url, this.accessToken, this.accessSecret, (
@@ -98,7 +130,76 @@ export class TwitterClient {
         try {
           resolve(JSON.parse(body));
         } catch (e) {
-          console.warn(`Body is not parsable JSON`);
+          console.warn(`GET ${url} yielded body not parsable as JSON: [${typeof body}] ${body}`);
+          resolve(body);
+        }
+      });
+    });
+  }
+
+  _post = (url: string, data: any = {}): Promise<any> => {
+    console.log(`POST URL: ${url}`);
+    return new Promise((resolve, reject) => {
+      this.oauth.post(url, data, this.accessToken, this.accessSecret, (
+        err: OAuthError,
+        body: any,
+        res: OAuthResponse,
+      ) => {
+        console.log(`POST response: [${res.statusCode}] ${res.statusMessage}`);
+        if (err) {
+          console.error(`POST failed: ${err.data}`);
+          reject(err);
+        }
+        try {
+          resolve(JSON.parse(body));
+        } catch (e) {
+          console.warn(`POST ${url} yielded body not parsable as JSON: [${typeof body}] ${body}`);
+          resolve(body);
+        }
+      });
+    });
+  }
+
+  _put = (url: string, data: any = {}): Promise<any> => {
+    console.log(`PUT URL: ${url}`);
+    return new Promise((resolve, reject) => {
+      this.oauth.put(url, this.accessToken, this.accessSecret, data, (
+        err: OAuthError,
+        body: any,
+        res: OAuthResponse,
+      ) => {
+        console.log(`PUT response: [${res.statusCode}] ${res.statusMessage}`);
+        if (err) {
+          console.error(`PUT failed: ${err.data}`);
+          reject(err);
+        }
+        try {
+          resolve(JSON.parse(body));
+        } catch (e) {
+          console.warn(`PUT ${url} yielded body not parsable as JSON: [${typeof body}] ${body}`);
+          resolve(body);
+        }
+      });
+    });
+  }
+
+  _delete = (url: string): Promise<any> => {
+    console.log(`DEL URL: ${url}`);
+    return new Promise((resolve, reject) => {
+      this.oauth.delete(url, this.accessToken, this.accessSecret, (
+        err: OAuthError,
+        body: any,
+        res: OAuthResponse,
+      ) => {
+        console.log(`DEL response: [${res.statusCode}] ${res.statusMessage}`);
+        if (err) {
+          console.error(`DEL failed: ${err.data}`);
+          reject(err);
+        }
+        try {
+          resolve(JSON.parse(body));
+        } catch (e) {
+          console.warn(`DEL ${url} yielded body not parsable as JSON: [${typeof body}] ${body}`);
           resolve(body);
         }
       });

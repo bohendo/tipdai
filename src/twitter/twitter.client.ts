@@ -39,7 +39,6 @@ export class TwitterClient {
   webhook: any;
 
   constructor(config: TwitterConfig) {
-    console.log(`Creating twitter CLIENT with config: ${JSON.stringify(config)}`);
     this.accessSecret = config.accessSecret || undefined;
     this.accessToken = config.accessToken || undefined;
     this.baseUrl = 'https://api.twitter.com/1.1';
@@ -47,7 +46,6 @@ export class TwitterClient {
     this.consumerKey = config.consumerKey;
     this.consumerSecret = config.consumerSecret;
     this.webhook = config.webhook;
-
     this.oauth = new OAuth(
       'https://api.twitter.com/oauth/request_token',
       'https://api.twitter.com/oauth/access_token',
@@ -60,12 +58,6 @@ export class TwitterClient {
   }
 
   createWebhook = async (): Promise<any> => {
-    /*
-    params = {
-      env: this.config.webhooks.twitter.env,
-      url: this.config.webhooks.twitter.url,
-    }
-    */
     const path = `/account_activity/all/${this.webhook.env}/webhooks.json`;
     const url = this._encodeUrl(this.baseUrl + path + this._buildQS({ url: this.callbackUrl }));
     return this._post(url);
@@ -82,13 +74,7 @@ export class TwitterClient {
   }
 
   getAccessToken = async (params: any): Promise<any> => {
-    /*
-    params = {
-      oauth_consumer_key: consumer_key,
-      oauth_token: token,
-      oauth_verifier: verifier,
-    }
-    */
+    // params = { oauth_consumer_key: consumer_key, oauth_token: token, oauth_verifier: verifier }
     const url = `https://api.twitter.com/oauth/access_token`;
     return this._post(url + this._buildQS(params));
   }
@@ -113,6 +99,35 @@ export class TwitterClient {
     return this._put(this._encodeUrl(this.baseUrl + path));
   }
 
+  tweet = async (status): Promise<any> => {
+    const path = '/statuses/update.json';
+    return this._post(this._encodeUrl(this.baseUrl + path), { status });
+  }
+
+  getUser = async (screen_name): Promise<any> => {
+    const path = '/users/show.json';
+    return this._get(this._encodeUrl(this.baseUrl + path + this._buildQS({ screen_name })));
+  }
+
+  getMentions = async (options): Promise<any> => {
+    const path = '/statuses/mentions_timeline.json';
+    return this._get(this._encodeUrl(this.baseUrl + path + this._buildQS(options)));
+  }
+
+  sendDM = async (recipient_id, text): Promise<any> => {
+    const path = '/direct_messages/events/new.json';
+    const data = JSON.stringify({
+      event: {
+        type: 'message_create',
+        message_create: {
+          target: { recipient_id },
+          message_data: { text },
+        },
+      },
+    });
+    return this._post(this._encodeUrl(this.baseUrl + path + this._buildQS(data)), data);
+  }
+
   ////////////////////////////////////////
   // Private Methods
 
@@ -124,7 +139,6 @@ export class TwitterClient {
         body: any,
         res: OAuthResponse,
       ) => {
-        if (res) { console.log(`GET response: [${res.statusCode}] ${res.statusMessage}`); }
         if (err) {
           console.error(`GET failed: ${err.data}`);
           reject(err);
@@ -142,12 +156,11 @@ export class TwitterClient {
   _post = (url: string, data: any = {}): Promise<any> => {
     console.log(`POST URL: ${url}`);
     return new Promise((resolve, reject) => {
-      this.oauth.post(url, data, this.accessToken, this.accessSecret, (
+      this.oauth.post(url, this.accessToken, this.accessSecret, data, 'application/json', (
         err: OAuthError,
         body: any,
         res: OAuthResponse,
       ) => {
-        if (res) { console.log(`POST response: [${res.statusCode}] ${res.statusMessage}`); }
         if (err) {
           console.error(`POST failed: ${err.data}`);
           reject(err);
@@ -165,12 +178,11 @@ export class TwitterClient {
   _put = (url: string, data: any = {}): Promise<any> => {
     console.log(`PUT URL: ${url}`);
     return new Promise((resolve, reject) => {
-      this.oauth.put(url, this.accessToken, this.accessSecret, data, (
+      this.oauth.put(url, this.accessToken, this.accessSecret, data, 'application/json', (
         err: OAuthError,
         body: any,
         res: OAuthResponse,
       ) => {
-        if (res) { console.log(`PUT response: [${res.statusCode}] ${res.statusMessage}`); }
         if (err) {
           console.error(`PUT failed: ${err.data}`);
           reject(err);
@@ -193,7 +205,6 @@ export class TwitterClient {
         body: any,
         res: OAuthResponse,
       ) => {
-        if (res) { console.log(`DEL response: [${res.statusCode}] ${res.statusMessage}`); }
         if (err) {
           console.error(`DEL failed: ${err.data}`);
           reject(err);

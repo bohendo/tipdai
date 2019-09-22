@@ -17,7 +17,9 @@ export class InitDeposit1569186916275 implements MigrationInterface {
   }
 
   public async down(queryRunner: QueryRunner): Promise<any> {
-    await queryRunner.query(`DROP TABLE "deposit"`);
+    await queryRunner.query(`
+      DROP TABLE "deposit"
+    `);
   }
 
 }

@@ -24,7 +24,7 @@ export class TwitterService {
   public botId: string;
 
   constructor(private readonly config: ConfigService) {
-    if (!this.config.consumerKey || !this.config.consumerSecret) {
+    if (!this.config.twitterDev.consumerKey || !this.config.twitterDev.consumerSecret) {
       console.warn(`[Twitter] Missing consumer token and/or secret, twitter stuff won't work.`);
       this.invalid = true;
     } else {

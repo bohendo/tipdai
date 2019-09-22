@@ -5,16 +5,21 @@ import { formatEther, parseEther } from 'ethers/utils';
 
 import { ConfigService } from '../config/config.service';
 
+import { ChannelRecordRepository } from './channel.repository';
+
 @Injectable()
 export class ChannelService {
   private channel: any;
   private tokenAddress: string;
   private swapRate: string;
 
-  constructor(private readonly config: ConfigService) {}
+  constructor(
+    private readonly config: ConfigService,
+    private readonly channelRecords: ChannelRecordRepository,
+  ) {}
 
   public async getChannel(): Promise<any> {
-    this.channel = await connext(await this.config.getChannelConfig());
+    this.channel = await connext({ ...this.config.channel, store: this.channelRecords });
     this.tokenAddress = (await this.channel.config()).contractAddresses.Token;
     this.swapRate = formatEther(
       await this.channel.getLatestSwapRate(AddressZero, this.tokenAddress),

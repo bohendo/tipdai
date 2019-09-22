@@ -1,4 +1,3 @@
-import { PostgresServiceFactory } from '@counterfactual/postgresql-node-connector';
 import { Injectable } from '@nestjs/common';
 import { JsonRpcProvider } from 'ethers/providers';
 import { Wallet } from 'ethers';
@@ -107,18 +106,12 @@ export class ConfigService {
     };
   }
 
-  async getChannelConfig(): Promise<any> {
-    const storeFactory = new PostgresServiceFactory({
-      ...this.database,
-      user: process.env.PGUSER,
-    } as any);
-    await storeFactory.connectDb();
+  get channel(): any {
     return {
       ethProviderUrl: env.ethProvider,
       logLevel: 3,
       mnemonic: fs.readFileSync(env.mnemonicFile, 'utf8'),
       nodeUrl: env.paymentHub,
-      store: storeFactory.createStoreService('TIPDAI_CF_NODE'),
       type: 'postgres',
     };
   }

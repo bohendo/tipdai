@@ -16,7 +16,7 @@ echo "my id: $id"
 docker exec $container bash ops/permissions-fixer.sh $id '
   export TYPEORM_CONNECTION="postgres"
   export TYPEORM_DATABASE="$PGDATABASE"
-  export TYPEORM_ENTITIES=dist/deposit/deposit.entity.js
+  export TYPEORM_ENTITIES=dist/*/*.entity.js
   export TYPEORM_HOST="$PGHOST"
   export TYPEORM_MIGRATIONS="dist/migrations/*"
   export TYPEORM_MIGRATIONS_DIR="src/migrations"

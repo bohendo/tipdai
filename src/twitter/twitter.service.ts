@@ -17,7 +17,7 @@ export class TwitterService {
   private twitterApp: any;
   private twitterBot: any;
   private twitterDev: any;
-  private webookId: string | undefined;
+  private webhookId: string | undefined;
 
   public authUrl: string | undefined;
   public botId: string;
@@ -57,9 +57,9 @@ export class TwitterService {
     console.log(`Authentication Success!`);
     console.log(`Got access tokens for ${data.screen_name}`);
     console.log(`Access tokens (You should save these for later):`);
-    console.log(`TWITTER_BOT_ACCESS_SECRET=${data.oauth_token_secret}`);
-    console.log(`TWITTER_BOT_ACCESS_TOKEN=${data.oauth_token}`);
-    console.log(`TWITTER_BOT_USER_ID=${data.user_id}`);
+    console.log(`TIPDAI_TWITTER_BOT_ACCESS_SECRET=${data.oauth_token_secret}`);
+    console.log(`TIPDAI_TWITTER_BOT_ACCESS_TOKEN=${data.oauth_token}`);
+    console.log(`TIPDAI_TWITTER_BOT_USER_ID=${data.user_id}`);
     this.botId = data.user_id;
     this.twitterBot = new Twitter({
       ...this.config.twitterBot,
@@ -77,7 +77,11 @@ export class TwitterService {
     console.log(`Got webhooks: ${JSON.stringify(webhooks, null, 2)}`);
     const subscriptions = await this.twitterDev.getSubscriptions();
     console.log(`Got subscriptions: ${JSON.stringify(subscriptions, null, 2)}`);
+    let crcRes;
     if (subscriptions.subscriptions.find(e => e.user_id === botId)) {
+      this.webhookId = webhooks.environments[0].webhooks[0].id;
+      crcRes = await this.triggerCRC();
+      console.log(`CRC Result: ${crcRes}`);
       console.log(`Already subscribed to user ${botId}. We're good to go!`);
       return;
     }
@@ -94,13 +98,14 @@ export class TwitterService {
     // 3. Create a new subscription
     const newSubscription = await this.twitterBot.createSubscription();
     console.log(`Activated subscription: ${JSON.stringify(newSubscription, null, 2)}`);
-    const crcRes = await this.triggerCRC();
+    this.webhookId = newWebhook.id;
+    crcRes = await this.triggerCRC();
     console.log(`CRC Result: ${crcRes}`);
     return(newSubscription);
   }
 
   public triggerCRC = async () => {
-    await this.twitterApp.triggerCRC(this.webookId);
+    await this.twitterApp.triggerCRC(this.webhookId);
   }
 
   public tweet = async (status) => {

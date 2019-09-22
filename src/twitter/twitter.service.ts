@@ -99,6 +99,8 @@ export class TwitterService {
 
           await this.getSubscriptions();
 
+          await this.triggerCRC();
+
           // 2. Remove all webhook subscriptions
           await Promise.all(webhooks.environments.map(async env => {
             return Promise.all(env.webhooks.map(async wh => {
@@ -135,7 +137,6 @@ export class TwitterService {
                 `/account_activity/all/${this.config.webhooks.twitter.env}/subscriptions.json`,
                 this.handleError(reject),
                 newSubscriptionRes => {
-                  console.log(`Success!`);
                   const innerData = JSON.parse(newWebhookRes);
                   console.log(`Activated subscription: ${JSON.stringify(innerData, null, 2)}`);
                   resolve(data);
@@ -145,16 +146,6 @@ export class TwitterService {
           );
         },
       );
-    });
-  }
-
-  public triggerCRC = () => {
-    return new Promise((resolve, reject) => {
-      const { env, id } = this.config.webhooks.twitter;
-      this.twitter.triggerCRC({ env, webhookId: id }, this.handleError(reject), res => {
-        console.log(`Success fully triggered a CRC!`);
-        resolve();
-      });
     });
   }
 
@@ -173,10 +164,19 @@ export class TwitterService {
     });
   }
 
+  public triggerCRC = () => {
+    return new Promise((resolve, reject) => {
+      const { env, id } = this.config.webhooks.twitter;
+      this.twitterApp.triggerCRC({ env, webhookId: id }, this.handleError(reject), res => {
+        console.log(`Success fully triggered a CRC!`);
+        resolve();
+      });
+    });
+  }
+
   public tweet = status => {
     return new Promise((resolve, reject) => {
       this.twitter.postTweet({ status }, this.handleError(reject), res => {
-        console.log(`Success!`);
         const data = JSON.parse(res);
         console.log(`Sent tweet: ${JSON.stringify(data, null, 2)}`);
         resolve(data);
@@ -191,7 +191,6 @@ export class TwitterService {
         { ...defaults, ...options },
         this.handleError(reject),
         res => {
-          console.log(`Success!`);
           const data = JSON.parse(res);
           const mentions = data.map(tweet => tweet.text);
           console.log(`Got mentions: ${JSON.stringify(mentions, null, 2)}`);
@@ -208,7 +207,6 @@ export class TwitterService {
         { screen_name },
         this.handleError(reject),
         res => {
-          console.log(`Success!`);
           const data = JSON.parse(res);
           console.log(`Got user: ${JSON.stringify(data, null, 2)}`);
           resolve(data);
@@ -236,7 +234,6 @@ export class TwitterService {
         }),
         this.handleError(reject),
         data => {
-          console.log(`Success!`);
           console.log(`Sent DM: ${data}`);
           resolve(data);
         },

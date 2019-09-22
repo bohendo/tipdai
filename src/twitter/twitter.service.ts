@@ -4,6 +4,7 @@ import * as qs from 'qs';
 
 import { ConfigService } from '../config/config.service';
 
+import { TwitterClient } from './twitter.client';
 import { Twitter } from './client';
 
 /*
@@ -17,14 +18,13 @@ export class TwitterService {
   private twitterApp: any;
   private twitterBot: any;
   private twitterDev: any;
-  private twitterDevClient: any;
   private webookId: string | undefined;
 
   public authUrl: string | undefined;
   public botId: string;
 
   constructor(private readonly config: ConfigService) {
-    this.twitterDevClient = new Twitter(this.config.twitterDev);
+    this.twitterDev = new TwitterClient(this.config.twitterDev);
     this.twitterApp = new Twitter(this.config.twitterApp);
     if (!config.twitterBot.accessToken) {
       console.log(`Bot credentials not found, requesting a new access token..`);
@@ -159,7 +159,7 @@ export class TwitterService {
 
   public getSubscriptions = (callback) => {
     return new Promise((resolve, reject) => {
-      this.twitterDevClient.getCustomApiCall(
+      this.twitterDev.getCustomApiCall(
         `/account_activity/all/${this.config.webhooks.twitter.env}/subscriptions/list.json`,
         {},
         this.handleError(reject),

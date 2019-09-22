@@ -95,7 +95,9 @@ export class TwitterService {
           const webhooks = JSON.parse(rawWebhooks);
           console.log(`Got webhooks: ${JSON.stringify(webhooks, null, 2)}`);
 
-          await this.getMentions({})
+          await this.getMentions({});
+
+          await this.getSubscriptions();
 
           // 2. Remove all webhook subscriptions
           await Promise.all(webhooks.environments.map(async env => {
@@ -158,12 +160,11 @@ export class TwitterService {
 
   public getSubscriptions = () => {
     return new Promise((resolve, reject) => {
-      this.twitterApp.getCustomApiCall(
+      this.twitterDev.getCustomApiCall(
         `/account_activity/all/${this.config.webhooks.twitter.env}/subscriptions/list.json`,
         {},
         this.handleError(reject),
         res => {
-          console.log(`Success!`);
           const data = JSON.parse(res);
           console.log(`Got subscriptions: ${JSON.stringify(data, null, 2)}`);
           resolve(data);

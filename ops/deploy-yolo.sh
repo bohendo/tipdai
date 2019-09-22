@@ -28,12 +28,8 @@ then
   ssh -i $ssh_key $user@$prod_server "bash -c '
     cd tipdai && make push-latest && make restart-prod && bash ops/logs.sh bot
   '"
-elif [[ "$push" == "none" ]]
+elif [[ "$push" == "local" ]]
 then
-  ssh -i $ssh_key $user@$prod_server "bash -c '
-    cd tipdai && bash ops/logs.sh bot
-  '"
-else
   ssh -i $ssh_key $user@$prod_server "bash -c '
     cd tipdai && docker pull bohendo/tipdai_bot:latest && make restart-prod && bash ops/logs.sh bot
   '"

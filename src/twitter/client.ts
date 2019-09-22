@@ -6,12 +6,15 @@ import { OAuth } from 'oauth';
 import * as qs from 'qs';
 
 function Twitter(config) {
+  console.log(`Creating twitter thing with config: ${JSON.stringify(config)}`);
   this.consumerKey = config.consumerKey;
   this.consumerSecret = config.consumerSecret;
   this.accessToken = config.accessToken;
   this.accessTokenSecret = config.accessSecret;
   this.callBackUrl = config.callBackUrl;
   this.baseUrl = 'https://api.twitter.com/1.1';
+  // console.log(`Consumer auth: ${this.consumerKey}, ${this.consumerSecret}`);
+  // console.log(`Access auth: ${this.accessToken}, ${this.accessTokenSecret}`);
   this.oauth = new OAuth(
     'https://api.twitter.com/oauth/request_token',
     'https://api.twitter.com/oauth/access_token',

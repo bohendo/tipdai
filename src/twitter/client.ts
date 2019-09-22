@@ -278,7 +278,7 @@ Twitter.prototype.doDelete = function(url, error, success) {
     .replace(/\(/g, '%28')
     .replace(/\)/g, '%29')
     .replace(/\*/g, '%2A');
-  this.oauth.get(url, this.accessToken, this.accessTokenSecret, function(
+  this.oauth.delete(url, this.accessToken, this.accessTokenSecret, function(
     err,
     body,
     response,

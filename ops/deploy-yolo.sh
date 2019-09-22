@@ -28,6 +28,11 @@ then
   ssh -i $ssh_key $user@$prod_server "bash -c '
     cd tipdai && make push-latest && make restart-prod && bash ops/logs.sh bot
   '"
+elif [[ "$push" == "none" ]]
+then
+  ssh -i $ssh_key $user@$prod_server "bash -c '
+    cd tipdai && make
+  '"
 elif [[ "$push" == "local" ]]
 then
   ssh -i $ssh_key $user@$prod_server "bash -c '

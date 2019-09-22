@@ -25,10 +25,10 @@ export class TwitterService {
 
   constructor(private readonly config: ConfigService) {
     this.twitterDev = new TwitterClient(this.config.twitterDev);
-    this.twitterApp = new Twitter(this.config.twitterApp);
+    this.twitterApp = new TwitterClient(this.config.twitterApp);
     if (!config.twitterBot.accessToken) {
       console.log(`Bot credentials not found, requesting a new access token..`);
-      this.requestToken();
+      this.botLogin();
     } else {
       this.twitterBot = new Twitter(this.config.twitterBot);
       this.botId = this.config.twitterBotUserId;
@@ -36,125 +36,86 @@ export class TwitterService {
     }
   }
 
-  // First step of 3-leg oauth process
-  public requestToken = () => {
-    return new Promise((resolve, reject) => {
-      this.twitterApp.requestToken(
-        { oauthCallback: this.config.callbacks.twitter },
-        this.handleError(reject),
-        (res) => {
-          const data = qs.parse(res);
-          const baseUrl = 'https://api.twitter.com/oauth/authorize';
-          this.authUrl = `${baseUrl}?oauth_token=${data.oauth_token}`;
-          console.log(`Login at: ${this.authUrl}`);
-          resolve(this.authUrl);
-        },
-      );
-    });
+  public botLogin = async () => {
+    const res = await this.twitterApp.requestToken();
+    const data = qs.parse(res);
+    console.log(`Got token data: ${JSON.stringify(data)}`);
+    const baseUrl = 'https://api.twitter.com/oauth/authorize';
+    this.authUrl = `${baseUrl}?oauth_token=${data.oauth_token}`;
+    console.log(`Login at: ${this.authUrl}`);
+    return this.authUrl;
   }
 
   // Third step of 3-leg oauth (2nd step is the user clicking the authUrl)
   public connectBot = (consumer_key, token, verifier): Promise<void> => {
     this.authUrl = undefined; // this url has been used & can't be used again
-    return new Promise((resolve, reject) => {
-      this.twitterApp.getAccessToken(
-        {
-          oauth_consumer_key: consumer_key,
-          oauth_token: token,
-          oauth_verifier: verifier,
-        },
-        this.handleError(reject),
-        async (res) => {
-          const data = qs.parse(res);
-          console.log(`Authentication Success!`);
-          console.log(`Got access tokens for ${data.screen_name}`);
-          console.log(`Access tokens (You should save these for later):`);
-          console.log(`TWITTER_BOT_ACCESS_SECRET=${data.oauth_token_secret}`);
-          console.log(`TWITTER_BOT_ACCESS_TOKEN=${data.oauth_token}`);
-          console.log(`TWITTER_BOT_USER_ID=${data.user_id}`);
-          this.botId = data.user_id;
-          this.twitterBot = new Twitter({
-            ...this.config.twitterBot,
-            accessToken: data.oauth_token,
-            accessSecret: data.oauth_token_secret,
-          });
-          console.log(`Twitter bot successfully connected!`);
-          await this.subscribe(this.botId);
-          console.log(`Account activity subscription successfully configured!`);
-          resolve();
-        },
-      );
+    return new Promise(async (resolve, reject) => {
+      const res = await this.twitterApp.getAccessToken({
+        oauth_consumer_key: consumer_key,
+        oauth_token: token,
+        oauth_verifier: verifier,
+      });
+      const data = qs.parse(res);
+      console.log(`Authentication Success!`);
+      console.log(`Got access tokens for ${data.screen_name}`);
+      console.log(`Access tokens (You should save these for later):`);
+      console.log(`TWITTER_BOT_ACCESS_SECRET=${data.oauth_token_secret}`);
+      console.log(`TWITTER_BOT_ACCESS_TOKEN=${data.oauth_token}`);
+      console.log(`TWITTER_BOT_USER_ID=${data.user_id}`);
+      this.botId = data.user_id;
+      this.twitterBot = new Twitter({
+        ...this.config.twitterBot,
+        accessToken: data.oauth_token,
+        accessSecret: data.oauth_token_secret,
+      });
+      console.log(`Twitter bot successfully connected!`);
+      await this.subscribe(this.botId);
+      console.log(`Account activity subscription successfully configured!`);
+      resolve();
     });
   }
 
   public subscribe = (botId) => {
-    return new Promise((resolve, reject) => {
-      // 1. Get all subscriptions
-      this.twitterApp.getCustomApiCall(
-        `/account_activity/all/webhooks.json`,
+    return new Promise(async (resolve, reject) => {
+      const webhooks = await this.twitterApp.getWebhooks();
+      console.log(`Got webhooks: ${JSON.stringify(webhooks, null, 2)}`);
+      await this.getMentions({});
+      const subscriptions = await this.twitterDev.getSubscriptions();
+      console.log(`Got subscriptions: ${JSON.stringify(subscriptions, null, 2)}`);
+      if (subscriptions.subscriptions.find(e => e.user_id === botId)) {
+        console.log(`Already subscribed to user ${botId}. We're good to go!`);
+        return resolve();
+      }
+      console.log(`Ok let's try to remove the old webhook subscriptions`);
+      // 2. Remove all webhook subscriptions
+      await Promise.all(webhooks.environments.map(async env => {
+        return Promise.all(env.webhooks.map(async wh => {
+          return new Promise((res, rej) => {
+            console.log(`Unsubscribing from ${env.environment_name} webhook: ${wh.id}..`);
+            this.twitterBot.deleteCustomApiCall(
+              `/account_activity/all/${env.environment_name}/webhooks/${wh.id}.json`,
+              {},
+              this.handleError(rej),
+              (delRes) => {
+                console.log(`Unsubscribed successfully! ${JSON.stringify(delRes)}`);
+                res();
+              },
+            );
+          });
+        }));
+      }));
+      console.log(`Done unsubscribing, time to do some subscribing`);
+      const newWebhook = await this.twitterApp.createWebhook();
+      console.log(`Created webhook: ${JSON.stringify(newWebhook, null, 2)}`);
+      // 3. Create a new subscription
+      this.twitterBot.postCustomApiCall(
+        `/account_activity/all/${this.config.webhooks.twitter.env}/subscriptions.json`,
         {},
         this.handleError(reject),
-        async (rawWebhooks) => {
-          const webhooks = JSON.parse(rawWebhooks);
-          console.log(`Got webhooks: ${JSON.stringify(webhooks, null, 2)}`);
-
-          await this.getMentions({});
-
-          const subscriptions = await this.twitterDev.getSubscriptions();
-
-          console.log(`Got subscriptions: ${JSON.stringify(subscriptions, null, 2)}`);
-
-          if (subscriptions.subscriptions.find(e => e.user_id === botId)) {
-            console.log(`Already subscribed to user ${botId}. We're good to go!`);
-            return resolve();
-          }
-
-          console.log(`Ok let's try to remove the old webhook subscriptions`);
-
-          // 2. Remove all webhook subscriptions
-          await Promise.all(webhooks.environments.map(async env => {
-            return Promise.all(env.webhooks.map(async wh => {
-              return new Promise((res, rej) => {
-                console.log(`Unsubscribing from ${env.environment_name} webhook: ${wh.id}..`);
-                this.twitterBot.deleteCustomApiCall(
-                  `/account_activity/all/${env.environment_name}/webhooks/${wh.id}.json`,
-                  {},
-                  this.handleError(rej),
-                  (delRes) => {
-                    console.log(`Unsubscribed successfully! ${JSON.stringify(delRes)}`);
-                    res();
-                  },
-                );
-              });
-            }));
-          }));
-          console.log(`Done unsubscribing, time to do some subscribing`);
-
-          // 3. Create a new webhook
-          console.log(`webhook config: ${JSON.stringify(this.config.webhooks)}`);
-          this.twitterApp.activateWebhook(
-            {
-              env: this.config.webhooks.twitter.env,
-              url: this.config.webhooks.twitter.url,
-            },
-            this.handleError(reject),
-            newWebhookRes => {
-              console.log(`Successfully activated a new webhook!`);
-              const data = JSON.parse(newWebhookRes);
-              console.log(`Activated webhook: ${JSON.stringify(data, null, 2)}`);
-              // 3. Create a new subscription
-              this.twitterBot.postCustomApiCall(
-                `/account_activity/all/${this.config.webhooks.twitter.env}/subscriptions.json`,
-                {},
-                this.handleError(reject),
-                newSubscriptionRes => {
-                  const innerData = JSON.parse(newWebhookRes);
-                  console.log(`Activated subscription: ${JSON.stringify(innerData, null, 2)}`);
-                  resolve(data);
-                },
-              );
-            },
-          );
+        newSubscriptionRes => {
+          const innerData = JSON.parse(newSubscriptionRes);
+          console.log(`Activated subscription: ${JSON.stringify(innerData, null, 2)}`);
+          resolve(innerData);
         },
       );
     });

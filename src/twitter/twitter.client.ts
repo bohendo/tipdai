@@ -59,7 +59,7 @@ export class TwitterClient {
     );
   }
 
-  createWebhook = async (params): Promise<any> => {
+  createWebhook = async (): Promise<any> => {
     /*
     params = {
       env: this.config.webhooks.twitter.env,
@@ -67,7 +67,8 @@ export class TwitterClient {
     }
     */
     const path = `/account_activity/all/${this.webhook.env}/webhooks.json`;
-    return this._post(this._encodeUrl(this.baseUrl + path + this._buildQS(params)));
+    const url = this._encodeUrl(this.baseUrl + path + this._buildQS({ url: this.callbackUrl }));
+    return this._post(url);
   }
 
   createSubscription = async (): Promise<any> => {
@@ -93,7 +94,8 @@ export class TwitterClient {
   }
 
   getWebhooks = async (): Promise<any> => {
-    return this._get(`/account_activity/all/webhooks.json`);
+    const path = `/account_activity/all/webhooks.json`;
+    return this._get(this._encodeUrl(this.baseUrl + path));
   }
 
   getSubscriptions = async (): Promise<any> => {
@@ -103,7 +105,7 @@ export class TwitterClient {
 
   requestToken = async (): Promise<any> => {
     const url = `https://api.twitter.com/oauth/request_token`;
-    return this._post(url);
+    return this._post(url + this._buildQS({ oauthCallback: this.callbackUrl }));
   }
 
   triggerCRC = async (webhookId): Promise<any> => {
@@ -122,7 +124,7 @@ export class TwitterClient {
         body: any,
         res: OAuthResponse,
       ) => {
-        console.log(`GET response: [${res.statusCode}] ${res.statusMessage}`);
+        if (res) { console.log(`GET response: [${res.statusCode}] ${res.statusMessage}`); }
         if (err) {
           console.error(`GET failed: ${err.data}`);
           reject(err);
@@ -145,7 +147,7 @@ export class TwitterClient {
         body: any,
         res: OAuthResponse,
       ) => {
-        console.log(`POST response: [${res.statusCode}] ${res.statusMessage}`);
+        if (res) { console.log(`POST response: [${res.statusCode}] ${res.statusMessage}`); }
         if (err) {
           console.error(`POST failed: ${err.data}`);
           reject(err);
@@ -168,7 +170,7 @@ export class TwitterClient {
         body: any,
         res: OAuthResponse,
       ) => {
-        console.log(`PUT response: [${res.statusCode}] ${res.statusMessage}`);
+        if (res) { console.log(`PUT response: [${res.statusCode}] ${res.statusMessage}`); }
         if (err) {
           console.error(`PUT failed: ${err.data}`);
           reject(err);
@@ -191,7 +193,7 @@ export class TwitterClient {
         body: any,
         res: OAuthResponse,
       ) => {
-        console.log(`DEL response: [${res.statusCode}] ${res.statusMessage}`);
+        if (res) { console.log(`DEL response: [${res.statusCode}] ${res.statusMessage}`); }
         if (err) {
           console.error(`DEL failed: ${err.data}`);
           reject(err);

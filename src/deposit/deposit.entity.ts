@@ -10,7 +10,7 @@ export class Deposit {
   @Column('text')
   address!: string;
 
-  @Column('text')
+  @Column({ type: 'text', nullable: true})
   amount: string;
 
   @Column('text')

@@ -7,7 +7,7 @@ export class InitDeposit1569199329181 implements MigrationInterface {
           CREATE TABLE "deposit" (
             "id" SERIAL NOT NULL,
             "address" text NOT NULL,
-            "amount" text NOT NULL,
+            "amount" text,
             "oldBalance" text NOT NULL,
             "startTime" text NOT NULL,
             "userId" integer,

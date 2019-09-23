@@ -23,8 +23,6 @@ docker exec $container bash ops/permissions-fixer.sh $id '
   export TYPEORM_PASSWORD="`cat $PGPASSFILE`"
   export TYPEORM_PORT="$PGPORT"
   export TYPEORM_USERNAME="$PGUSER"
-  env
-  echo
   ./node_modules/.bin/typeorm migration:generate -n '"$name"'
 '
 

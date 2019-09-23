@@ -23,6 +23,39 @@ export class DepositService {
     this.startDepositPoller();
   }
 
+  public newDeposit = async (user: User): Promise<string> => {
+    let deposit;
+    deposit = await this.depositRepo.findOne({ user });
+    if (deposit && deposit.address) {
+      return deposit.address;
+    }
+    if (!deposit) {
+      deposit = new Deposit();
+      deposit.startTime = new Date();
+      deposit.user = user;
+    }
+    const pendingDeposits = await this.depositRepo.getAllPending();
+    if (!pendingDeposits) {
+      deposit.address = this.config.getWallet(1).address;
+    } else {
+      deposit.address = this.config.getWallet(pendingDeposits.length + 1).address;
+    }
+    deposit.oldBalance = formatEther(await this.config.ethProvider.getBalance(deposit.address));
+    this.depositRepo.save(deposit);
+    return deposit.address;
+  }
+
+  public delayDeposit = async (user: User): Promise<string> => {
+    let deposit;
+    deposit = await this.depositRepo.findOne({ user });
+    if (!deposit) {
+      return '';
+    }
+    deposit.startTime = new Date();
+    await this.depositRepo.save(deposit);
+    return deposit.address;
+  }
+
   public startDepositPoller = () => {
     setInterval(async () => {
       await this.checkForDeposits();
@@ -31,13 +64,11 @@ export class DepositService {
 
   public checkForDeposits = async () => {
     const channel = await this.channel.getChannel();
-    let pendingDeposits = await this.depositRepo.find();
+    let pendingDeposits = await this.depositRepo.getAllPending();
     if (!pendingDeposits || pendingDeposits === []) {
       console.log(`No pending deposits`);
       return;
     }
-    console.log(`Found pending deposits: ${JSON.stringify(pendingDeposits)}`);
-
     // Check the balance of each pending deposit address
     pendingDeposits = await Promise.all(
       pendingDeposits.map(async dep => {
@@ -58,13 +89,10 @@ export class DepositService {
       await Promise.all(
         completeDeposits.map(async dep => {
           pendingDeposits = pendingDeposits.filter(depp => !depp.amount);
-          let user = await this.userRepo.findByTwitterId(dep.user);
+          const user = await this.userRepo.findOne(dep.user);
           if (!user) {
             console.warn(`Got a deposit from a user we've never seen before?!`);
-            user = new User();
-            user.twitterId = dep.user;
-            user.balance = '0.00';
-            user.linkPayment = '{}';
+            return;
           }
           console.log(`Depositing this deposit into our channel`);
           const tokenAddress = this.channel.tokenAddress;

@@ -5,6 +5,7 @@ import { MessageService } from './message.service';
 
 import { ChannelModule } from '../channel/channel.module';
 import { ConfigModule } from '../config/config.module';
+import { DepositModule } from '../deposit/deposit.module';
 import { TwitterModule } from '../twitter/twitter.module';
 import { UserRepository } from '../user/user.repository';
 
@@ -13,6 +14,7 @@ import { UserRepository } from '../user/user.repository';
   imports: [
     ConfigModule,
     ChannelModule,
+    DepositModule,
     TwitterModule,
     TypeOrmModule.forFeature([UserRepository]),
   ],

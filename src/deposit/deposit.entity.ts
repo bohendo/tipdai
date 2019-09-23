@@ -1,4 +1,6 @@
-import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
+import { Column, Entity, JoinColumn, OneToOne, PrimaryGeneratedColumn } from 'typeorm';
+
+import { User } from '../user/user.entity';
 
 @Entity()
 export class Deposit {
@@ -9,14 +11,15 @@ export class Deposit {
   address!: string;
 
   @Column('text')
-  amount!: string;
+  amount: string;
+
+  @Column('text')
+  oldBalance!: string;
 
   @Column('text')
   startTime!: Date;
 
-  @Column('text')
-  user!: string;
-
-  @Column('text')
-  oldBalance!: string;
+  @OneToOne(type => User)
+  @JoinColumn()
+  user: User;
 }

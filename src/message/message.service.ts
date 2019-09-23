@@ -3,6 +3,7 @@ import { formatEther, parseEther } from 'ethers/utils';
 
 import { ChannelService } from '../channel/channel.service';
 import { ConfigService } from '../config/config.service';
+import { DepositService } from '../deposit/deposit.service';
 import { TwitterService } from '../twitter/twitter.service';
 import { User } from '../user/user.entity';
 import { UserRepository } from '../user/user.repository';
@@ -14,9 +15,11 @@ export class MessageService {
   constructor(
     private readonly config: ConfigService,
     private readonly channel: ChannelService,
+    private readonly deposit: DepositService,
     private readonly twitter: TwitterService,
     private readonly userRepo: UserRepository,
-  ) {}
+  ) {
+  }
 
   public handleMessage = async (event) => {
     const sender = event.message_create.sender_id;
@@ -24,7 +27,7 @@ export class MessageService {
     if (sender === botId) { return; } // ignore messages sent by the bot
     console.log(`Processing message event: ${JSON.stringify(event, null, 2)}`);
 
-    if (message.match(/^trigger crc/i)) {
+    if (message.match(/^crc/i)) {
       try {
         await this.twitter.triggerCRC();
         return await this.twitter.sendDM(sender, 'Successfully triggered CRC!');
@@ -32,14 +35,6 @@ export class MessageService {
         return await this.twitter.sendDM(sender, `CRC didn't go so well..`);
       }
     }
-
-    const tokenAddress = ''; // await db.get('tokenAddress');
-    const swapRate = '100'; // (await db.get(`swapRate`)) as any;
-    console.log(`swap rate: ${swapRate}`);
-    const maxDeposit = formatEther(
-      parseEther(parseEther('10').toString()).div(parseEther(swapRate)),
-    );
-    console.log(`maxDeposit: ${maxDeposit}`);
 
     let user = await this.userRepo.findByTwitterId(sender);
     if (!user) {
@@ -54,64 +49,21 @@ export class MessageService {
 
     if (message.match(/^balance/i) || message.match(/^refresh/i)) {
       if (user.balance) {
-        if (!user.linkPayment) {
-          const channel = await this.channel.getChannel();
-          console.log(`Attempting to create link payment`);
-          const link = await channel.conditionalTransfer({
-            amount: parseEther(user.balance),
-            assetId: tokenAddress,
-            conditionType: 'LINKED_TRANSFER',
-          });
-          console.log(`Link: ${JSON.stringify(link)}`);
-          user.linkPayment = link;
-          // await db.set(`user-${sender}`, JSON.stringify(user));
-        } else {
-          console.log(`Link: ${JSON.stringify(user.linkPayment)}`);
-        }
         return await this.twitter.sendDM(
           sender,
           `Your balance is $${user.balance} (rinkeby) DAI.\n\nLink: ${user.linkPayment}`,
         );
+      } else {
+        return await this.twitter.sendDM(sender, `Your balance is $0.00`);
       }
-      return await this.twitter.sendDM(sender, `Your balance is $0.00`);
     }
 
     if (message.match(/^deposit/i)) {
-      let pendingDeposits = '[]' as any; // (await db.get('pendingDeposits')) as any;
-      let depositAddress;
-      if (!pendingDeposits) {
-        pendingDeposits = [];
-        depositAddress = this.config.getWallet(1).address;
-      } else {
-        pendingDeposits = JSON.parse(pendingDeposits);
-        const prevDeposit = pendingDeposits.filter(dep => dep.user === sender);
-        if (prevDeposit[0]) {
-          depositAddress = prevDeposit[0].address;
-          pendingDeposits = pendingDeposits.filter(dep => dep.user !== sender);
-        } else {
-          depositAddress = this.config.getWallet(pendingDeposits.length + 1).address;
-        }
-      }
-      /*
-      await db.set(
-        'pendingDeposits',
-        JSON.stringify([
-          {
-            address: depositAddress,
-            oldBalance: formatEther(
-              await this.config.provider.getBalance(depositAddress),
-            ),
-            startTime: Date.now(),
-            user: sender,
-          },
-          ...pendingDeposits,
-        ]),
-      );
-      */
-      // TODO: mention max deposit
+      const depositAddress = await this.deposit.newDeposit(user);
       await this.twitter.sendDM(
         sender,
-        `Send max of ${maxDeposit} rinkeby ETH to the following address to deposit. This address will be available for deposits for 10 minutes. ` +
+        `Send up to 30 DAI worth of rinkeby ETH to the following address to deposit. ` +
+        `This address will be available for deposits for 10 minutes. ` +
         `If you send a transaction with low gas, reply "wait" and the timeout will be extended.`,
       );
       await this.twitter.sendDM(sender, depositAddress);
@@ -119,46 +71,20 @@ export class MessageService {
     }
 
     if (message.match(/^wait/i)) {
-      let pendingDeposits = '[]' as any; // (await db.get('pendingDeposits')) as any;
-      if (!pendingDeposits) {
-        return;
-      } // No prevDeposit, ignore
-      pendingDeposits = JSON.parse(pendingDeposits);
-      const prevDeposit = pendingDeposits.filter(dep => dep.user === sender);
-      if (!prevDeposit[0]) {
-        return;
-      } // No prevDeposit, ignore
-      pendingDeposits = pendingDeposits.filter(dep => dep.user !== sender);
-      /*
-      await db.set(
-        'pendingDeposits',
-        JSON.stringify([
-          {
-            startTime: Date.now(),
-            ...prevDeposit,
-          },
-          ...pendingDeposits,
-        ]),
-      );
-      */
+      const depositAddress = await this.deposit.delayDeposit(user);
+      if (!depositAddress) {
+        await this.twitter.sendDM(
+          sender,
+          `No deposit found, reply with "deposit" to start a deposit.`,
+        );
+      }
       await this.twitter.sendDM(
         sender,
-        `Timeout extended, you have 10 more minutes to deposit up to ${maxDeposit} rinkeby ETH to the below address. ` +
+        `Timeout extended, you have 10 more minutes to deposit up to 30 DAI worth of rinkeby ETH to the below address. ` +
         `If you want to extend again, reply "wait" as many times as needed.`,
       );
-      await this.twitter.sendDM(sender, prevDeposit[0].address);
+      await this.twitter.sendDM(sender, depositAddress);
       return;
-    }
-
-    if (message.match(/^tip/i)) {
-      let tips = '[]' as any; // (await db.get(`unprocessedTips`)) as any;
-      if (!tips) {
-        tips = [];
-      } else {
-        tips = JSON.parse(tips);
-      }
-      console.log(`Processing tips: ${JSON.stringify(tips)}`);
-      // await db.set('unprocessedTips', JSON.stringify(tips));
     }
   }
 

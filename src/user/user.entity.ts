@@ -11,6 +11,6 @@ export class User {
   @Column('text')
   balance!: string;
 
-  @Column('json')
-  linkPayment: string;
+  @Column({ type: 'json' })
+  linkPayment: object;
 }

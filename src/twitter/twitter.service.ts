@@ -41,6 +41,33 @@ export class TwitterService {
     }
   }
 
+  public triggerCRC = async () => {
+    if (this.invalid) { return; }
+    return await this.twitterApp.triggerCRC(this.webhookId);
+  }
+
+  public tweet = async (status) => {
+    if (this.invalid) { return; }
+    return await this.twitterBot.tweet(status);
+  }
+
+  public getUser = async (screen_name) => {
+    if (this.invalid) { return; }
+    return await this.twitterBot.getUser(screen_name);
+  }
+
+  public getMentions = async (options) => {
+    if (this.invalid) { return; }
+    const defaults = { count: '5', trim_user: true, include_entities: true };
+    const res = await this.twitterBot.getMentions({ ...defaults, ...options });
+    return res.map(tweet => tweet.text);
+  }
+
+  public sendDM = async (recipient_id, message) => {
+    if (this.invalid) { return; }
+    return await this.twitterBot.sendDM(recipient_id, message);
+  }
+
   public botLogin = async () => {
     if (this.invalid) { return; }
     const res = await this.twitterApp.requestToken();
@@ -111,41 +138,6 @@ export class TwitterService {
     crcRes = await this.triggerCRC();
     console.log(`CRC Result: ${crcRes}`);
     return(newSubscription);
-  }
-
-  public triggerCRC = async () => {
-    if (this.invalid) { return; }
-    await this.twitterApp.triggerCRC(this.webhookId);
-  }
-
-  public tweet = async (status) => {
-    if (this.invalid) { return; }
-    const res = this.twitterBot.tweet(status);
-    console.log(`Sent tweet: ${JSON.stringify(res, null, 2)}`);
-    return res;
-  }
-
-  public getUser = async (screen_name) => {
-    if (this.invalid) { return; }
-    const res = await this.twitterBot.getUser(screen_name);
-    console.log(`Got user: ${JSON.stringify(res, null, 2)}`);
-    return res;
-  }
-
-  public getMentions = async (options) => {
-    if (this.invalid) { return; }
-    const defaults = { count: '5', trim_user: true, include_entities: true };
-    const res = await this.twitterBot.getMentions({ ...defaults, ...options });
-    const mentions = res.map(tweet => tweet.text);
-    console.log(`Got mentions: ${JSON.stringify(mentions, null, 2)}`);
-    return mentions;
-  }
-
-  public sendDM = async (recipient_id, message) => {
-    if (this.invalid) { return; }
-    const res = await this.twitterBot.sendDM(recipient_id, message);
-    console.log(`Sent DM: ${res}`);
-    return res;
   }
 
 }

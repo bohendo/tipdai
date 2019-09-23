@@ -41,9 +41,15 @@ export class TwitterService {
     }
   }
 
-  public triggerCRC = async () => {
+  public triggerCRC = async (): Promise<boolean> => {
     if (this.invalid) { return; }
-    return await this.twitterApp.triggerCRC(this.webhookId);
+    try {
+      await this.twitterApp.triggerCRC(this.webhookId);
+      return true;
+    } catch (e) {
+      console.warn(e);
+      return false;
+    }
   }
 
   public tweet = async (status) => {
@@ -108,16 +114,16 @@ export class TwitterService {
   }
 
   public subscribe = async (botId) => {
+    console.log(`Subscribing to events for ${botId}`);
     if (this.invalid) { return; }
     const webhooks = await this.twitterApp.getWebhooks();
-    console.log(`Got webhooks: ${JSON.stringify(webhooks, null, 2)}`);
     const subscriptions = await this.twitterDev.getSubscriptions();
-    console.log(`Got subscriptions: ${JSON.stringify(subscriptions, null, 2)}`);
+    console.log(`Got subscriptions: ${JSON.stringify(subscriptions.subscriptions)}`);
     let crcRes;
     if (subscriptions.subscriptions.find(e => e.user_id === botId)) {
       this.webhookId = webhooks.environments[0].webhooks[0].id;
       crcRes = await this.triggerCRC();
-      console.log(`CRC Result: ${crcRes}`);
+      console.log(`CRC succeeded: ${crcRes}`);
       console.log(`Already subscribed to user ${botId}. We're good to go!`);
       return;
     }
@@ -136,7 +142,7 @@ export class TwitterService {
     console.log(`Activated subscription: ${JSON.stringify(newSubscription, null, 2)}`);
     this.webhookId = newWebhook.id;
     crcRes = await this.triggerCRC();
-    console.log(`CRC Result: ${crcRes}`);
+    console.log(`CRC succeeded: ${crcRes}`);
     return(newSubscription);
   }
 

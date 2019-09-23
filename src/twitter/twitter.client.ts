@@ -143,6 +143,7 @@ export class Twitter {
           console.error(`GET failed: ${err.data}`);
           reject(err);
         }
+        if (res.statusCode === 204) { return resolve(); }
         try {
           resolve(JSON.parse(body));
         } catch (e) {
@@ -165,6 +166,7 @@ export class Twitter {
           console.error(`POST failed: ${err.data}`);
           reject(err);
         }
+        if (res.statusCode === 204) { return resolve(); }
         try {
           resolve(JSON.parse(body));
         } catch (e) {
@@ -187,6 +189,7 @@ export class Twitter {
           console.error(`PUT failed: ${err.data}`);
           reject(err);
         }
+        if (res.statusCode === 204) { return resolve(); }
         try {
           resolve(JSON.parse(body));
         } catch (e) {
@@ -209,6 +212,7 @@ export class Twitter {
           console.error(`DEL failed: ${err.data}`);
           reject(err);
         }
+        if (res.statusCode === 204) { return resolve(); }
         try {
           resolve(JSON.parse(body));
         } catch (e) {

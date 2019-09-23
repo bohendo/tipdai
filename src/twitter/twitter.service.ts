@@ -114,7 +114,6 @@ export class TwitterService {
   }
 
   public subscribe = async (botId) => {
-    console.log(`Subscribing to events for ${botId}`);
     if (this.invalid) { return; }
     const webhooks = await this.twitterApp.getWebhooks();
     const subscriptions = await this.twitterDev.getSubscriptions();

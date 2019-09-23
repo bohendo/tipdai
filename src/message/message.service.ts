@@ -41,6 +41,7 @@ export class MessageService {
       user = new User();
       user.twitterId = sender;
       user.balance = '0.00';
+      user.linkPayment = {};
       await this.userRepo.save(user);
       console.log(`Saved new user: ${JSON.stringify(user)}`);
     } else {
@@ -73,7 +74,7 @@ export class MessageService {
     if (message.match(/^wait/i)) {
       const depositAddress = await this.deposit.delayDeposit(user);
       if (!depositAddress) {
-        await this.twitter.sendDM(
+        return await this.twitter.sendDM(
           sender,
           `No deposit found, reply with "deposit" to start a deposit.`,
         );

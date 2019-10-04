@@ -9,6 +9,8 @@ import { User } from '../user/user.entity';
 import { UserRepository } from '../user/user.repository';
 
 const botId = '1154313992141099008';
+const paymentIdRegex = /paymentId=0x[0-9a-fA-F]{64}/;
+const secretRegex = /secret=0x[0-9a-fA-F]{64}/;
 
 @Injectable()
 export class MessageService {
@@ -46,6 +48,12 @@ export class MessageService {
       console.log(`Saved new user: ${JSON.stringify(user)}`);
     } else {
       console.log(`Found user: ${JSON.stringify(user)}`);
+    }
+
+    if (message.match(paymentIdRegex)  && message.match(secretRegex)) {
+      const paymentId = message.match(paymentIdRegex)[0];
+      const secret = message.match(secretRegex)[0];
+      console.log(`Detected link payment, id: ${paymentId}, secret: ${secret}`);
     }
 
     if (message.match(/^balance/i) || message.match(/^refresh/i)) {

@@ -48,7 +48,7 @@ export class MessageService {
     }
 
     if (message.match(/^balance/i) || message.match(/^refresh/i)) {
-      const user = await this.userRepo.findByTwitterId(sender);
+      const user = await this.userRepo.getByTwitterId(sender);
       if (user.balance) {
         return await this.twitter.sendDM(
           sender,

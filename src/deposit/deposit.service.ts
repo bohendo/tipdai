@@ -24,7 +24,7 @@ export class DepositService {
   }
 
   public newDeposit = async (sender: string): Promise<string> => {
-    const user = await this.userRepo.findByTwitterId(sender);
+    const user = await this.userRepo.getByTwitterId(sender);
     let deposit;
     deposit = await this.depositRepo.findOne({ user });
     if (deposit && deposit.address) {
@@ -47,7 +47,7 @@ export class DepositService {
   }
 
   public delayDeposit = async (sender: string): Promise<string> => {
-    const user = await this.userRepo.findByTwitterId(sender);
+    const user = await this.userRepo.getByTwitterId(sender);
     let deposit;
     deposit = await this.depositRepo.findOne({ user });
     if (deposit && deposit.address) {

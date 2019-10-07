@@ -68,7 +68,7 @@ export class PaymentService {
   }
 
   // Deposit Payment
-  public newPayment = async (linkPayment: string, sender: string, redipient: string = AddressZero): Promise<string[]> => {
+  public newPayment = async (linkPayment: string, sender: string, recipient: string = AddressZero): Promise<string[]> => {
     const channel = await this.channelService.getChannel();
     const paymentId = linkPayment.match(paymentIdRegex)[0].replace('paymentId=', '');
     const secret = linkPayment.match(secretRegex)[0].replace('secret=', '');
@@ -84,19 +84,23 @@ export class PaymentService {
     payment.secret = secret;
     const link = await channel.getLinkedTransfer(paymentId);
     console.log(`Found link: ${JSON.stringify(link)}`);
-    payment.amount = link && link.amount ? formatEther(bigNumberify(link.amount)) : '0.00';
+    payment.amount = link && link.amount ? link.amount : '0.00';
     payment.status = link && link.status ? link.status : 'UNKNOWN';
     if (payment.status !== 'PENDING') {
-      return [`Link payment ${paymentId} already redeemed. Your balance: ${user.balance}`];
+      return [`Link payment ${paymentId} not redeemable. Your balance: ${user.balance}`];
     }
+    console.log(`Saving new link payment ${JSON.stringify(payment)}`);
     await this.paymentRepo.save(payment);
-    console.log(`Detected new link payment ${JSON.stringify(payment)}`);
+    await this.redeemPayment(payment);
+    user.balance = formatEther(parseEther(user.balance).add(parseEther(payment.amount)));
+    await this.userRepo.save(user);
+    payment.status = 'REDEEMED';
+    await this.paymentRepo.save(payment);
     if (user.payment) {
       await this.redeemPayment(user.payment);
-      await this.redeemPayment(payment);
-      user.balance = formatEther(parseEther(user.balance).add(parseEther(payment.amount)));
     }
     user.payment = await this.createPayment(user.balance);
+    await this.userRepo.save(user);
     return [
       `Link payment has been redeemed. New balance: $${user.balance}. Cashout anytime by clicking the following link\n\n${user.payment.baseUrl}?paymentId=${user.payment.paymentId}&secret=${user.payment.secret}`,
     ];

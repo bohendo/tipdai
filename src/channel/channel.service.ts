@@ -27,7 +27,7 @@ export class ChannelService {
   public async connectChannel(): Promise<any> {
     this.channel = new Promise(async (resolve, reject) => {
       const channel = await connext({ ...this.config.channel, store: this.channelRecords });
-      this.tokenAddress = (await channel.config()).contractAddresses.Token;
+      this.tokenAddress = channel.config.contractAddresses.Token;
       this.swapRate = await channel.getLatestSwapRate(AddressZero, this.tokenAddress),
 
       channel.subscribeToSwapRates(AddressZero, this.tokenAddress, async res => {

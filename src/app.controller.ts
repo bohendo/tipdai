@@ -10,4 +10,9 @@ export class AppController {
   async getHello(@Query() query: any): Promise<string> {
     return await this.appService.getHello(query);
   }
+
+  @Get('crc')
+  async triggerCRC(): Promise<string> {
+    return await this.appService.triggerCRC();
+  }
 }

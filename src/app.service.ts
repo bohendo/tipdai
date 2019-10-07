@@ -26,4 +26,16 @@ export class AppService {
     }
     return 'Hello World!';
   }
+
+  async triggerCRC(): Promise<string> {
+    console.log(`Triggering Twitter CRC`);
+    try {
+      await this.twitter.triggerCRC();
+      console.log(`Success`);
+      return 'success';
+    } catch (e) {
+      console.log(`Failure: ${e}`);
+      return 'failure';
+    }
+  }
 }

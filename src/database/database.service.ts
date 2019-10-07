@@ -13,6 +13,7 @@ import { InitUser1569194238955 } from '../migrations/1569194238955-InitUser';
 import { InitDeposit1569199329181 } from '../migrations/1569199329181-InitDeposit';
 import { InitPayments1570419214251 } from '../migrations/1570419214251-InitPayments';
 import { LinkUserPayments1570440560857 } from '../migrations/1570440560857-LinkUserPayments';
+import { AddLinkUrl1570441718465 } from '../migrations/1570441718465-AddLinkUrl';
 
 const migrations = [
   InitChannelRecords1569189365938,
@@ -20,6 +21,7 @@ const migrations = [
   InitDeposit1569199329181,
   InitPayments1570419214251,
   LinkUserPayments1570440560857,
+  AddLinkUrl1570441718465,
 ];
 
 const entities = [

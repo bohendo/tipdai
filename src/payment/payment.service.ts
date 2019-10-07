@@ -9,6 +9,9 @@ import { PaymentRepository } from '../payment/payment.repository';
 import { User } from '../user/user.entity';
 import { UserRepository } from '../user/user.repository';
 
+const paymentIdRegex = /paymentId=0x[0-9a-fA-F]{64}/;
+const secretRegex = /secret=0x[0-9a-fA-F]{64}/;
+
 @Injectable()
 export class PaymentService {
   constructor(
@@ -18,7 +21,10 @@ export class PaymentService {
     private readonly userRepo: UserRepository,
   ) {}
 
-  public newPayment = async (paymentId: string, secret: string, sender: string): Promise<string[]> => {
+  public newPayment = async (linkPayment, sender: string): Promise<string[]> => {
+    const paymentId = linkPayment.match(paymentIdRegex)[0].replace('paymentId=', '');
+    const secret = linkPayment.match(secretRegex)[0].replace('secret=', '');
+
     const user = await this.userRepo.findByTwitterId(sender);
     let payment = await this.paymentRepo.findByPaymentId(paymentId);
     if (payment) {
@@ -27,6 +33,7 @@ export class PaymentService {
     payment = new Payment();
     payment.twitterId = sender;
     payment.paymentId = paymentId;
+    payment.baseUrl = linkPayment.substring(0, linkPayment.indexOf('?'));
     payment.secret = secret;
     const channel = await this.channel.getChannel();
     const link = await channel.getLinkedTransfer(paymentId);
@@ -48,7 +55,7 @@ export class PaymentService {
       user.payment = payment;
       return [
         `Link payment has been applied. New balance: $${user.balance}. Cashout anytime by clicking the following link`,
-        `${user.payment}`,
+        `${user.payment.baseUrl}?paymentId=${user.payment.paymentId}&secret=${user.payment.secret}`,
       ];
     }
   }

@@ -22,6 +22,9 @@ export class Payment {
   @Column('text')
   status!: string;
 
+  @Column('text')
+  baseUrl!: string;
+
   @OneToOne(type => User, user => user.payment)
   @JoinColumn()
   user: User;

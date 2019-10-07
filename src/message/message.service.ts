@@ -29,7 +29,6 @@ export class MessageService {
     const sender = event.message_create.sender_id;
     const message = event.message_create.message_data.text;
     const messageUrls = event.message_create.message_data.entities.urls;
-    console.log(`Got messageUrls: ${JSON.stringify(messageUrls)}`);
     const messageUrl = messageUrls && messageUrls.length ? messageUrls[0].expanded_url : undefined;
     if (sender === botId) { return; } // ignore messages sent by the bot
     console.log(`Processing message event: ${JSON.stringify(event, null, 2)}`);
@@ -44,11 +43,9 @@ export class MessageService {
     }
 
     if (messageUrl && messageUrl.match(paymentIdRegex) && messageUrl.match(secretRegex)) {
-      const paymentId = messageUrl.match(paymentIdRegex)[0].replace('paymentId=', '');
-      const secret = messageUrl.match(secretRegex)[0].replace('secret=', '');
-      console.log(`Detected link payment: paymentId ${paymentId} & secret ${secret}`);
-      const dmToSend = await this.payment.newPayment(paymentId, secret, sender);
-      return dmToSend.forEach(async dm => await this.twitter.sendDM(sender, dm));
+      return (await this.payment.newPayment(messageUrl, sender)).forEach(
+        async dm => await this.twitter.sendDM(sender, dm),
+      );
     }
 
     if (message.match(/^balance/i) || message.match(/^refresh/i)) {

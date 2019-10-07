@@ -24,8 +24,9 @@ export class PaymentService {
   ) {}
 
   public redeemPayment = async (payment: Payment): Promise<void> => {
+    console.log(`Redeeming payment: ${JSON.stringify(payment)}`);
     const channel = await this.channelService.getChannel();
-    const freeTokenBalance = await channel.getFreeBalance(channel.tokenAddress);
+    const freeTokenBalance = await channel.getFreeBalance(this.channelService.tokenAddress);
     const hubFreeBalanceAddress = Object.keys(freeTokenBalance).find(
       addr => addr.toLowerCase() !== channel.freeBalanceAddress.toLowerCase(),
     );
@@ -37,9 +38,9 @@ export class PaymentService {
         amountToCollateralize:
           parseEther(payment.amount).sub(freeTokenBalance[hubFreeBalanceAddress]).toString(),
         minimumMaintainedCollateral: parseEther(payment.amount).toString(),
-        assetId: channel.tokenAddress,
+        assetId: this.channelService.tokenAddress,
       });
-      await channel.requestCollateral(channel.tokenAddress);
+      await channel.requestCollateral(this.channelService.tokenAddress);
     }
 
     const result = await channel.resolveCondition({
@@ -55,7 +56,7 @@ export class PaymentService {
     const amountBN = parseEther(amount);
     console.log(`Creating a $${amount} link payment`);
     const payment = await channel.conditionalTransfer({
-      assetId: channel.tokenAddress,
+      assetId: this.channelService.tokenAddress,
       amount: amountBN.toString(),
       conditionType: 'LINKED_TRANSFER',
       paymentId: hexlify(randomBytes(32)),
@@ -75,7 +76,7 @@ export class PaymentService {
     const secret = linkPayment.match(secretRegex)[0].replace('secret=', '');
     const user = await this.userRepo.getByTwitterId(sender);
     let payment = await this.paymentRepo.findByPaymentId(paymentId);
-    if (payment) {
+    if (payment && payment.status !== 'PENDING') {
       if (user.payment) {
         return `Link payment already applied. Balance: $${user.balance}. Cashout anytime by clicking the following link:\n\n${user.payment.baseUrl}?paymentId=${user.payment.paymentId}&secret=${user.payment.secret}`;
       } else {

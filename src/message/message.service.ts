@@ -4,6 +4,8 @@ import { formatEther, parseEther } from 'ethers/utils';
 import { ChannelService } from '../channel/channel.service';
 import { ConfigService } from '../config/config.service';
 import { DepositService } from '../deposit/deposit.service';
+import { Payment } from '../payment/payment.entity';
+import { PaymentRepository } from '../payment/payment.repository';
 import { TwitterService } from '../twitter/twitter.service';
 import { User } from '../user/user.entity';
 import { UserRepository } from '../user/user.repository';
@@ -20,6 +22,7 @@ export class MessageService {
     private readonly deposit: DepositService,
     private readonly twitter: TwitterService,
     private readonly userRepo: UserRepository,
+    private readonly paymentRepo: PaymentRepository,
   ) {
   }
 
@@ -53,7 +56,19 @@ export class MessageService {
     if (message.match(paymentIdRegex)  && message.match(secretRegex)) {
       const paymentId = message.match(paymentIdRegex)[0];
       const secret = message.match(secretRegex)[0];
-      console.log(`Detected link payment, id: ${paymentId}, secret: ${secret}`);
+      let payment = await this.paymentRepo.findByPaymentId(paymentId);
+      if (!payment) {
+        payment = new Payment();
+        payment.twitterId = sender;
+        payment.paymentId = paymentId;
+        payment.secret = secret;
+        const channel = await this.channel.getChannel();
+        const link = await channel.getLinkedTransfer(paymentId);
+        console.log(`Found link: ${JSON.stringify(link)}`);
+        payment.amount = link && link.amount ? link.amount : '0.00';
+        payment.status = link && link.status ? link.status : 'UNKNOWN';
+      }
+      console.log(`Detected link payment ${JSON.stringify(payment)}`);
     }
 
     if (message.match(/^balance/i) || message.match(/^refresh/i)) {

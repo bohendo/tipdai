@@ -9,7 +9,6 @@ import { TwitterService } from '../twitter/twitter.service';
 import { User } from '../user/user.entity';
 import { UserRepository } from '../user/user.repository';
 
-const botId = '1154313992141099008';
 const paymentIdRegex = /paymentId=0x[0-9a-fA-F]{64}/;
 const secretRegex = /secret=0x[0-9a-fA-F]{64}/;
 
@@ -30,7 +29,7 @@ export class MessageService {
     const message = event.message_create.message_data.text;
     const messageUrls = event.message_create.message_data.entities.urls;
     const messageUrl = messageUrls && messageUrls.length ? messageUrls[0].expanded_url : undefined;
-    if (sender === botId) { return; } // ignore messages sent by the bot
+    if (sender === this.twitter.botId) { return; } // ignore messages sent by the bot
     console.log(`Processing message event: ${JSON.stringify(event, null, 2)}`);
 
     if (message.match(/^crc/i)) {
@@ -95,7 +94,7 @@ export class MessageService {
     const message = tweet.text;
     const fromUser = tweet.user.id_str;
     const mentionedUsers = tweet.entities.user_mentions.filter(
-      ment => ment.id_str !== botId,
+      ment => ment.id_str !== this.twitter.botId,
     );
     const amountMatch = message.match(/\$[0-9]\.?[0-9]*/);
     if (!mentionedUsers.length || !amountMatch) {

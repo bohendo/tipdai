@@ -75,7 +75,11 @@ export class PaymentService {
     const user = await this.userRepo.getByTwitterId(sender);
     let payment = await this.paymentRepo.findByPaymentId(paymentId);
     if (payment) {
-      return [`Link payment ${paymentId} already applied. Balance: ${user.balance}`];
+      if (user.payment) {
+        return [`Link payment already applied. Balance: $${user.balance}. Cashout anytime by clicking the following link:\n\n${user.payment.baseUrl}?paymentId=${user.payment.paymentId}&secret=${user.payment.secret}`];
+      } else {
+        return [`Link payment already applied. Balance: $${user.balance}`];
+      }
     }
     payment = new Payment();
     payment.twitterId = sender;
@@ -87,7 +91,7 @@ export class PaymentService {
     payment.amount = link && link.amount ? link.amount : '0.00';
     payment.status = link && link.status ? link.status : 'UNKNOWN';
     if (payment.status !== 'PENDING') {
-      return [`Link payment ${paymentId} not redeemable. Your balance: ${user.balance}`];
+      return [`Link payment not redeemable. Your balance: $${user.balance}`];
     }
     console.log(`Saving new link payment ${JSON.stringify(payment)}`);
     await this.paymentRepo.save(payment);
@@ -102,7 +106,7 @@ export class PaymentService {
     user.payment = await this.createPayment(user.balance);
     await this.userRepo.save(user);
     return [
-      `Link payment has been redeemed. New balance: $${user.balance}. Cashout anytime by clicking the following link\n\n${user.payment.baseUrl}?paymentId=${user.payment.paymentId}&secret=${user.payment.secret}`,
+      `Link payment has been redeemed. New balance: $${user.balance}.\nCashout anytime by clicking the following link:\n\n${user.payment.baseUrl}?paymentId=${user.payment.paymentId}&secret=${user.payment.secret}`,
     ];
   }
 }

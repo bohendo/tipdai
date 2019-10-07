@@ -31,7 +31,7 @@ export class PaymentService {
       addr => addr.toLowerCase() !== channel.freeBalanceAddress.toLowerCase(),
     );
     const collateral = freeTokenBalance[hubFreeBalanceAddress];
-    console.log(`We've been collateralized with ${collateral}, need ${payment.amount}`);
+    console.log(`We've been collateralized with ${formatEther(collateral)}, need ${payment.amount}`);
 
     // TODO: compare to default collateralization?
     if (bigNumberify(collateral).lt(parseEther(payment.amount))) {

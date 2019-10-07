@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { bigNumberify, formatEther, parseEther } from 'ethers/utils';
+import { Zero } from 'ethers/constants';
 
 import { ChannelService } from '../channel/channel.service';
 import { ConfigService } from '../config/config.service';
@@ -42,20 +43,19 @@ export class MessageService {
     }
 
     if (messageUrl && messageUrl.match(paymentIdRegex) && messageUrl.match(secretRegex)) {
-      return (await this.payment.newPayment(messageUrl, sender)).forEach(
-        async dm => await this.twitter.sendDM(sender, dm),
-      );
+      return await this.twitter.sendDM(sender, await this.payment.newPayment(messageUrl, sender));
     }
 
     if (message.match(/^balance/i) || message.match(/^refresh/i)) {
       const user = await this.userRepo.getByTwitterId(sender);
-      if (user.balance) {
-        return await this.twitter.sendDM(
-          sender,
-          `Your balance is $${user.balance} (rinkeby) DAI.\n\nLink: ${user.payment}`,
-        );
+      if (parseEther(user.balance).gt(Zero) && !user.payment) {
+        return await this.twitter.sendDM(sender, `User has balance but no payment. This should never happen :(`);
+      } else if (!user.balance && user.payment) {
+        return await this.twitter.sendDM(sender, `User has payment but no balance. This should never happen :(`);
+      } else if (user.balance && user.payment) {
+        return await this.twitter.sendDM(sender, `Balance: $${user.balance}. Cashout anytime by clicking the following link:\n\n${user.payment.baseUrl}?paymentId=${user.payment.paymentId}&secret=${user.payment.secret}`);
       } else {
-        return await this.twitter.sendDM(sender, `Your balance is $0.00`);
+        return await this.twitter.sendDM(sender, `Your balance is $0.00. Send a link payment to get started.`);
       }
     }
 

@@ -31,6 +31,7 @@ export class PaymentService {
       addr => addr.toLowerCase() !== channel.freeBalanceAddress.toLowerCase(),
     );
     const collateral = freeTokenBalance[hubFreeBalanceAddress];
+    console.log(`We've been collateralized with ${collateral}, need ${payment.amount}`);
 
     // TODO: compare to default collateralization?
     if (bigNumberify(collateral).lt(parseEther(payment.amount))) {
@@ -41,6 +42,7 @@ export class PaymentService {
         assetId: this.channelService.tokenAddress,
       });
       await channel.requestCollateral(this.channelService.tokenAddress);
+      console.log(`Requested more collateral successfully`);
     }
 
     const result = await channel.resolveCondition({
@@ -52,9 +54,9 @@ export class PaymentService {
   }
 
   public createPayment = async (amount: string): Promise<Payment> => {
+    console.log(`Creating payment for ${amount}`);
     const channel = await this.channelService.getChannel();
     const amountBN = parseEther(amount);
-    console.log(`Creating a $${amount} link payment`);
     const payment = await channel.conditionalTransfer({
       assetId: this.channelService.tokenAddress,
       amount: amountBN.toString(),

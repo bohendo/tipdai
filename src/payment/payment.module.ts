@@ -3,18 +3,18 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 
 import { ConfigModule } from '../config/config.module';
 import { ChannelModule } from '../channel/channel.module';
-import { UserModule } from '../user/user.module';
+import { UserRepository } from '../user/user.repository';
 
+import { PaymentService } from './payment.service';
 import { PaymentRepository } from './payment.repository';
 
 @Module({
-  providers: [],
+  providers: [PaymentService],
   imports: [
     ChannelModule,
     ConfigModule,
-    UserModule,
-    TypeOrmModule.forFeature([PaymentRepository]),
+    TypeOrmModule.forFeature([PaymentRepository, UserRepository]),
   ],
-  exports: [PaymentRepository],
+  exports: [PaymentService],
 })
 export class PaymentModule {}

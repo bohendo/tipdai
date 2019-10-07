@@ -12,8 +12,8 @@ import { UserRepository } from '../user/user.repository';
 @Injectable()
 export class PaymentService {
   constructor(
-    private readonly config: ConfigService,
     private readonly channel: ChannelService,
+    private readonly config: ConfigService,
     private readonly paymentRepo: PaymentRepository,
     private readonly userRepo: UserRepository,
   ) {}

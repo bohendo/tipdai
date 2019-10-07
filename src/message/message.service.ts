@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { formatEther, parseEther } from 'ethers/utils';
+import { bigNumberify, formatEther, parseEther } from 'ethers/utils';
 
 import { ChannelService } from '../channel/channel.service';
 import { ConfigService } from '../config/config.service';
@@ -29,6 +29,9 @@ export class MessageService {
   public handleMessage = async (event) => {
     const sender = event.message_create.sender_id;
     const message = event.message_create.message_data.text;
+    const messageUrls = event.message_create.message_data.entities.urls;
+    console.log(`Got messageUrls: ${JSON.stringify(messageUrls)}`);
+    const messageUrl = messageUrls && messageUrls.length ? messageUrls[0].expanded_url : undefined;
     if (sender === botId) { return; } // ignore messages sent by the bot
     console.log(`Processing message event: ${JSON.stringify(event, null, 2)}`);
 
@@ -53,9 +56,10 @@ export class MessageService {
       console.log(`Found user: ${JSON.stringify(user)}`);
     }
 
-    if (message.match(paymentIdRegex)  && message.match(secretRegex)) {
-      const paymentId = message.match(paymentIdRegex)[0];
-      const secret = message.match(secretRegex)[0];
+    if (messageUrl && messageUrl.match(paymentIdRegex) && messageUrl.match(secretRegex)) {
+      const paymentId = messageUrl.match(paymentIdRegex)[0].replace('paymentId=', '');
+      const secret = messageUrl.match(secretRegex)[0].replace('secret=', '');
+      console.log(`Detected link payment: paymentId ${paymentId} & secret ${secret}`);
       let payment = await this.paymentRepo.findByPaymentId(paymentId);
       if (!payment) {
         payment = new Payment();
@@ -65,7 +69,7 @@ export class MessageService {
         const channel = await this.channel.getChannel();
         const link = await channel.getLinkedTransfer(paymentId);
         console.log(`Found link: ${JSON.stringify(link)}`);
-        payment.amount = link && link.amount ? link.amount : '0.00';
+        payment.amount = link && link.amount ? formatEther(bigNumberify(link.amount)) : '0.00';
         payment.status = link && link.status ? link.status : 'UNKNOWN';
       }
       console.log(`Detected link payment ${JSON.stringify(payment)}`);

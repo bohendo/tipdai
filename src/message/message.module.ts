@@ -13,8 +13,8 @@ import { UserRepository } from '../user/user.repository';
 @Module({
   providers: [MessageService],
   imports: [
-    ConfigModule,
     ChannelModule,
+    ConfigModule,
     DepositModule,
     TwitterModule,
     TypeOrmModule.forFeature([UserRepository, PaymentRepository]),

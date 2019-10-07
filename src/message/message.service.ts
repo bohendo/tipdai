@@ -4,8 +4,7 @@ import { bigNumberify, formatEther, parseEther } from 'ethers/utils';
 import { ChannelService } from '../channel/channel.service';
 import { ConfigService } from '../config/config.service';
 import { DepositService } from '../deposit/deposit.service';
-import { Payment } from '../payment/payment.entity';
-import { PaymentRepository } from '../payment/payment.repository';
+import { PaymentService } from '../payment/payment.service';
 import { TwitterService } from '../twitter/twitter.service';
 import { User } from '../user/user.entity';
 import { UserRepository } from '../user/user.repository';
@@ -17,12 +16,12 @@ const secretRegex = /secret=0x[0-9a-fA-F]{64}/;
 @Injectable()
 export class MessageService {
   constructor(
-    private readonly config: ConfigService,
     private readonly channel: ChannelService,
+    private readonly config: ConfigService,
     private readonly deposit: DepositService,
+    private readonly payment: PaymentService,
     private readonly twitter: TwitterService,
     private readonly userRepo: UserRepository,
-    private readonly paymentRepo: PaymentRepository,
   ) {
   }
 
@@ -44,42 +43,20 @@ export class MessageService {
       }
     }
 
-    let user = await this.userRepo.findByTwitterId(sender);
-    if (!user) {
-      user = new User();
-      user.twitterId = sender;
-      user.balance = '0.00';
-      user.linkPayment = {};
-      await this.userRepo.save(user);
-      console.log(`Saved new user: ${JSON.stringify(user)}`);
-    } else {
-      console.log(`Found user: ${JSON.stringify(user)}`);
-    }
-
     if (messageUrl && messageUrl.match(paymentIdRegex) && messageUrl.match(secretRegex)) {
       const paymentId = messageUrl.match(paymentIdRegex)[0].replace('paymentId=', '');
       const secret = messageUrl.match(secretRegex)[0].replace('secret=', '');
       console.log(`Detected link payment: paymentId ${paymentId} & secret ${secret}`);
-      let payment = await this.paymentRepo.findByPaymentId(paymentId);
-      if (!payment) {
-        payment = new Payment();
-        payment.twitterId = sender;
-        payment.paymentId = paymentId;
-        payment.secret = secret;
-        const channel = await this.channel.getChannel();
-        const link = await channel.getLinkedTransfer(paymentId);
-        console.log(`Found link: ${JSON.stringify(link)}`);
-        payment.amount = link && link.amount ? formatEther(bigNumberify(link.amount)) : '0.00';
-        payment.status = link && link.status ? link.status : 'UNKNOWN';
-      }
-      console.log(`Detected link payment ${JSON.stringify(payment)}`);
+      const dmToSend = await this.payment.newPayment(paymentId, secret, sender);
+      return dmToSend.forEach(async dm => await this.twitter.sendDM(sender, dm));
     }
 
     if (message.match(/^balance/i) || message.match(/^refresh/i)) {
+      const user = await this.userRepo.findByTwitterId(sender);
       if (user.balance) {
         return await this.twitter.sendDM(
           sender,
-          `Your balance is $${user.balance} (rinkeby) DAI.\n\nLink: ${user.linkPayment}`,
+          `Your balance is $${user.balance} (rinkeby) DAI.\n\nLink: ${user.payment}`,
         );
       } else {
         return await this.twitter.sendDM(sender, `Your balance is $0.00`);
@@ -87,7 +64,7 @@ export class MessageService {
     }
 
     if (message.match(/^deposit/i)) {
-      const depositAddress = await this.deposit.newDeposit(user);
+      const depositAddress = await this.deposit.newDeposit(sender);
       await this.twitter.sendDM(
         sender,
         `Send up to 30 DAI worth of rinkeby ETH to the following address to deposit. ` +
@@ -99,7 +76,7 @@ export class MessageService {
     }
 
     if (message.match(/^wait/i)) {
-      const depositAddress = await this.deposit.delayDeposit(user);
+      const depositAddress = await this.deposit.delayDeposit(sender);
       if (!depositAddress) {
         return await this.twitter.sendDM(
           sender,

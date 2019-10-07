@@ -1,4 +1,6 @@
-import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
+import { Column, Entity, JoinColumn, OneToOne, PrimaryGeneratedColumn } from 'typeorm';
+
+import { User } from '../user/user.entity';
 
 @Entity()
 export class Payment {
@@ -19,4 +21,8 @@ export class Payment {
 
   @Column('text')
   status!: string;
+
+  @OneToOne(type => User, user => user.payment)
+  @JoinColumn()
+  user: User;
 }

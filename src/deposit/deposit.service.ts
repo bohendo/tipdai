@@ -23,7 +23,8 @@ export class DepositService {
     this.startDepositPoller();
   }
 
-  public newDeposit = async (user: User): Promise<string> => {
+  public newDeposit = async (sender: string): Promise<string> => {
+    const user = await this.userRepo.findByTwitterId(sender);
     let deposit;
     deposit = await this.depositRepo.findOne({ user });
     if (deposit && deposit.address) {
@@ -45,14 +46,26 @@ export class DepositService {
     return deposit.address;
   }
 
-  public delayDeposit = async (user: User): Promise<string> => {
+  public delayDeposit = async (sender: string): Promise<string> => {
+    const user = await this.userRepo.findByTwitterId(sender);
     let deposit;
     deposit = await this.depositRepo.findOne({ user });
-    if (!deposit) {
-      return '';
+    if (deposit && deposit.address) {
+      return deposit.address;
     }
-    deposit.startTime = new Date();
-    await this.depositRepo.save(deposit);
+    if (!deposit) {
+      deposit = new Deposit();
+      deposit.startTime = new Date();
+      deposit.user = user;
+    }
+    const pendingDeposits = await this.depositRepo.getAllPending();
+    if (!pendingDeposits) {
+      deposit.address = this.config.getWallet(1).address;
+    } else {
+      deposit.address = this.config.getWallet(pendingDeposits.length + 1).address;
+    }
+    deposit.oldBalance = formatEther(await this.config.ethProvider.getBalance(deposit.address));
+    this.depositRepo.save(deposit);
     return deposit.address;
   }
 

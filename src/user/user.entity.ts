@@ -1,4 +1,6 @@
-import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
+import { Column, Entity, OneToOne, PrimaryGeneratedColumn } from 'typeorm';
+
+import { Payment } from '../payment/payment.entity';
 
 @Entity()
 export class User {
@@ -11,6 +13,6 @@ export class User {
   @Column('text')
   balance!: string;
 
-  @Column({ type: 'json' })
-  linkPayment: object;
+  @OneToOne(type => Payment, payment => payment.user)
+  payment: Payment;
 }

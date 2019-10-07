@@ -89,7 +89,7 @@ export class PaymentService {
     payment.secret = secret;
     const link = await channel.getLinkedTransfer(paymentId);
     console.log(`Found link: ${JSON.stringify(link)}`);
-    payment.amount = link && link.amount ? link.amount : '0.00';
+    payment.amount = link && link.amount ? formatEther(bigNumberify(link.amount)) : '0.00';
     payment.status = link && link.status ? link.status : 'UNKNOWN';
     if (payment.status !== 'PENDING') {
       return `Link payment not redeemable. Your balance: $${user.balance}`;

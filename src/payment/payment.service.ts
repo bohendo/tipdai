@@ -10,6 +10,7 @@ import { PaymentRepository } from '../payment/payment.repository';
 import { User } from '../user/user.entity';
 import { UserRepository } from '../user/user.repository';
 
+const baseUrl = 'https://rinkeby.indra.connext.network/redeem'
 const LINK_LIMIT = parseEther('10');
 const paymentIdRegex = /paymentId=0x[0-9a-fA-F]{64}/;
 const secretRegex = /secret=0x[0-9a-fA-F]{64}/;
@@ -53,26 +54,36 @@ export class PaymentService {
     console.log(`Redeemed payment with result: ${JSON.stringify(result, null, 2)}`);
   }
 
-  public createPayment = async (amount: string): Promise<Payment> => {
+  public createPayment = async (amount: string, recipient: string): Promise<Payment> => {
     console.log(`Creating payment for ${amount}`);
     const channel = await this.channelService.getChannel();
     const amountBN = parseEther(amount);
-    const payment = await channel.conditionalTransfer({
+    const linkResult = await channel.conditionalTransfer({
       assetId: this.channelService.tokenAddress,
       amount: amountBN.toString(),
       conditionType: 'LINKED_TRANSFER',
       paymentId: hexlify(randomBytes(32)),
       preImage: hexlify(randomBytes(32)),
     });
-    console.log(`Created link payment: ${JSON.stringify(payment, null, 2)}`);
+    console.log(`Created link transfer, result: ${JSON.stringify(linkResult, null, 2)}`);
+    const payment = new Payment();
+    payment.twitterId = recipient;
+    payment.paymentId = linkResult.paymentId;
+    payment.secret = linkResult.preImage;
+    payment.amount = amount;
     payment.status = 'PENDING';
+    payment.baseUrl = baseUrl;
+    const user = await this.userRepo.getByTwitterId(recipient);
+    payment.user = user;
+    user.payment = payment;
     this.paymentRepo.save(payment);
+    this.userRepo.save(user);
     return payment;
   }
 
   // Deposit Payment
   // TODO: don't accept any baseUrl, a whitelist should be hardcoded
-  public newPayment = async (linkPayment: string, sender: string, recipient: string = AddressZero): Promise<string> => {
+  public newPayment = async (linkPayment: string, sender: string): Promise<string> => {
     const channel = await this.channelService.getChannel();
     const paymentId = linkPayment.match(paymentIdRegex)[0].replace('paymentId=', '');
     const secret = linkPayment.match(secretRegex)[0].replace('secret=', '');
@@ -80,7 +91,7 @@ export class PaymentService {
     let payment = await this.paymentRepo.findByPaymentId(paymentId);
     if (payment && payment.status !== 'PENDING') {
       if (user.payment) {
-        return `Link payment already applied. Balance: $${user.balance}. Cashout anytime by clicking the following link:\n\n${user.payment.baseUrl}?paymentId=${user.payment.paymentId}&secret=${user.payment.secret}`;
+        return `Link payment already applied. Balance: $${user.balance}. Cashout anytime by clicking the following link:\n\n${baseUrl}?paymentId=${user.payment.paymentId}&secret=${user.payment.secret}`;
       } else {
         return `Link payment already applied. Balance: $${user.balance}`;
       }
@@ -88,7 +99,7 @@ export class PaymentService {
     payment = new Payment();
     payment.twitterId = sender;
     payment.paymentId = paymentId;
-    payment.baseUrl = linkPayment.substring(0, linkPayment.indexOf('?'));
+    payment.baseUrl = baseUrl;
     payment.secret = secret;
     const link = await channel.getLinkedTransfer(paymentId);
     console.log(`Found link: ${JSON.stringify(link)}`);
@@ -107,8 +118,8 @@ export class PaymentService {
     if (user.payment) {
       await this.redeemPayment(user.payment);
     }
-    user.payment = await this.createPayment(user.balance);
+    user.payment = await this.createPayment(user.balance, sender);
     await this.userRepo.save(user);
-    return `Link payment has been redeemed. New balance: $${user.balance}.\nCashout anytime by clicking the following link:\n\n${user.payment.baseUrl}?paymentId=${user.payment.paymentId}&secret=${user.payment.secret}`;
+    return `Link payment has been redeemed. New balance: $${user.balance}.\nCashout anytime by clicking the following link:\n\n${baseUrl}?paymentId=${user.payment.paymentId}&secret=${user.payment.secret}`;
   }
 }

@@ -104,7 +104,13 @@ export class MessageService {
       console.log(JSON.stringify(tipInfo));
       return; // , ignore
     }
-    const result = await this.tip.handleTip(tweet.user.id_str, tipInfo[1], tipInfo[2]);
+    const sender = await this.userRepo.getByTwitterId(tweet.user.id_str);
+    console.log(`Got sender user: ${Object.keys(sender)}`);
+    const recipientUser = await this.twitter.getUser(tipInfo[1]);
+    console.log(`Got recipient tweeter: ${JSON.stringify(recipientUser)}`);
+    const recipient = await this.userRepo.getByTwitterId(recipientUser.id_str);
+    console.log(`Got recipient user: ${Object.keys(recipient)}`);
+    const result = await this.tip.handleTip(sender, recipient, tipInfo[2], tweet.text);
     console.log(`Got tip result: ${JSON.stringify(result)}`);
 
   }

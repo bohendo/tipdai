@@ -1,15 +1,17 @@
-import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
+import { Column, Entity, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
+
+import { User } from '../user/user.entity';
 
 @Entity()
 export class Tip {
   @PrimaryGeneratedColumn()
   id!: number;
 
-  @Column('text')
-  sender!: string;
+  @ManyToOne(type => User, { cascade: true })
+  sender: User;
 
-  @Column('text')
-  recipient!: string;
+  @ManyToOne(type => User, { cascade: true })
+  recipient: User;
 
   @Column('text')
   amount!: string;

@@ -1,4 +1,4 @@
-import { Column, Entity, JoinColumn, OneToOne, PrimaryGeneratedColumn } from 'typeorm';
+import { Column, Entity, JoinColumn, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
 
 import { User } from '../user/user.entity';
 
@@ -8,9 +8,6 @@ export class Payment {
   id!: number;
 
   @Column('text')
-  twitterId!: string;
-
-  @Column('text')
   paymentId!: string;
 
   @Column('text')
@@ -18,6 +15,12 @@ export class Payment {
 
   @Column('text')
   amount!: string;
+
+  @ManyToOne(type => User)
+  sender: User;
+
+  @ManyToOne(type => User)
+  recipient: User;
 
   @Column('text')
   status!: string;

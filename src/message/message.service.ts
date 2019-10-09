@@ -43,17 +43,17 @@ export class MessageService {
     }
 
     if (messageUrl && messageUrl.match(paymentIdRegex) && messageUrl.match(secretRegex)) {
-      return await this.twitter.sendDM(sender, await this.payment.newPayment(messageUrl, sender));
+      return await this.twitter.sendDM(sender, await this.payment.depositPayment(messageUrl, sender));
     }
 
     if (message.match(/^balance/i) || message.match(/^refresh/i)) {
       const user = await this.userRepo.getByTwitterId(sender);
-      if (parseEther(user.balance).gt(Zero) && !user.payment) {
-        return await this.twitter.sendDM(sender, `User has balance but no payment. This should never happen :(`);
-      } else if (!user.balance && user.payment) {
-        return await this.twitter.sendDM(sender, `User has payment but no balance. This should never happen :(`);
-      } else if (user.balance && user.payment) {
-        return await this.twitter.sendDM(sender, `Balance: $${user.balance}. Cashout anytime by clicking the following link:\n\n${this.config.linkBaseUrl}?paymentId=${user.payment.paymentId}&secret=${user.payment.secret}`);
+      if (parseEther(user.balance).gt(Zero) && !user.cashout) {
+        return await this.twitter.sendDM(sender, `User has balance but no cashout link. This should never happen :(`);
+      } else if (!user.balance && user.cashout) {
+        return await this.twitter.sendDM(sender, `User has cashout link but no balance. This should never happen :(`);
+      } else if (user.balance && user.cashout) {
+        return await this.twitter.sendDM(sender, `Balance: $${user.balance}. Cashout anytime by clicking the following link:\n\n${this.config.linkBaseUrl}?paymentId=${user.cashout.paymentId}&secret=${user.cashout.secret}`);
       } else {
         return await this.twitter.sendDM(sender, `Your balance is $0.00. Send a link payment to get started.`);
       }

@@ -14,5 +14,5 @@ export class User {
   balance!: string;
 
   @OneToOne(type => Payment)
-  payment: Payment;
+  cashout: Payment;
 }

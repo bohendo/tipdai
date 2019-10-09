@@ -8,7 +8,6 @@ export class InitUser1569194238955 implements MigrationInterface {
         "id" SERIAL NOT NULL,
         "twitterId" text NOT NULL,
         "balance" text NOT NULL,
-        "linkPayment" json NOT NULL,
         CONSTRAINT "PK_cace4a159ff9f2512dd42373760" PRIMARY KEY ("id")
       )
     `);

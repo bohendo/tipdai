@@ -13,7 +13,8 @@ import { UserRepository } from '../user/user.repository';
 
 const paymentIdRegex = /paymentId=0x[0-9a-fA-F]{64}/;
 const secretRegex = /secret=0x[0-9a-fA-F]{64}/;
-const tipRegex = /@TipDai.*(@[a-zA-Z0-9])*.*$([0-9]+.?[0-9]*)?/i;
+// TODO: Don't hardcode screen name
+const tipRegex = /@TipFakeDai.*(@[a-zA-Z0-9]*).*[$]([0-9]+.?[0-9]*)?/i;
 
 @Injectable()
 export class MessageService {

@@ -50,7 +50,7 @@ export class TipService {
         console.log(`Recipient had cashout payment.. redeeming old one`);
         await this.payment.redeemPayment(recipient.cashout);
       }
-      sender.cashout = await this.payment.createPayment(recipient.balance, recipient.twitterId);
+      recipient.cashout = await this.payment.createPayment(recipient.balance, recipient.twitterId);
       console.log(`Gave recipient new cashout payment`);
       this.userRepo.save(recipient);
       console.log(`Saved new recipient data`);

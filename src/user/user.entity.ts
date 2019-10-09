@@ -1,4 +1,4 @@
-import { Column, Entity, OneToOne, PrimaryGeneratedColumn } from 'typeorm';
+import { Column, Entity, JoinColumn, OneToOne, PrimaryGeneratedColumn } from 'typeorm';
 
 import { Payment } from '../payment/payment.entity';
 
@@ -14,5 +14,6 @@ export class User {
   balance!: string;
 
   @OneToOne(type => Payment)
+  @JoinColumn()
   cashout: Payment;
 }

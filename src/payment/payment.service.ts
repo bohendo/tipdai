@@ -88,12 +88,12 @@ export class PaymentService {
     let payment = await this.paymentRepo.findByPaymentId(paymentId);
     if (payment && payment.status !== 'PENDING') {
       if (user.cashout) {
-        return `Link payment already applied. Balance: $${user.balance}.\n` +
+        return `Link payment already applied, status: ${payment.status}. Balance: $${user.balance}.\n` +
           `Cashout anytime by clicking the following link:\n\n` +
           `${this.config.linkBaseUrl}?paymentId=${user.cashout.paymentId}&` +
           `secret=${user.cashout.secret}`;
       } else {
-        return `Link payment already applied. Balance: $${user.balance}`;
+        return `Link payment already applied, status: ${payment.status}. Balance: $${user.balance}`;
       }
     }
     payment = new Payment();
@@ -105,7 +105,7 @@ export class PaymentService {
     payment.amount = link && link.amount ? formatEther(bigNumberify(link.amount)) : '0.00';
     payment.status = link && link.status ? link.status : 'UNKNOWN';
     if (payment.status !== 'PENDING') {
-      return `Link payment not redeemable. Your balance: $${user.balance}`;
+      return `Link payment not redeemable, status: ${payment.status}. Your balance: $${user.balance}`;
     }
     console.log(`Saving new link payment ${JSON.stringify(payment)}`);
     await this.paymentRepo.save(payment);

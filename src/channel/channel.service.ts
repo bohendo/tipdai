@@ -47,10 +47,8 @@ export class ChannelService {
       try {
         await channel.getFreeBalance(this.tokenAddress);
       } catch (e) {
-        console.log(JSON.stringify(e));
         if (e.message.includes('StateChannel does not exist yet')) {
           console.log(`State channel state is missing, attempting to restore..`);
-          // TODO wtf?
           await channel.restoreStateFromNode(this.config.wallet.mnemonic);
           console.log(`State successfully restored!`);
         }

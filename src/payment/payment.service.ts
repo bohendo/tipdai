@@ -76,9 +76,9 @@ export class PaymentService {
     payment.status = 'PENDING';
     user.cashout = payment;
     console.log(`Saving new payment`);
-    this.paymentRepo.save(payment);
+    await this.paymentRepo.save(payment);
     console.log(`Saving updated cashout link`);
-    this.userRepo.save(user);
+    await this.userRepo.save(user);
     return payment;
   }
 

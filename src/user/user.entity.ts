@@ -13,7 +13,7 @@ export class User {
   @Column('text')
   balance!: string;
 
-  @OneToOne(type => Payment, { eager: true, cascade: true })
+  @OneToOne(type => Payment, { eager: true })
   @JoinColumn()
   cashout: Payment;
 }

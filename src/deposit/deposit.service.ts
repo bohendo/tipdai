@@ -42,7 +42,7 @@ export class DepositService {
       deposit.address = this.config.getWallet(pendingDeposits.length + 1).address;
     }
     deposit.oldBalance = formatEther(await this.config.ethProvider.getBalance(deposit.address));
-    this.depositRepo.save(deposit);
+    await this.depositRepo.save(deposit);
     return deposit.address;
   }
 
@@ -65,7 +65,7 @@ export class DepositService {
       deposit.address = this.config.getWallet(pendingDeposits.length + 1).address;
     }
     deposit.oldBalance = formatEther(await this.config.ethProvider.getBalance(deposit.address));
-    this.depositRepo.save(deposit);
+    await this.depositRepo.save(deposit);
     return deposit.address;
   }
 
@@ -150,8 +150,8 @@ export class DepositService {
           tokenBalances = await channel.getFreeBalance(tokenAddress);
           const newChannelTokens = tokenBalances[channel.freeBalanceAddress];
           user.balance = formatEther(parseEther(user.balance).add(parseEther(expectedDeposit)));
-          this.userRepo.save(user);
-          this.depositRepo.remove(dep);
+          await this.userRepo.save(user);
+          await this.depositRepo.remove(dep);
         }),
       );
     }

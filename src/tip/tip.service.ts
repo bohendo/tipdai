@@ -26,7 +26,7 @@ export class TipService {
       newTip.recipient = recipient;
       newTip.amount = amount;
       newTip.result = 'PROCESSING';
-      this.tipRepo.save(newTip);
+      await this.tipRepo.save(newTip);
 
       if (!sender.balance || parseEther(sender.balance).lt(parseEther(amount))) {
         console.log(`sender balance ${sender.balance} is lower than ${amount}`);
@@ -40,7 +40,7 @@ export class TipService {
       console.log(`Redeemed old cashout payment`);
       sender.cashout = await this.payment.createPayment(sender.balance, sender.twitterId);
       console.log(`Gave sender new cashout payment`);
-      this.userRepo.save(sender);
+      await this.userRepo.save(sender);
       console.log(`Saved new sender data`);
 
       console.log(`Recipient old balance: ${recipient.balance}`);
@@ -52,7 +52,7 @@ export class TipService {
       }
       recipient.cashout = await this.payment.createPayment(recipient.balance, recipient.twitterId);
       console.log(`Gave recipient new cashout payment`);
-      this.userRepo.save(recipient);
+      await this.userRepo.save(recipient);
       console.log(`Saved new recipient data`);
 
       return 'true';

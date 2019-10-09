@@ -1,0 +1,13 @@
+import {MigrationInterface, QueryRunner} from "typeorm";
+
+export class UpdateTip1570649406343 implements MigrationInterface {
+
+    public async up(queryRunner: QueryRunner): Promise<any> {
+        await queryRunner.query(`ALTER TABLE "tip" ADD "result" text NOT NULL`, undefined);
+    }
+
+    public async down(queryRunner: QueryRunner): Promise<any> {
+        await queryRunner.query(`ALTER TABLE "tip" DROP COLUMN "result"`, undefined);
+    }
+
+}

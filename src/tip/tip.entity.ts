@@ -18,4 +18,7 @@ export class Tip {
 
   @Column('text')
   message!: string;
+
+  @Column('text')
+  result!: string;
 }

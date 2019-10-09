@@ -6,12 +6,14 @@ import { ChannelService } from '../channel/channel.service';
 import { ConfigService } from '../config/config.service';
 import { DepositService } from '../deposit/deposit.service';
 import { PaymentService } from '../payment/payment.service';
+import { TipService } from '../tip/tip.service';
 import { TwitterService } from '../twitter/twitter.service';
 import { User } from '../user/user.entity';
 import { UserRepository } from '../user/user.repository';
 
 const paymentIdRegex = /paymentId=0x[0-9a-fA-F]{64}/;
 const secretRegex = /secret=0x[0-9a-fA-F]{64}/;
+const tipRegex = /@TipDai.*(@[a-zA-Z0-9])*.*$([0-9]+.?[0-9]*)?/i;
 
 @Injectable()
 export class MessageService {
@@ -21,6 +23,7 @@ export class MessageService {
     private readonly deposit: DepositService,
     private readonly payment: PaymentService,
     private readonly twitter: TwitterService,
+    private readonly tip: TipService,
     private readonly userRepo: UserRepository,
   ) {
   }
@@ -93,60 +96,15 @@ export class MessageService {
   public handleTweet = async (tweet) => {
     console.log(`Got a tweet event: ${JSON.stringify(tweet, null, 2)}`);
     const message = tweet.text;
-    const fromUser = tweet.user.id_str;
-    const mentionedUsers = tweet.entities.user_mentions.filter(
-      ment => ment.id_str !== this.config.twitterBotUserId,
-    );
-    const amountMatch = message.match(/\$[0-9]\.?[0-9]*/);
-    if (!mentionedUsers.length || !amountMatch) {
-      // Improper tweet, ignore
-      return;
-    }
-    const amount = amountMatch[0].replace('$', '');
-    const toUser = mentionedUsers[0].id_str;
-    let tips = '[]' as any; // (await db.get(`tipsArchive`)) as any;
-    if (!tips) {
-      tips = [];
-    } else {
-      tips = JSON.parse(tips);
-    }
-    tips.push({
-      amount,
-      fromUser,
-      message,
-      toUser,
-      tweetId: tweet.id_str,
-    });
-    console.log(`Archived tips: ${JSON.stringify(tips, null, 2)}`);
-    // db.set('tipsArchive', JSON.stringify(tips));
 
-    let sender = '{}' as any; // (await db.get(`user-${fromUser}`)) as any;
-    if (!sender) {
-      sender = { id: sender };
-    } else {
-      sender = JSON.parse(sender);
+    const tipInfo = tweet.text.match(tipRegex);
+    if (!tipInfo || !tipInfo[2]) {
+      console.log(`Improperly formatted tweet, ignoring`);
+      console.log(JSON.stringify(tipInfo));
+      return; // , ignore
     }
-
-    if (!sender.balance || parseEther(sender.balance).lt(parseEther(amount))) {
-      console.log(`sender balance ${sender.balance} is lower than ${amount}`);
-      return; // TODO: this.twitter.tweet('hey sender you need more money')
-    }
-
-    let recipient = '{}' as any; // (await db.get(`user-${toUser}`)) as any;
-    if (!recipient) {
-      recipient = { id: toUser };
-    } else {
-      recipient = JSON.parse(recipient);
-    }
-    if (!recipient.balance) {
-      recipient.balance = amount;
-    } else {
-      recipient.balance = formatEther(
-        parseEther(recipient.balance).add(parseEther(amount)),
-      );
-    }
-    console.log(`Recipient: ${JSON.stringify(recipient, null, 2)}`);
-    // await db.set(`user-${toUser}`, JSON.stringify(recipient));
+    const result = await this.tip.handleTip(tweet.user.id_str, tipInfo[1], tipInfo[2]);
+    console.log(`Got tip result: ${JSON.stringify(result)}`);
 
   }
 

@@ -9,6 +9,7 @@ import { ChannelModule } from './channel/channel.module';
 import { DepositModule } from './deposit/deposit.module';
 import { MessageModule } from './message/message.module';
 import { UserModule } from './user/user.module';
+import { TipModule } from './tip/tip.module';
 
 @Module({
   imports: [
@@ -20,6 +21,7 @@ import { UserModule } from './user/user.module';
     DepositModule,
     MessageModule,
     UserModule,
+    TipModule,
   ],
   controllers: [AppController],
   providers: [AppService],

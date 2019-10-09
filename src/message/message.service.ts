@@ -48,6 +48,7 @@ export class MessageService {
 
     if (message.match(/^balance/i) || message.match(/^refresh/i)) {
       const user = await this.userRepo.getByTwitterId(sender);
+      console.log(`user: ${JSON.stringify(user, (key, value) => (key && typeof value === 'object') ? value.toString() : value, 2)}`);
       if (parseEther(user.balance).gt(Zero) && !user.cashout) {
         return await this.twitter.sendDM(sender, `User has balance but no cashout link. This should never happen :(`);
       } else if (!user.balance && user.cashout) {

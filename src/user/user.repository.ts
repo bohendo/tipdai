@@ -13,7 +13,7 @@ export class UserRepository extends Repository<User> {
     return user;
   }
 
-  async getByTwitterId(twitterId): Promise<User> {
+  async getByTwitterId(twitterId: string): Promise<User> {
     return await this.findOne({ where: { twitterId } }) || this.initUser(twitterId);
   }
 }

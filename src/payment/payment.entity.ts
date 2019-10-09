@@ -16,10 +16,10 @@ export class Payment {
   @Column('text')
   amount!: string;
 
-  @ManyToOne(type => User)
+  @ManyToOne(type => User, { cascade: true })
   sender: User;
 
-  @ManyToOne(type => User)
+  @ManyToOne(type => User, { cascade: true })
   recipient: User;
 
   @Column('text')

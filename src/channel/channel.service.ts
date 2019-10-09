@@ -44,17 +44,29 @@ export class ChannelService {
       console.log(` - Token address: ${this.tokenAddress}`);
       console.log(` - Swap rate: ${this.swapRate}`);
 
+      try {
+        await channel.getFreeBalance(this.tokenAddress);
+      } catch (e) {
+        console.log(JSON.stringify(e));
+        if (e.message.includes('StateChannel does not exist yet')) {
+          console.log(`State channel state is missing, attempting to restore..`);
+          // TODO wtf?
+          await channel.restoreStateFromNode(this.config.wallet.mnemonic);
+          console.log(`State successfully restored!`);
+        }
+      }
+
+      const freeTokenBalance = await channel.getFreeBalance(this.tokenAddress);
+      const hubFreeBalanceAddress = Object.keys(freeTokenBalance).filter(
+        addr => addr.toLowerCase() !== channel.freeBalanceAddress,
+      )[0];
+
       console.log(`Creating a payment profile..`);
       await channel.addPaymentProfile({
         amountToCollateralize: parseEther('10').toString(),
         minimumMaintainedCollateral: parseEther('5').toString(),
         assetId: this.tokenAddress,
       });
-
-      const freeTokenBalance = await channel.getFreeBalance(this.tokenAddress);
-      const hubFreeBalanceAddress = Object.keys(freeTokenBalance).filter(
-        addr => addr.toLowerCase() !== channel.freeBalanceAddress,
-      )[0];
 
       if (freeTokenBalance[hubFreeBalanceAddress].eq(Zero)) {
         console.log(`Requesting collateral for token ${this.tokenAddress}`);

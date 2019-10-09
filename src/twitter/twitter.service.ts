@@ -3,6 +3,7 @@ import { OAuth } from 'oauth';
 import * as qs from 'qs';
 
 import { ConfigService } from '../config/config.service';
+import { UserRepository } from '../user/user.repository';
 
 import { Twitter } from './twitter.client';
 
@@ -21,9 +22,11 @@ export class TwitterService {
   private webhookId: string | undefined;
 
   public authUrl: string | undefined;
-  public botId: string;
 
-  constructor(private readonly config: ConfigService) {
+  constructor(
+    private readonly config: ConfigService,
+    private readonly userRepo: UserRepository,
+  ) {
     if (!this.config.twitterDev.consumerKey || !this.config.twitterDev.consumerSecret) {
       console.warn(`[Twitter] Missing consumer token and/or secret, twitter stuff won't work.`);
       this.invalid = true;
@@ -35,8 +38,8 @@ export class TwitterService {
         this.botLogin();
       } else {
         this.twitterBot = new Twitter(this.config.twitterBot);
-        this.botId = this.config.twitterBotUserId;
-        this.subscribe(this.botId);
+        this.subscribe(this.config.twitterBotUserId);
+        this.userRepo.getByTwitterId(this.config.twitterBotUserId);
       }
     }
   }
@@ -101,15 +104,15 @@ export class TwitterService {
     console.log(`TIPDAI_TWITTER_BOT_ACCESS_SECRET=${data.oauth_token_secret}`);
     console.log(`TIPDAI_TWITTER_BOT_ACCESS_TOKEN=${data.oauth_token}`);
     console.log(`TIPDAI_TWITTER_BOT_USER_ID=${data.user_id}`);
-    this.botId = data.user_id;
     this.twitterBot = new Twitter({
       ...this.config.twitterBot,
       accessToken: data.oauth_token,
       accessSecret: data.oauth_token_secret,
     });
     console.log(`Twitter bot successfully connected!`);
-    await this.subscribe(this.botId);
+    await this.subscribe(data.user_id);
     console.log(`Account activity subscription successfully configured!`);
+    await this.userRepo.getByTwitterId(this.config.twitterBotUserId);
     return;
   }
 

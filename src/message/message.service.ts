@@ -30,7 +30,7 @@ export class MessageService {
     const message = event.message_create.message_data.text;
     const messageUrls = event.message_create.message_data.entities.urls;
     const messageUrl = messageUrls && messageUrls.length ? messageUrls[0].expanded_url : undefined;
-    if (sender === this.twitter.botId) { return; } // ignore messages sent by the bot
+    if (sender === this.config.twitterBotUserId) { return; } // ignore messages sent by the bot
     console.log(`Processing message event: ${JSON.stringify(event, null, 2)}`);
 
     if (message.match(/^crc/i)) {
@@ -94,7 +94,7 @@ export class MessageService {
     const message = tweet.text;
     const fromUser = tweet.user.id_str;
     const mentionedUsers = tweet.entities.user_mentions.filter(
-      ment => ment.id_str !== this.twitter.botId,
+      ment => ment.id_str !== this.config.twitterBotUserId,
     );
     const amountMatch = message.match(/\$[0-9]\.?[0-9]*/);
     if (!mentionedUsers.length || !amountMatch) {

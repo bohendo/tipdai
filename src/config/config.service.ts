@@ -7,6 +7,7 @@ import { PostgresConfig, TwitterConfig } from '../types';
 
 const env = {
   ethProvider: process.env.ETH_PROVIDER,
+  linkBaseUrl: process.env.LINK_BASE_URL,
   mnemonicFile: process.env.MNEMONIC_FILE,
   nodeEnv: process.env.NODE_ENV,
   paymentHub: process.env.PAYMENT_HUB,
@@ -39,6 +40,10 @@ export class ConfigService {
   public getWallet(index: number | string = cfIndex): Wallet {
     const mnemonic = fs.readFileSync(env.mnemonicFile, 'utf8');
     return Wallet.fromMnemonic(mnemonic, `m/44'/60'/0'/0/${index}`).connect(this.ethProvider);
+  }
+
+  get linkBaseUrl(): string {
+    return env.linkBaseUrl || 'https://rinkeby.indra.connext.network/redeem';
   }
 
   get wallet(): Wallet {

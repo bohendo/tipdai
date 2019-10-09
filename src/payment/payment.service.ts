@@ -10,7 +10,6 @@ import { PaymentRepository } from '../payment/payment.repository';
 import { User } from '../user/user.entity';
 import { UserRepository } from '../user/user.repository';
 
-const baseUrl = 'https://rinkeby.indra.connext.network/redeem'
 const LINK_LIMIT = parseEther('10');
 const paymentIdRegex = /paymentId=0x[0-9a-fA-F]{64}/;
 const secretRegex = /secret=0x[0-9a-fA-F]{64}/;
@@ -72,9 +71,7 @@ export class PaymentService {
     payment.secret = linkResult.preImage;
     payment.amount = amount;
     payment.status = 'PENDING';
-    payment.baseUrl = baseUrl;
     const user = await this.userRepo.getByTwitterId(recipient);
-    payment.user = user;
     user.payment = payment;
     this.paymentRepo.save(payment);
     this.userRepo.save(user);
@@ -82,7 +79,6 @@ export class PaymentService {
   }
 
   // Deposit Payment
-  // TODO: don't accept any baseUrl, a whitelist should be hardcoded
   public newPayment = async (linkPayment: string, sender: string): Promise<string> => {
     const channel = await this.channelService.getChannel();
     const paymentId = linkPayment.match(paymentIdRegex)[0].replace('paymentId=', '');
@@ -91,7 +87,7 @@ export class PaymentService {
     let payment = await this.paymentRepo.findByPaymentId(paymentId);
     if (payment && payment.status !== 'PENDING') {
       if (user.payment) {
-        return `Link payment already applied. Balance: $${user.balance}. Cashout anytime by clicking the following link:\n\n${baseUrl}?paymentId=${user.payment.paymentId}&secret=${user.payment.secret}`;
+        return `Link payment already applied. Balance: $${user.balance}. Cashout anytime by clicking the following link:\n\n${this.config.linkBaseUrl}?paymentId=${user.payment.paymentId}&secret=${user.payment.secret}`;
       } else {
         return `Link payment already applied. Balance: $${user.balance}`;
       }
@@ -99,7 +95,6 @@ export class PaymentService {
     payment = new Payment();
     payment.twitterId = sender;
     payment.paymentId = paymentId;
-    payment.baseUrl = baseUrl;
     payment.secret = secret;
     const link = await channel.getLinkedTransfer(paymentId);
     console.log(`Found link: ${JSON.stringify(link)}`);
@@ -120,6 +115,6 @@ export class PaymentService {
     }
     user.payment = await this.createPayment(user.balance, sender);
     await this.userRepo.save(user);
-    return `Link payment has been redeemed. New balance: $${user.balance}.\nCashout anytime by clicking the following link:\n\n${baseUrl}?paymentId=${user.payment.paymentId}&secret=${user.payment.secret}`;
+    return `Link payment has been redeemed. New balance: $${user.balance}.\nCashout anytime by clicking the following link:\n\n${this.config.linkBaseUrl}?paymentId=${user.payment.paymentId}&secret=${user.payment.secret}`;
   }
 }

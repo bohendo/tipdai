@@ -53,7 +53,7 @@ export class MessageService {
       } else if (!user.balance && user.payment) {
         return await this.twitter.sendDM(sender, `User has payment but no balance. This should never happen :(`);
       } else if (user.balance && user.payment) {
-        return await this.twitter.sendDM(sender, `Balance: $${user.balance}. Cashout anytime by clicking the following link:\n\n${user.payment.baseUrl}?paymentId=${user.payment.paymentId}&secret=${user.payment.secret}`);
+        return await this.twitter.sendDM(sender, `Balance: $${user.balance}. Cashout anytime by clicking the following link:\n\n${this.config.linkBaseUrl}?paymentId=${user.payment.paymentId}&secret=${user.payment.secret}`);
       } else {
         return await this.twitter.sendDM(sender, `Your balance is $0.00. Send a link payment to get started.`);
       }

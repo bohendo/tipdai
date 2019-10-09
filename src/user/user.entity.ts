@@ -13,6 +13,6 @@ export class User {
   @Column('text')
   balance!: string;
 
-  @OneToOne(type => Payment, payment => payment.user)
+  @OneToOne(type => Payment)
   payment: Payment;
 }

@@ -81,6 +81,10 @@ elif [[ "$chainId" == "42" ]]
 then ethNetwork="kovan"
 elif [[ "$chainId" == "4447" ]]
 then ethNetwork="ganache"
+elif [[ "$chainId" == "" ]]
+then
+  echo "Couldn't get chainId for $TIPDAI_ETH_PROVIDER, are you connected to the internet?"
+  exit
 else
   echo "Ethereum chain \"$chainId\" is not supported yet"
   exit

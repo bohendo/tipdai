@@ -114,12 +114,7 @@ export class MessageService {
       result = result.replace('XXX', tipInfo[1]);
     }
 
-    if (result.indexOf('YYY') !== -1) {
-      result = result.replace('YYY', tweet.user.screen_name);
-    }
-
-    await this.twitter.tweet(result, tweet.id_str);
-
+    await this.twitter.tweet(`@${tweet.user.screen_name} ${result}`, tweet.id_str);
   }
 
 }

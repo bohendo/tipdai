@@ -50,20 +50,6 @@ export class MessageService {
       return await this.twitter.sendDM(sender, await this.payment.depositPayment(messageUrl, sender));
     }
 
-    if (message.match(/^balance/i) || message.match(/^refresh/i)) {
-      const user = await this.userRepo.getByTwitterId(sender);
-      console.log(`user: ${JSON.stringify(user, (key, value) => (key && typeof value === 'object') ? value.toString() : value, 2)}`);
-      if (parseEther(user.balance).gt(Zero) && !user.cashout) {
-        return await this.twitter.sendDM(sender, `User has balance but no cashout link. This should never happen :(`);
-      } else if (!user.balance && user.cashout) {
-        return await this.twitter.sendDM(sender, `User has cashout link but no balance. This should never happen :(`);
-      } else if (user.balance && user.cashout) {
-        return await this.twitter.sendDM(sender, `Balance: $${user.balance}. Cashout anytime by clicking the following link:\n\n${this.config.linkBaseUrl}?paymentId=${user.cashout.paymentId}&secret=${user.cashout.secret}`);
-      } else {
-        return await this.twitter.sendDM(sender, `Your balance is $0.00. Send a link payment to get started.`);
-      }
-    }
-
     if (false && message.match(/^deposit/i)) {
       const depositAddress = await this.deposit.newDeposit(sender);
       await this.twitter.sendDM(
@@ -92,6 +78,20 @@ export class MessageService {
       await this.twitter.sendDM(sender, depositAddress);
       return;
     }
+
+    if (message.match(/^balance/i) || message.match(/^refresh/i)) {
+      const user = await this.userRepo.getByTwitterId(sender);
+      console.log(`user: ${JSON.stringify(user, (key, value) => (key && typeof value === 'object') ? value.toString() : value, 2)}`);
+      if (parseEther(user.balance).gt(Zero) && !user.cashout) {
+        return await this.twitter.sendDM(sender, `User has balance but no cashout link. This should never happen :(`);
+      } else if (!user.balance && user.cashout) {
+        return await this.twitter.sendDM(sender, `User has cashout link but no balance. This should never happen :(`);
+      } else if (user.balance && user.cashout) {
+        return await this.twitter.sendDM(sender, `Balance: $${user.balance}. Cashout anytime by clicking the following link:\n\n${this.config.linkBaseUrl}?paymentId=${user.cashout.paymentId}&secret=${user.cashout.secret}`);
+      } else {
+        return await this.twitter.sendDM(sender, `Your balance is $0.00. Send a link payment to get started.`);
+      }
+    }
   }
 
   public handleTweet = async (tweet) => {
@@ -112,6 +112,10 @@ export class MessageService {
 
     if (result.indexOf('XXX') !== -1) {
       result = result.replace('XXX', tipInfo[1]);
+    }
+
+    if (result.indexOf('YYY') !== -1) {
+      result = result.replace('YYY', tweet.user.screen_name);
     }
 
     await this.twitter.tweet(result, tweet.id_str);

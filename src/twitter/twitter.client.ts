@@ -99,9 +99,9 @@ export class Twitter {
     return this._put(this._encodeUrl(this.baseUrl + path));
   }
 
-  tweet = async (status): Promise<any> => {
+  tweet = async (status, in_reply_to_status_id): Promise<any> => {
     const path = '/statuses/update.json';
-    return this._post(this._encodeUrl(this.baseUrl + path), { status });
+    return this._post(this._encodeUrl(this.baseUrl + path), { status, in_reply_to_status_id });
   }
 
   getUser = async (screen_name): Promise<any> => {

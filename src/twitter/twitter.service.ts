@@ -55,9 +55,9 @@ export class TwitterService {
     }
   }
 
-  public tweet = async (status) => {
+  public tweet = async (status: string, replyTo?: string) => {
     if (this.invalid) { return; }
-    return await this.twitterBot.tweet(status);
+    return await this.twitterBot.tweet(status, replyTo);
   }
 
   public getUser = async (screen_name) => {

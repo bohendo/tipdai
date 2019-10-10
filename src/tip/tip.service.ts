@@ -16,7 +16,7 @@ export class TipService {
     private readonly payment: PaymentService,
   ) {}
 
-  public handleTip = async (sender: User, recipient: User, amount: string, message: string) => {
+  public handleTip = async (sender: User, recipient: User, amount: string, message: string): Promise<string> => {
     try {
       console.log(`Handling tip from ${sender.twitterId} to ${recipient.twitterId} amount ${amount}`);
 
@@ -30,7 +30,8 @@ export class TipService {
 
       if (!sender.balance || parseEther(sender.balance).lt(parseEther(amount))) {
         console.log(`sender balance ${sender.balance} is lower than ${amount}`);
-        return 'false';
+        return `You don't have a high enough balance to send a $${amount} tip, ` +
+        `DM me a link payment to increase your balance & then try again.`;
       }
 
       console.log(`Sender old balance: ${sender.balance}`);
@@ -55,10 +56,11 @@ export class TipService {
       await this.userRepo.save(recipient);
       console.log(`Saved new recipient data`);
 
-      return 'true';
+      return `Tip successful! Balance for XXX has increased by $${amount}. DM me to check your balance or to cashout.`;
+
     } catch (e) {
       console.log(`Failed to handling tip: ${e}`);
-      return 'false';
+      return `Oops something went wrong, it was probably my fault. Hey @bohendo, can you fix me?`;
     }
   }
 

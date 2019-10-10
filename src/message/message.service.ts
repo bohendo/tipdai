@@ -64,7 +64,7 @@ export class MessageService {
       }
     }
 
-    if (message.match(/^deposit/i)) {
+    if (false && message.match(/^deposit/i)) {
       const depositAddress = await this.deposit.newDeposit(sender);
       await this.twitter.sendDM(
         sender,
@@ -76,7 +76,7 @@ export class MessageService {
       return;
     }
 
-    if (message.match(/^wait/i)) {
+    if (false && message.match(/^wait/i)) {
       const depositAddress = await this.deposit.delayDeposit(sender);
       if (!depositAddress) {
         return await this.twitter.sendDM(
@@ -107,8 +107,14 @@ export class MessageService {
     const sender = await this.userRepo.getByTwitterId(tweet.user.id_str);
     const recipientUser = await this.twitter.getUser(tipInfo[1]);
     const recipient = await this.userRepo.getByTwitterId(recipientUser.id_str);
-    const result = await this.tip.handleTip(sender, recipient, tipInfo[2], tweet.text);
+    let result = await this.tip.handleTip(sender, recipient, tipInfo[2], tweet.text);
     console.log(`Got tip result: ${JSON.stringify(result)}`);
+
+    if (result.indexOf('XXX') !== -1) {
+      result = result.replace('XXX', tipInfo[1]);
+    }
+
+    await this.twitter.tweet(result, tweet.id_str);
 
   }
 

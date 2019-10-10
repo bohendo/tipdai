@@ -56,7 +56,7 @@ export class TipService {
       await this.userRepo.save(recipient);
       console.log(`Saved new recipient data`);
 
-      return `YYY, your tip was successful! A payment of $${amount} has been transfered. XXX, you can tip someone else with the tweet pattern mentioned in my bio or DM me "balance" to cashout.`;
+      return `@YYY, your tip was successful! A payment of $${amount} has been transfered. XXX, you can tip someone else with the tweet pattern mentioned in my bio or DM me "balance" to cashout.`;
 
     } catch (e) {
       console.log(`Failed to handling tip: ${e}`);

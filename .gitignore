@@ -38,3 +38,4 @@ ops/*.log
 src/scratch.js
 .pgpass
 .*mnemonic*
+*.logs

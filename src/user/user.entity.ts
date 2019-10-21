@@ -7,7 +7,10 @@ export class User {
   @PrimaryGeneratedColumn()
   id!: number;
 
-  @Column('text')
+  @Column('text', { nullable: true })
+  address!: string;
+
+  @Column('text', { nullable: true })
   twitterId!: string;
 
   @Column('text', { nullable: true })

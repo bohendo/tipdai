@@ -9,12 +9,12 @@ import { UserRepository } from '../user/user.repository';
 import { WebhooksController } from './webhooks.controller';
 
 @Module({
+  controllers: [WebhooksController],
   imports: [
     ConfigModule,
     MessageModule,
     TwitterModule,
     TypeOrmModule.forFeature([UserRepository]),
   ],
-  controllers: [WebhooksController],
 })
 export class WebhooksModule {}

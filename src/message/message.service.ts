@@ -4,17 +4,13 @@ import { Zero } from 'ethers/constants';
 
 import { ChannelService } from '../channel/channel.service';
 import { ConfigService } from '../config/config.service';
+import { paymentIdRegex, secretRegex, tipRegex } from '../constants';
 import { DepositService } from '../deposit/deposit.service';
 import { PaymentService } from '../payment/payment.service';
 import { TipService } from '../tip/tip.service';
 import { TwitterService } from '../twitter/twitter.service';
 import { User } from '../user/user.entity';
 import { UserRepository } from '../user/user.repository';
-
-const paymentIdRegex = /paymentId=0x[0-9a-fA-F]{64}/;
-const secretRegex = /secret=0x[0-9a-fA-F]{64}/;
-// TODO: Don't hardcode screen name
-const tipRegex = /@TipFakeDai.*(@[a-zA-Z0-9]*).*[$]([0-9]+.?[0-9]*)?/i;
 
 @Injectable()
 export class MessageService {
@@ -29,7 +25,11 @@ export class MessageService {
   ) {
   }
 
-  public handlePublicMessage = async (sender: User, message: string): Promise<string> => {
+  public handlePublicMessage = async (
+    sender: User,
+    recipient: User,
+    message: string,
+  ): Promise<string> => {
     if (sender.twitterId === this.config.twitterBotUserId) { return; }
     const tipInfo = message.match(tipRegex);
     if (!tipInfo || !tipInfo[2]) {
@@ -37,8 +37,6 @@ export class MessageService {
       console.log(JSON.stringify(tipInfo));
       return;
     }
-    const recipientUser = await this.twitter.getUser(tipInfo[1]);
-    const recipient = await this.userRepo.getByTwitterId(recipientUser.id_str);
     let result = await this.tip.handleTip(sender, recipient, tipInfo[2], message);
     console.log(`Got tip result: ${JSON.stringify(result)}`);
     if (result.indexOf('XXX') !== -1) {

@@ -15,4 +15,5 @@ export class AppController {
   async triggerCRC(): Promise<string> {
     return await this.appService.triggerCRC();
   }
+
 }

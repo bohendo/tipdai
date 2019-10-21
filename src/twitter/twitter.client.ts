@@ -104,7 +104,12 @@ export class Twitter {
     return this._post(this._encodeUrl(this.baseUrl + path), { status, in_reply_to_status_id });
   }
 
-  getUser = async (screen_name): Promise<any> => {
+  getUserById = async (user_id: string): Promise<any> => {
+    const path = '/users/show.json';
+    return this._get(this._encodeUrl(this.baseUrl + path + this._buildQS({ user_id })));
+  }
+
+  getUserByName = async (screen_name: string): Promise<any> => {
     const path = '/users/show.json';
     return this._get(this._encodeUrl(this.baseUrl + path + this._buildQS({ screen_name })));
   }

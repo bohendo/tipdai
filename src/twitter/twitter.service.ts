@@ -60,7 +60,12 @@ export class TwitterService {
     return await this.twitterBot.tweet(status, replyTo);
   }
 
-  public getUser = async (screen_name) => {
+  public getUserById = async (user_id) => {
+    if (this.invalid) { return; }
+    return await this.twitterBot.getUser(user_id);
+  }
+
+  public getUserByName = async (screen_name) => {
     if (this.invalid) { return; }
     return await this.twitterBot.getUser(screen_name);
   }

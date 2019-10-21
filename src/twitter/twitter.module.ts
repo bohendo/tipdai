@@ -7,11 +7,11 @@ import { UserRepository } from '../user/user.repository';
 import { TwitterService } from './twitter.service';
 
 @Module({
-  providers: [TwitterService],
+  exports: [TwitterService],
   imports: [
     ConfigModule,
     TypeOrmModule.forFeature([UserRepository]),
   ],
-  exports: [TwitterService],
+  providers: [TwitterService],
 })
 export class TwitterModule {}

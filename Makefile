@@ -23,6 +23,7 @@ log_finish=@echo "[Makefile] => Finished building $@ in $$((`date "+%s"` - `cat 
 
 ########################################
 ## Phony Rules
+.PHONY: test
 
 default: dev
 all: dev prod
@@ -56,6 +57,9 @@ restart-prod: stop
 
 push-latest: prod
 	bash ops/push-images.sh latest bot proxy
+
+test:
+	node test/entry.js
 
 ########################################
 ## Real Rules

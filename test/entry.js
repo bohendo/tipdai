@@ -31,9 +31,7 @@ const axio = axios.create({
 
   console.log(`Channel all set up`);
 
-
   process.exit(0);
-
 
 })()
 

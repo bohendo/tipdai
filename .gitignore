@@ -3,6 +3,7 @@
 .config
 .node-gyp
 .npm
+.store.json
 
 # Compiled output
 build/

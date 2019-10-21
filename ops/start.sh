@@ -10,6 +10,10 @@ docker swarm init 2> /dev/null || true
 ####################
 # External Env Vars
 
+if [[ -f .env ]]
+then source .env
+fi
+
 TIPDAI_DOMAINNAME="${TIPDAI_DOMAINNAME:-localhost}"
 TIPDAI_EMAIL="${TIPDAI_EMAIL:-noreply@gmail.com}" # for notifications when ssl certs expire
 TIPDAI_ETH_PROVIDER="${TIPDAI_ETH_PROVIDER:-http://localhost:8545}"

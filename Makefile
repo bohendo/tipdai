@@ -75,7 +75,7 @@ proxy: $(proxy)/entry.sh $(proxy)/nginx.conf $(proxy)/nginx.dockerfile
 	docker build --file $(proxy)/nginx.dockerfile --tag tipdai_proxy:latest .
 	$(log_finish) && touch $(flags)/$@
 
-tipdai-image-dev: tipdai-js ops/bot.dockerfile 
+tipdai-image-dev: tipdai-js ops/bot-dev.dockerfile
 	$(log_start)
 	docker build --file ops/bot-dev.dockerfile --tag tipdai_bot_dev:latest .
 	touch $(flags)/$@

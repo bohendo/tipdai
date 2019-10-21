@@ -1,8 +1,9 @@
 
-// TODO: Don't hardcode screen name
 
 export const paymentIdRegex = /paymentId=0x[0-9a-fA-F]{64}/;
 export const secretRegex = /secret=0x[0-9a-fA-F]{64}/;
+
+// TODO: Don't hardcode screen name
 export const tipRegex = /@TipFakeDai.*(@[a-zA-Z0-9]*).*[$]([0-9]+.?[0-9]*)?/i;
 
 const exampleTwitterPrivateMessage = {

@@ -1,11 +1,9 @@
 import { Injectable } from '@nestjs/common';
-import { arrayify, hexlify, isHexString, randomBytes, verifyMessage } from 'ethers/utils';
+import { arrayify, hexlify, randomBytes, verifyMessage } from 'ethers/utils';
 
 import { User } from '../user/user.entity';
 import { UserRepository } from '../user/user.repository';
-
-const isValidHex = (hex: string, bytes: number): boolean =>
-  isHexString(hex) && arrayify(hex).length === bytes;
+import { isValidHex } from '../utils';
 
 const badToken = (warning: string): any => {
   console.warn(warning);
@@ -23,8 +21,8 @@ export class UserService {
 
   getNonce(address: string): string | undefined {
     if (!isValidHex(address, 20)) {
-      console.log(`Invalid address: ${address}`);
-      return;
+      console.log(`Invalid Address: ${address}`);
+      return 'Invalid Address';
     }
     const nonce = hexlify(randomBytes(16));
     const expiry = Date.now() + (2 * 60 * 60 * 1000);
@@ -50,7 +48,7 @@ export class UserService {
     }
     const { address, expiry } = this.nonces[nonce];
     if (givenAddress !== address) {
-      return badToken(`Nonce ${nonce} for address ${address}, but xpub maps to ${givenAddress}`);
+      return badToken(`Nonce ${nonce} is for address ${address}, but given address ${givenAddress}`);
     }
     if (Date.now() >= expiry) {
       delete this.nonces[nonce];

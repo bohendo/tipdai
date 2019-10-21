@@ -29,92 +29,78 @@ export class MessageService {
   ) {
   }
 
-  public handleMessage = async (event) => {
-    const sender = event.message_create.sender_id;
-    const message = event.message_create.message_data.text;
-    const messageUrls = event.message_create.message_data.entities.urls;
-    const messageUrl = messageUrls && messageUrls.length ? messageUrls[0].expanded_url : undefined;
+  public handlePrivateMessage = async (sender, message, messageUrls) => {
     if (sender === this.config.twitterBotUserId) { return; } // ignore messages sent by the bot
-    console.log(`Processing message event: ${JSON.stringify(event, null, 2)}`);
+    const messageUrl = messageUrls && messageUrls.length ? messageUrls[0].expanded_url : undefined;
 
     if (message.match(/^crc/i)) {
       try {
         await this.twitter.triggerCRC();
-        return await this.twitter.sendDM(sender, 'Successfully triggered CRC!');
+        return 'Successfully triggered CRC!';
       } catch (e) {
-        return await this.twitter.sendDM(sender, `CRC didn't go so well..`);
+        return `CRC didn't go so well..`;
       }
     }
 
     if (messageUrl && messageUrl.match(paymentIdRegex) && messageUrl.match(secretRegex)) {
-      return await this.twitter.sendDM(sender, await this.payment.depositPayment(messageUrl, sender));
+      return await this.payment.depositPayment(messageUrl, sender);
     }
 
     if (false && message.match(/^deposit/i)) {
       const depositAddress = await this.deposit.newDeposit(sender);
-      await this.twitter.sendDM(
-        sender,
+      return [
         `Send up to 30 DAI worth of rinkeby ETH to the following address to deposit. ` +
         `This address will be available for deposits for 10 minutes. ` +
         `If you send a transaction with low gas, reply "wait" and the timeout will be extended.`,
-      );
-      await this.twitter.sendDM(sender, depositAddress);
-      return;
+        depositAddress,
+      ];
     }
 
     if (false && message.match(/^wait/i)) {
       const depositAddress = await this.deposit.delayDeposit(sender);
       if (!depositAddress) {
-        return await this.twitter.sendDM(
-          sender,
-          `No deposit found, reply with "deposit" to start a deposit.`,
-        );
+        return `No deposit found, reply with "deposit" to start a deposit.`;
       }
-      await this.twitter.sendDM(
-        sender,
+      return [
         `Timeout extended, you have 10 more minutes to deposit up to 30 DAI worth of rinkeby ETH to the below address. ` +
         `If you want to extend again, reply "wait" as many times as needed.`,
-      );
-      await this.twitter.sendDM(sender, depositAddress);
-      return;
+        depositAddress,
+      ];
     }
 
     if (message.match(/^balance/i) || message.match(/^refresh/i)) {
       const user = await this.userRepo.getByTwitterId(sender);
-      console.log(`user: ${JSON.stringify(user, (key, value) => (key && typeof value === 'object') ? value.toString() : value, 2)}`);
       if (parseEther(user.balance).gt(Zero) && !user.cashout) {
-        return await this.twitter.sendDM(sender, `User has balance but no cashout link. This should never happen :(`);
+        return `User has balance but no cashout link. This should never happen :(`;
       } else if (!user.balance && user.cashout) {
-        return await this.twitter.sendDM(sender, `User has cashout link but no balance. This should never happen :(`);
+        return `User has cashout link but no balance. This should never happen :(`;
       } else if (user.balance && user.cashout) {
-        return await this.twitter.sendDM(sender, `Balance: $${user.balance}. Cashout anytime by clicking the following link:\n\n${this.config.linkBaseUrl}?paymentId=${user.cashout.paymentId}&secret=${user.cashout.secret}`);
+        return  `Balance: $${user.balance}. Cashout anytime by clicking the following link:\n\n${this.config.linkBaseUrl}?paymentId=${user.cashout.paymentId}&secret=${user.cashout.secret}`;
       } else {
-        return await this.twitter.sendDM(sender, `Your balance is $0.00. Send a link payment to get started.`);
+        return `Your balance is $0.00. Send a link payment to get started.`;
       }
     }
   }
 
-  public handleTweet = async (tweet) => {
-    console.log(`Got a tweet event: ${JSON.stringify(tweet, null, 2)}`);
-    const message = tweet.text;
-
-    const tipInfo = tweet.text.match(tipRegex);
+  public handlePublicMessage = async (sender, message) => {
+    if (sender === this.config.twitterBotUserId) { return; } // ignore messages sent by the bot
+    const tipInfo = message.match(tipRegex);
     if (!tipInfo || !tipInfo[2]) {
-      console.log(`Improperly formatted tweet, ignoring`);
+      console.log(`Improperly formatted public message, ignoring`);
       console.log(JSON.stringify(tipInfo));
-      return; // , ignore
+      return;
     }
-    const sender = await this.userRepo.getByTwitterId(tweet.user.id_str);
+    const senderUser = await this.userRepo.getByTwitterId(sender);
     const recipientUser = await this.twitter.getUser(tipInfo[1]);
     const recipient = await this.userRepo.getByTwitterId(recipientUser.id_str);
-    let result = await this.tip.handleTip(sender, recipient, tipInfo[2], tweet.text);
+    let result = await this.tip.handleTip(senderUser, recipient, tipInfo[2], message);
     console.log(`Got tip result: ${JSON.stringify(result)}`);
 
     if (result.indexOf('XXX') !== -1) {
       result = result.replace('XXX', tipInfo[1]);
     }
 
-    await this.twitter.tweet(`@${tweet.user.screen_name} ${result}`, tweet.id_str);
+    return result;
   }
 
 }

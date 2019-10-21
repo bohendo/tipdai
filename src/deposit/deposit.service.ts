@@ -122,6 +122,7 @@ export class DepositService {
           console.log(`Old channel balance: ${oldChannelTokens}`);
 
           /*
+          // TODO: Port over daicard's deposit & swap all functions
           try {
             await channel.deposit({
               amount: parseEther(dep.amount),

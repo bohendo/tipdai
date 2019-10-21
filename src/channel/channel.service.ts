@@ -17,14 +17,6 @@ export class ChannelService {
     private readonly config: ConfigService,
     private readonly channelRecords: ChannelRecordRepository,
   ) {
-    this.connectChannel();
-  }
-
-  public async getChannel(): Promise<any> {
-    return await this.channel;
-  }
-
-  public async connectChannel(): Promise<any> {
     this.channel = new Promise(async (resolve, reject) => {
       const channel = await connext({ ...this.config.channel, store: this.channelRecords });
       this.tokenAddress = channel.config.contractAddresses.Token;
@@ -84,4 +76,9 @@ export class ChannelService {
       return resolve(channel);
     });
   }
+
+  public async getChannel(): Promise<any> {
+    return await this.channel;
+  }
+
 }

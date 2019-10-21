@@ -4,6 +4,7 @@ import { Body, Controller, Get, Post, Query } from '@nestjs/common';
 import { ConfigService } from '../config/config.service';
 import { MessageService } from '../message/message.service';
 import { TwitterService } from '../twitter/twitter.service';
+import { UserRepository } from '../user/user.repository';
 
 type TwitterCRCResponse = {
   response_token: string;
@@ -15,6 +16,7 @@ export class WebhooksController {
     private readonly config: ConfigService,
     private readonly message: MessageService,
     private readonly twitter: TwitterService,
+    private readonly userRepo: UserRepository,
   ) {}
 
   @Get('twitter')
@@ -34,7 +36,8 @@ export class WebhooksController {
 
     if (body.tweet_create_events) {
       body.tweet_create_events.forEach(async tweet => {
-        const response = await this.message.handlePublicMessage(tweet.user.id_str, tweet.text);
+        const sender = await this.userRepo.getTwitterUser(tweet.user.id_str, tweet.user.screen_name);
+        const response = await this.message.handlePublicMessage(sender, tweet.text);
         if (response) {
           await this.twitter.tweet(
            `@${tweet.user.screen_name} ${response}`,
@@ -46,13 +49,22 @@ export class WebhooksController {
 
     if (body.direct_message_events) {
       body.direct_message_events.forEach(async dm => {
-        const response = await this.message.handlePrivateMessage(
-          dm.message_create.sender_id,
+        const senderId = dm.message_create.sender_id;
+        let sender = await this.userRepo.getByTwitterId(senderId);
+        if (!sender) {
+          const twitterUser = await this.twitter.getUser(senderId);
+          console.log(`twitterUser: ${JSON.stringify(twitterUser)}`);
+          sender = await this.userRepo.getTwitterUser(senderId, twitterUser.screen_name);
+        }
+        const responses = await this.message.handlePrivateMessage(
+          sender,
           dm.message_create.message_data.text,
-          dm.message_create.message_data.entities.urls,
+          dm.message_create.message_data.entities.urls.map(url => url.expanded_url),
         );
-        if (response) {
-          await this.twitter.sendDM(dm.message_create.sender_id, response);
+        if (responses && responses.length) {
+          responses.forEach(
+            async response => await this.twitter.sendDM(dm.message_create.sender_id, response),
+          );
         }
       });
     }

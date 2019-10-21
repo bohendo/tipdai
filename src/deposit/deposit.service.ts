@@ -23,17 +23,16 @@ export class DepositService {
     this.startDepositPoller();
   }
 
-  public newDeposit = async (sender: string): Promise<string> => {
-    const user = await this.userRepo.getByTwitterId(sender);
+  public newDeposit = async (sender: User): Promise<string> => {
     let deposit;
-    deposit = await this.depositRepo.findOne({ user });
+    deposit = await this.depositRepo.findOne({ user: sender });
     if (deposit && deposit.address) {
       return deposit.address;
     }
     if (!deposit) {
       deposit = new Deposit();
       deposit.startTime = new Date();
-      deposit.user = user;
+      deposit.user = sender;
     }
     const pendingDeposits = await this.depositRepo.getAllPending();
     if (!pendingDeposits) {
@@ -46,17 +45,16 @@ export class DepositService {
     return deposit.address;
   }
 
-  public delayDeposit = async (sender: string): Promise<string> => {
-    const user = await this.userRepo.getByTwitterId(sender);
+  public delayDeposit = async (sender: User): Promise<string> => {
     let deposit;
-    deposit = await this.depositRepo.findOne({ user });
+    deposit = await this.depositRepo.findOne({ user: sender });
     if (deposit && deposit.address) {
       return deposit.address;
     }
     if (!deposit) {
       deposit = new Deposit();
       deposit.startTime = new Date();
-      deposit.user = user;
+      deposit.user = sender;
     }
     const pendingDeposits = await this.depositRepo.getAllPending();
     if (!pendingDeposits) {

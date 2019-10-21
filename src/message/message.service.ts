@@ -29,21 +29,43 @@ export class MessageService {
   ) {
   }
 
-  public handlePrivateMessage = async (sender, message, messageUrls) => {
-    if (sender === this.config.twitterBotUserId) { return; } // ignore messages sent by the bot
-    const messageUrl = messageUrls && messageUrls.length ? messageUrls[0].expanded_url : undefined;
+  public handlePublicMessage = async (sender: User, message: string): Promise<string> => {
+    if (sender.twitterId === this.config.twitterBotUserId) { return; }
+    const tipInfo = message.match(tipRegex);
+    if (!tipInfo || !tipInfo[2]) {
+      console.log(`Improperly formatted public message, ignoring`);
+      console.log(JSON.stringify(tipInfo));
+      return;
+    }
+    const recipientUser = await this.twitter.getUser(tipInfo[1]);
+    const recipient = await this.userRepo.getByTwitterId(recipientUser.id_str);
+    let result = await this.tip.handleTip(sender, recipient, tipInfo[2], message);
+    console.log(`Got tip result: ${JSON.stringify(result)}`);
+    if (result.indexOf('XXX') !== -1) {
+      result = result.replace('XXX', tipInfo[1]);
+    }
+    return result;
+  }
+
+  public handlePrivateMessage = async (
+    sender: User,
+    message: string,
+    messageUrls?: string[],
+  ): Promise<string[]> => {
+    if (sender.twitterId === this.config.twitterBotUserId) { return; }
+    const messageUrl = messageUrls && messageUrls.length ? messageUrls[0] : undefined;
 
     if (message.match(/^crc/i)) {
       try {
         await this.twitter.triggerCRC();
-        return 'Successfully triggered CRC!';
+        return ['Successfully triggered CRC!'];
       } catch (e) {
-        return `CRC didn't go so well..`;
+        return [`CRC didn't go so well..`];
       }
     }
 
     if (messageUrl && messageUrl.match(paymentIdRegex) && messageUrl.match(secretRegex)) {
-      return await this.payment.depositPayment(messageUrl, sender);
+      return [await this.payment.depositPayment(messageUrl, sender)];
     }
 
     if (false && message.match(/^deposit/i)) {
@@ -59,7 +81,7 @@ export class MessageService {
     if (false && message.match(/^wait/i)) {
       const depositAddress = await this.deposit.delayDeposit(sender);
       if (!depositAddress) {
-        return `No deposit found, reply with "deposit" to start a deposit.`;
+        return [`No deposit found, reply with "deposit" to start a deposit.`];
       }
       return [
         `Timeout extended, you have 10 more minutes to deposit up to 30 DAI worth of rinkeby ETH to the below address. ` +
@@ -69,38 +91,16 @@ export class MessageService {
     }
 
     if (message.match(/^balance/i) || message.match(/^refresh/i)) {
-      const user = await this.userRepo.getByTwitterId(sender);
-      if (parseEther(user.balance).gt(Zero) && !user.cashout) {
-        return `User has balance but no cashout link. This should never happen :(`;
-      } else if (!user.balance && user.cashout) {
-        return `User has cashout link but no balance. This should never happen :(`;
-      } else if (user.balance && user.cashout) {
-        return  `Balance: $${user.balance}. Cashout anytime by clicking the following link:\n\n${this.config.linkBaseUrl}?paymentId=${user.cashout.paymentId}&secret=${user.cashout.secret}`;
+      if (parseEther(sender.balance).gt(Zero) && !sender.cashout) {
+        return [`User has balance but no cashout link. This should never happen :(`];
+      } else if (!sender.balance && sender.cashout) {
+        return [`User has cashout link but no balance. This should never happen :(`];
+      } else if (sender.balance && sender.cashout) {
+        return [`Balance: $${sender.balance}. Cashout anytime by clicking the following link:\n\n${this.config.linkBaseUrl}?paymentId=${sender.cashout.paymentId}&secret=${sender.cashout.secret}`];
       } else {
-        return `Your balance is $0.00. Send a link payment to get started.`;
+        return [`Your balance is $0.00. Send a link payment to get started.`];
       }
     }
-  }
-
-  public handlePublicMessage = async (sender, message) => {
-    if (sender === this.config.twitterBotUserId) { return; } // ignore messages sent by the bot
-    const tipInfo = message.match(tipRegex);
-    if (!tipInfo || !tipInfo[2]) {
-      console.log(`Improperly formatted public message, ignoring`);
-      console.log(JSON.stringify(tipInfo));
-      return;
-    }
-    const senderUser = await this.userRepo.getByTwitterId(sender);
-    const recipientUser = await this.twitter.getUser(tipInfo[1]);
-    const recipient = await this.userRepo.getByTwitterId(recipientUser.id_str);
-    let result = await this.tip.handleTip(senderUser, recipient, tipInfo[2], message);
-    console.log(`Got tip result: ${JSON.stringify(result)}`);
-
-    if (result.indexOf('XXX') !== -1) {
-      result = result.replace('XXX', tipInfo[1]);
-    }
-
-    return result;
   }
 
 }

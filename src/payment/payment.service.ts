@@ -16,12 +16,16 @@ const secretRegex = /secret=0x[0-9a-fA-F]{64}/;
 
 @Injectable()
 export class PaymentService {
+  private botUser: Promise<User>;
+
   constructor(
     private readonly channelService: ChannelService,
     private readonly config: ConfigService,
     private readonly paymentRepo: PaymentRepository,
     private readonly userRepo: UserRepository,
-  ) {}
+  ) {
+    this.botUser = this.userRepo.getByTwitterId(this.config.twitterBotUserId);
+  }
 
   public redeemPayment = async (payment: Payment): Promise<void> => {
     console.log(`Redeeming payment: ${JSON.stringify(payment)}`);
@@ -53,12 +57,10 @@ export class PaymentService {
     console.log(`Redeemed payment with result: ${JSON.stringify(result, null, 2)}`);
   }
 
-  public createPayment = async (amount: string, recipient: string): Promise<Payment> => {
+  public createPayment = async (amount: string, recipient: User): Promise<Payment> => {
     console.log(`Creating payment for ${amount}`);
     const amountBN = parseEther(amount);
     const channel = await this.channelService.getChannel();
-    const user = await this.userRepo.getByTwitterId(recipient);
-    const bot = await this.userRepo.getByTwitterId(this.config.twitterBotUserId);
     const linkResult = await channel.conditionalTransfer({
       assetId: this.channelService.tokenAddress,
       amount: amountBN.toString(),
@@ -69,37 +71,36 @@ export class PaymentService {
     console.log(`Created link transfer, result: ${JSON.stringify(linkResult, null, 2)}`);
     const payment = new Payment();
     payment.paymentId = linkResult.paymentId;
-    payment.recipient = user;
-    payment.sender = bot;
+    payment.recipient = recipient;
+    payment.sender = await this.botUser;
     payment.secret = linkResult.preImage;
     payment.amount = amount;
     payment.status = 'PENDING';
-    user.cashout = payment;
+    recipient.cashout = payment;
     console.log(`Saving new payment`);
     await this.paymentRepo.save(payment);
     console.log(`Saving updated cashout link`);
-    await this.userRepo.save(user);
+    await this.userRepo.save(recipient);
     return payment;
   }
 
-  public depositPayment = async (linkPayment: string, sender: string): Promise<string> => {
+  public depositPayment = async (linkPayment: string, sender: User): Promise<string> => {
     const channel = await this.channelService.getChannel();
     const paymentId = linkPayment.match(paymentIdRegex)[0].replace('paymentId=', '');
     const secret = linkPayment.match(secretRegex)[0].replace('secret=', '');
-    const user = await this.userRepo.getByTwitterId(sender);
     let payment = await this.paymentRepo.findByPaymentId(paymentId);
     if (payment && payment.status !== 'PENDING') {
-      if (user.cashout) {
-        return `Link payment already applied, status: ${payment.status}. Balance: $${user.balance}.\n` +
+      if (sender.cashout) {
+        return `Link payment already applied, status: ${payment.status}. Balance: $${sender.balance}.\n` +
           `Cashout anytime by clicking the following link:\n\n` +
-          `${this.config.linkBaseUrl}?paymentId=${user.cashout.paymentId}&` +
-          `secret=${user.cashout.secret}`;
+          `${this.config.linkBaseUrl}?paymentId=${sender.cashout.paymentId}&` +
+          `secret=${sender.cashout.secret}`;
       } else {
-        return `Link payment already applied, status: ${payment.status}. Balance: $${user.balance}`;
+        return `Link payment already applied, status: ${payment.status}. Balance: $${sender.balance}`;
       }
     }
     payment = new Payment();
-    payment.sender = user;
+    payment.sender = sender;
     payment.paymentId = paymentId;
     payment.secret = secret;
     const link = await channel.getLinkedTransfer(paymentId);
@@ -107,23 +108,23 @@ export class PaymentService {
     payment.amount = link && link.amount ? formatEther(bigNumberify(link.amount)) : '0.00';
     payment.status = link && link.status ? link.status : 'UNKNOWN';
     if (payment.status !== 'PENDING') {
-      return `Link payment not redeemable, status: ${payment.status}. Your balance: $${user.balance}`;
+      return `Link payment not redeemable, status: ${payment.status}. Your balance: $${sender.balance}`;
     }
     console.log(`Saving new link payment ${JSON.stringify(payment)}`);
     await this.paymentRepo.save(payment);
     await this.redeemPayment(payment);
-    user.balance = formatEther(parseEther(user.balance).add(parseEther(payment.amount)));
-    await this.userRepo.save(user);
+    sender.balance = formatEther(parseEther(sender.balance).add(parseEther(payment.amount)));
+    await this.userRepo.save(sender);
     payment.status = 'REDEEMED';
     await this.paymentRepo.save(payment);
-    if (user.cashout) {
-      await this.redeemPayment(user.cashout);
+    if (sender.cashout) {
+      await this.redeemPayment(sender.cashout);
     }
-    user.cashout = await this.createPayment(user.balance, sender);
-    await this.userRepo.save(user);
-    return `Link payment has been redeemed. New balance: $${user.balance}.\n` +
+    sender.cashout = await this.createPayment(sender.balance, sender);
+    await this.userRepo.save(sender);
+    return `Link payment has been redeemed. New balance: $${sender.balance}.\n` +
       `Cashout anytime by clicking the following link:` +
-      `\n\n${this.config.linkBaseUrl}?paymentId=${user.cashout.paymentId}&` +
-      `secret=${user.cashout.secret}`;
+      `\n\n${this.config.linkBaseUrl}?paymentId=${sender.cashout.paymentId}&` +
+      `secret=${sender.cashout.secret}`;
   }
 }

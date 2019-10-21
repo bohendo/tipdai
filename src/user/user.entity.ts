@@ -10,6 +10,9 @@ export class User {
   @Column('text')
   twitterId!: string;
 
+  @Column('text', { nullable: true })
+  twitterName!: string;
+
   @Column('text')
   balance!: string;
 

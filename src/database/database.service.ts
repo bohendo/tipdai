@@ -17,6 +17,7 @@ import { LinkUserPayment1570642369091 } from '../migrations/1570642369091-LinkUs
 import { InitTip1570646855257 } from '../migrations/1570646855257-InitTip';
 import { FixTip1570648530658 } from '../migrations/1570648530658-FixTip';
 import { UpdateTip1570649406343 } from '../migrations/1570649406343-UpdateTip';
+import { AddTwitterName1571652347467 } from '../migrations/1571652347467-AddTwitterName';
 
 const migrations = [
   InitChannelRecords1569189365938,
@@ -27,6 +28,7 @@ const migrations = [
   InitTip1570646855257,
   FixTip1570648530658,
   UpdateTip1570649406343,
+  AddTwitterName1571652347467,
 ];
 
 const entities = [

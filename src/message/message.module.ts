@@ -8,11 +8,14 @@ import { PaymentModule } from '../payment/payment.module';
 import { TipModule } from '../tip/tip.module';
 import { TwitterModule } from '../twitter/twitter.module';
 import { UserRepository } from '../user/user.repository';
+import { UserModule } from '../user/user.module';
 
+import { MessageController } from './message.controller';
 import { MessageService } from './message.service';
 
 @Module({
-  providers: [MessageService],
+  controllers: [MessageController],
+  exports: [MessageService],
   imports: [
     ChannelModule,
     ConfigModule,
@@ -21,7 +24,8 @@ import { MessageService } from './message.service';
     TipModule,
     TwitterModule,
     TypeOrmModule.forFeature([UserRepository]),
+    UserModule,
   ],
-  exports: [MessageService],
+  providers: [MessageService],
 })
 export class MessageModule {}

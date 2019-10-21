@@ -1,6 +1,9 @@
 import { Injectable } from '@nestjs/common';
 import { arrayify, hexlify, isHexString, randomBytes, verifyMessage } from 'ethers/utils';
 
+import { User } from '../user/user.entity';
+import { UserRepository } from '../user/user.repository';
+
 const isValidHex = (hex: string, bytes: number): boolean =>
   isHexString(hex) && arrayify(hex).length === bytes;
 
@@ -14,6 +17,10 @@ export class UserService {
   private nonces: { [key: string]: { address: string; expiry: number } } = {};
   private signerCache: { [key: string]: string } = {};
 
+  constructor(
+    private readonly userRepo: UserRepository,
+  ) {}
+
   getNonce(address: string): string | undefined {
     if (!isValidHex(address, 20)) {
       console.log(`Invalid address: ${address}`);
@@ -26,7 +33,7 @@ export class UserService {
     return nonce;
   }
 
-  verifySig(givenAddress: string, token: string): boolean {
+  async verifySig(givenAddress: string, token: string): Promise<boolean | User> {
     // Get & validate the nonce + signature from provided token
     if (token.indexOf(':') === -1) {
       return badToken(`Missing or malformed token: ${token}`);
@@ -59,7 +66,7 @@ export class UserService {
     if (this.signerCache[token] !== address) {
       return badToken(`Bad sig for ${nonce}: Got ${this.signerCache[token]}, expected ${address}`);
     }
-    return true;
+    return await this.userRepo.getByAddress(givenAddress);
   }
 
 }

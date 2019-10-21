@@ -7,8 +7,8 @@ import { ChannelRecordRepository } from './channel.repository';
 import { ConfigModule } from '../config/config.module';
 
 @Module({
-  providers: [ChannelService],
-  imports: [ConfigModule, TypeOrmModule.forFeature([ChannelRecordRepository])],
   exports: [ChannelService],
+  imports: [ConfigModule, TypeOrmModule.forFeature([ChannelRecordRepository])],
+  providers: [ChannelService],
 })
 export class ChannelModule {}

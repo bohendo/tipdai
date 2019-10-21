@@ -10,12 +10,12 @@ import { DepositService } from './deposit.service';
 import { UserRepository } from '../user/user.repository';
 
 @Module({
-  providers: [DepositService],
+  exports: [DepositService],
   imports: [
     ConfigModule,
     ChannelModule,
     TypeOrmModule.forFeature([DepositRepository, UserRepository]),
   ],
-  exports: [DepositService],
+  providers: [DepositService],
 })
 export class DepositModule {}

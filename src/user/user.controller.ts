@@ -1,5 +1,6 @@
 import { Body, Controller, Get, Post, Query } from '@nestjs/common';
 
+import { User } from './user.entity';
 import { UserService } from './user.service';
 
 @Controller('user')
@@ -14,8 +15,8 @@ export class UserController {
   }
 
   @Post('auth')
-  doVerifySig(@Body() body: any): boolean {
-    return this.userService.verifySig(body.address, body.token);
+  async doVerifySig(@Body() body: any): Promise<boolean | User> {
+    return await this.userService.verifySig(body.address, body.token);
   }
 
 }

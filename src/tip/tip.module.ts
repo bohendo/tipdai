@@ -8,11 +8,11 @@ import { TipRepository } from './tip.repository';
 import { TipService } from './tip.service';
 
 @Module({
-  providers: [TipService],
+  exports: [TipService],
   imports: [
     PaymentModule,
     TypeOrmModule.forFeature([UserRepository, TipRepository]),
   ],
-  exports: [TipService],
+  providers: [TipService],
 })
 export class TipModule {}

@@ -9,12 +9,12 @@ import { PaymentService } from './payment.service';
 import { PaymentRepository } from './payment.repository';
 
 @Module({
-  providers: [PaymentService],
+  exports: [PaymentService],
   imports: [
     ChannelModule,
     ConfigModule,
     TypeOrmModule.forFeature([PaymentRepository, UserRepository]),
   ],
-  exports: [PaymentService],
+  providers: [PaymentService],
 })
 export class PaymentModule {}

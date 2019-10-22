@@ -35,8 +35,8 @@ export class MessageController {
   @Post('private')
   async doPrivateMessage(@Body() body: any): Promise<string> {
     console.log(`Got body: ${JSON.stringify(body)}`);
-    const { address, message, token } = body;
-    if (!address || !message || !token) {
+    const { address, message, token, urls } = body;
+    if (!address || (!message && message !== '') || !token) {
       return 'Invalid Body, expected fields: address, message, token';
     }
     if (!isValidHex(address, 20)) {
@@ -46,7 +46,11 @@ export class MessageController {
       return 'Invalid Token';
     }
     const sender = await this.userRepo.getByAddress(address);
-    return (await this.messageService.handlePrivateMessage(sender, message, [])).join(' ');
+    const response = await this.messageService.handlePrivateMessage(sender, message, urls || []);
+    if (response) {
+      return response.join('\n\n');
+    }
+    return '';
   }
 
 }

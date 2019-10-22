@@ -29,7 +29,7 @@ export class MessageService {
     sender: User,
     recipient: User,
     message: string,
-  ): Promise<string> => {
+  ): Promise<string | undefined> => {
     if (sender.twitterId === this.config.twitterBotUserId) { return; }
     const tipInfo = message.match(tipRegex);
     if (!tipInfo || !tipInfo[2]) {
@@ -49,7 +49,7 @@ export class MessageService {
     sender: User,
     message: string,
     messageUrls?: string[],
-  ): Promise<string[]> => {
+  ): Promise<string[] | undefined> => {
     if (sender.twitterId === this.config.twitterBotUserId) { return; }
     const messageUrl = messageUrls && messageUrls.length ? messageUrls[0] : undefined;
 

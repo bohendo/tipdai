@@ -58,30 +58,30 @@ const setupChannel = async (wallet) => {
   const conditionType = "LINKED_TRANSFER";
   const randHash = () => hexlify(randomBytes(32));
   const paymentIds = [randHash(), randHash(), randHash()];
-  const preImages = [randHash(), randHash(), randHash()];
+  const secrets = [randHash(), randHash(), randHash()];
   await channel.conditionalTransfer({
     amount,
     assetId,
     conditionType,
     paymentId: paymentIds[0],
-    preImage: preImages[0],
+    preImage: secrets[0],
   });
   await channel.conditionalTransfer({
     amount,
     assetId,
     conditionType,
     paymentId: paymentIds[1],
-    preImage: preImages[1],
+    preImage: secrets[1],
   });
   await channel.conditionalTransfer({
     amount,
     assetId,
     conditionType,
     paymentId: paymentIds[2],
-    preImage: preImages[2],
+    preImage: secrets[2],
   });
 
-  return { channel, paymentIds, preImages }
+  return { channel, paymentIds, secrets }
 }
 
 module.exports = { setupChannel }

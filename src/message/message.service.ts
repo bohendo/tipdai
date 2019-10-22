@@ -89,14 +89,16 @@ export class MessageService {
     }
 
     if (message.match(/^balance/i) || message.match(/^refresh/i)) {
-      if (parseEther(sender.balance).gt(Zero) && !sender.cashout) {
-        return [`User has balance but no cashout link. This should never happen :(`];
-      } else if (!sender.balance && sender.cashout) {
-        return [`User has cashout link but no balance. This should never happen :(`];
-      } else if (sender.balance && sender.cashout) {
-        return [`Balance: $${sender.balance}. Cashout anytime by clicking the following link:\n\n${this.config.linkBaseUrl}?paymentId=${sender.cashout.paymentId}&secret=${sender.cashout.secret}`];
+      sender.cashout = await this.payment.updatePayment(sender.cashout);
+      if (sender.cashout && sender.cashout.status === 'PENDING') {
+        return [
+          `Balance: $${sender.cashout.amount}. Cashout anytime by clicking the following link:\n\n` +
+          `${this.config.paymentUrl}?paymentId=${sender.cashout.paymentId}&secret=${sender.cashout.secret}`,
+        ];
       } else {
-        return [`Your balance is $0.00. Send a link payment to get started.`];
+        return [
+          `Your balance is $0.00. Send a link payment to get started.`,
+        ];
       }
     }
   }

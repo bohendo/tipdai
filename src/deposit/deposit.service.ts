@@ -4,6 +4,7 @@ import { formatEther, parseEther } from 'ethers/utils';
 
 import { ChannelService } from '../channel/channel.service';
 import { ConfigService } from '../config/config.service';
+import { PaymentService } from '../payment/payment.service';
 
 import { Deposit } from './deposit.entity';
 import { DepositRepository } from './deposit.repository';
@@ -18,6 +19,7 @@ export class DepositService {
     private readonly config: ConfigService,
     private readonly channel: ChannelService,
     private readonly depositRepo: DepositRepository,
+    private readonly payment: PaymentService,
     private readonly userRepo: UserRepository,
   ) {
     this.startDepositPoller();
@@ -148,7 +150,19 @@ export class DepositService {
 
           tokenBalances = await channel.getFreeBalance(tokenAddress);
           const newChannelTokens = tokenBalances[channel.freeBalanceAddress];
-          user.balance = formatEther(parseEther(user.balance).add(parseEther(expectedDeposit)));
+
+          console.log(`Depositor old balance: ${user.cashout.amount}`);
+
+          const userBalance = formatEther(parseEther(user.cashout.amount)
+            .add(parseEther(expectedDeposit)));
+          console.log(`Sender new balance: ${userBalance}`);
+          await this.payment.redeemPayment(user.cashout);
+          console.log(`Redeemed old cashout payment`);
+          user.cashout = await this.payment.createPayment(userBalance, user);
+          console.log(`Gave user new cashout payment`);
+          await this.userRepo.save(user);
+          console.log(`Saved new user data`);
+
           await this.userRepo.save(user);
           await this.depositRepo.remove(dep);
         }),

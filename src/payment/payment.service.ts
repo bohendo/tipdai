@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { bigNumberify, formatEther, hexlify, parseEther, randomBytes } from 'ethers/utils';
-import { AddressZero} from 'ethers/constants';
+import { AddressZero, Zero } from 'ethers/constants';
 
 import { ChannelService } from '../channel/channel.service';
 import { ConfigService } from '../config/config.service';
@@ -27,7 +27,7 @@ export class PaymentService {
     this.botUser = this.userRepo.getByTwitterId(this.config.twitterBotUserId);
   }
 
-  public redeemPayment = async (payment: Payment): Promise<void> => {
+  public redeemPayment = async (payment: Payment): Promise<string> => {
     console.log(`Redeeming payment: ${JSON.stringify(payment)}`);
     const channel = await this.channelService.getChannel();
     const freeTokenBalance = await channel.getFreeBalance(this.channelService.tokenAddress);
@@ -49,12 +49,52 @@ export class PaymentService {
       console.log(`Requested more collateral successfully`);
     }
 
-    const result = await channel.resolveCondition({
-      conditionType: 'LINKED_TRANSFER',
-      paymentId: payment.paymentId,
-      preImage: payment.secret,
-    });
-    console.log(`Redeemed payment with result: ${JSON.stringify(result, null, 2)}`);
+    let redeemedAmount;
+    try {
+      const result = await channel.resolveCondition({
+        conditionType: 'LINKED_TRANSFER',
+        paymentId: payment.paymentId,
+        preImage: payment.secret,
+      });
+      console.debug(`Redeemed payment with result: ${JSON.stringify(result, null, 2)}`);
+      redeemedAmount = payment.amount;
+    } catch (e) {
+      if (e.message.match(/already been redeemed/i)) {
+        console.warn(`Failed to redeem link payment, already redeemed.`);
+        redeemedAmount = '0.0';
+      }
+      throw e;
+    }
+    payment.status = 'REDEEMED';
+    await this.paymentRepo.save(payment);
+    return redeemedAmount;
+  }
+
+  public updatePayment = async (payment: Payment): Promise<Payment> => {
+    const channel = await this.channelService.getChannel();
+    const result = await channel.getLinkedTransfer(payment.paymentId);
+    if (result) {
+      let saveFlag = false;
+      if (payment.status !== result.status) {
+        console.log(`Updating status of payment ${payment.paymentId} from ${payment.status} to ${result.status}`);
+        payment.status = result.status;
+        saveFlag = true;
+      }
+      const amount = formatEther(bigNumberify(result.amount));
+      if (payment.amount !== amount) {
+        console.log(`Updating amount of payment ${payment.paymentId} from ${payment.amount} to ${amount}`);
+        payment.amount = amount;
+        saveFlag = true;
+      }
+      if (saveFlag) {
+        console.log(`Saving updated link payment: ${JSON.stringify(payment)}`);
+        await this.paymentRepo.save(payment);
+      }
+    } else {
+      payment.status = 'UNKNOWN';
+      payment.amount = '0.00';
+    }
+    return payment;
   }
 
   public createPayment = async (amount: string, recipient: User): Promise<Payment> => {
@@ -89,42 +129,39 @@ export class PaymentService {
     const paymentId = linkPayment.match(paymentIdRegex)[0].replace('paymentId=', '');
     const secret = linkPayment.match(secretRegex)[0].replace('secret=', '');
     let payment = await this.paymentRepo.findByPaymentId(paymentId);
-    if (payment && payment.status !== 'PENDING') {
-      if (sender.cashout) {
-        return `Link payment already applied, status: ${payment.status}. Balance: $${sender.balance}.\n` +
-          `Cashout anytime by clicking the following link:\n\n` +
-          `${this.config.linkBaseUrl}?paymentId=${sender.cashout.paymentId}&` +
-          `secret=${sender.cashout.secret}`;
-      } else {
-        return `Link payment already applied, status: ${payment.status}. Balance: $${sender.balance}`;
+    if (payment) {
+      payment = await this.updatePayment(payment);
+      if (payment.status !== 'PENDING') {
+        if (sender.cashout) {
+          return `Link payment already applied, status: ${payment.status}. Balance: $${sender.cashout.amount}.\n` +
+            `Cashout anytime by clicking the following link:\n\n` +
+            `${this.config.paymentUrl}?paymentId=${sender.cashout.paymentId}&` +
+            `secret=${sender.cashout.secret}`;
+        } else {
+          return `Link payment already applied, status: ${payment.status}. Balance: $0.00`;
+        }
       }
     }
     payment = new Payment();
     payment.sender = sender;
     payment.paymentId = paymentId;
     payment.secret = secret;
-    const link = await channel.getLinkedTransfer(paymentId);
-    console.log(`Found link: ${JSON.stringify(link)}`);
-    payment.amount = link && link.amount ? formatEther(bigNumberify(link.amount)) : '0.00';
-    payment.status = link && link.status ? link.status : 'UNKNOWN';
+    payment = await this.updatePayment(payment);
     if (payment.status !== 'PENDING') {
-      return `Link payment not redeemable, status: ${payment.status}. Your balance: $${sender.balance}`;
+      return `Link payment not redeemable, status: ${payment.status}. Your balance: $${sender.cashout.amount}`;
     }
-    console.log(`Saving new link payment ${JSON.stringify(payment)}`);
-    await this.paymentRepo.save(payment);
-    await this.redeemPayment(payment);
-    sender.balance = formatEther(parseEther(sender.balance).add(parseEther(payment.amount)));
-    await this.userRepo.save(sender);
-    payment.status = 'REDEEMED';
-    await this.paymentRepo.save(payment);
+
+    let senderBalance = await this.redeemPayment(payment);
     if (sender.cashout) {
-      await this.redeemPayment(sender.cashout);
+      senderBalance = formatEther(parseEther(senderBalance).add(parseEther(await this.redeemPayment(sender.cashout))));
     }
-    sender.cashout = await this.createPayment(sender.balance, sender);
+    sender.cashout = parseEther(senderBalance).gt(Zero)
+      ? await this.createPayment(senderBalance, sender)
+      : null;
     await this.userRepo.save(sender);
-    return `Link payment has been redeemed. New balance: $${sender.balance}.\n` +
+    return `Link payment has been redeemed. New balance: $${sender.cashout.amount}.\n` +
       `Cashout anytime by clicking the following link:` +
-      `\n\n${this.config.linkBaseUrl}?paymentId=${sender.cashout.paymentId}&` +
+      `\n\n${this.config.paymentUrl}?paymentId=${sender.cashout.paymentId}&` +
       `secret=${sender.cashout.secret}`;
   }
 }

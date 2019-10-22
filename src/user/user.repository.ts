@@ -10,7 +10,6 @@ export class UserRepository extends Repository<User> {
     if (!user) {
       user = new User();
       user.address = address;
-      user.balance = '0.00';
       await this.save(user);
       console.log(`Saved new user: ${JSON.stringify(user)}`);
     }
@@ -27,7 +26,6 @@ export class UserRepository extends Repository<User> {
       user = new User();
       user.twitterId = twitterId;
       user.twitterName = twitterName;
-      user.balance = '0.00';
       await this.save(user);
       console.log(`Saved new user: ${JSON.stringify(user)}`);
     }

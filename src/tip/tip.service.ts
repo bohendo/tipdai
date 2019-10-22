@@ -17,6 +17,7 @@ export class TipService {
   ) {}
 
   public handleTip = async (sender: User, recipient: User, amount: string, message: string): Promise<string> => {
+    const amountBN = parseEther(amount);
     try {
       console.log(`Handling tip from ${sender.twitterId} to ${recipient.twitterId} amount ${amount}`);
 
@@ -28,30 +29,30 @@ export class TipService {
       newTip.result = 'PROCESSING';
       await this.tipRepo.save(newTip);
 
-      if (!sender.balance || parseEther(sender.balance).lt(parseEther(amount))) {
-        console.log(`sender balance ${sender.balance} is lower than ${amount}`);
+      if (!sender.cashout || parseEther(sender.cashout.amount).lt(amountBN)) {
+        console.log(`sender balance ${sender.cashout.amount} is lower than ${amount}`);
         return `You don't have a high enough balance to send a $${amount} tip, ` +
         `DM me a link payment to increase your balance & then try again.`;
       }
 
-      console.log(`Sender old balance: ${sender.balance}`);
-      sender.balance = formatEther(parseEther(sender.balance).sub(parseEther(amount)));
-      console.log(`Sender new balance: ${sender.balance}`);
+      console.log(`Sender old balance: ${sender.cashout.amount}`);
+      const senderBalance = formatEther(parseEther(sender.cashout.amount).sub(amountBN));
+      console.log(`Sender new balance: ${senderBalance}`);
       await this.payment.redeemPayment(sender.cashout);
       console.log(`Redeemed old cashout payment`);
-      sender.cashout = await this.payment.createPayment(sender.balance, sender);
+      sender.cashout = await this.payment.createPayment(senderBalance, sender);
       console.log(`Gave sender new cashout payment`);
       await this.userRepo.save(sender);
       console.log(`Saved new sender data`);
 
-      console.log(`Recipient old balance: ${recipient.balance}`);
-      recipient.balance = formatEther(parseEther(recipient.balance).add(parseEther(amount)));
-      console.log(`Recipient new balance: ${recipient.balance}`);
+      console.log(`Recipient old balance: ${recipient.cashout.amount}`);
+      const recipientBalance = formatEther(parseEther(recipient.cashout.amount).add(amountBN));
+      console.log(`Recipient new balance: ${recipientBalance}`);
       if (recipient.cashout) {
         console.log(`Recipient had cashout payment.. redeeming old one`);
         await this.payment.redeemPayment(recipient.cashout);
       }
-      recipient.cashout = await this.payment.createPayment(recipient.balance, recipient);
+      recipient.cashout = await this.payment.createPayment(recipientBalance, recipient);
       console.log(`Gave recipient new cashout payment`);
       await this.userRepo.save(recipient);
       console.log(`Saved new recipient data`);

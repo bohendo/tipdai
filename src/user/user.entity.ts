@@ -16,9 +16,6 @@ export class User {
   @Column('text', { nullable: true })
   twitterName!: string;
 
-  @Column('text')
-  balance!: string;
-
   @OneToOne(type => Payment, { eager: true })
   @JoinColumn()
   cashout: Payment;

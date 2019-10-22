@@ -7,10 +7,10 @@ import { PostgresConfig, TwitterConfig } from '../types';
 
 const env = {
   ethProvider: process.env.ETH_PROVIDER,
-  linkBaseUrl: process.env.LINK_BASE_URL,
   mnemonicFile: process.env.MNEMONIC_FILE,
   nodeEnv: process.env.NODE_ENV,
   paymentHub: process.env.PAYMENT_HUB,
+  paymentUrl: process.env.PAYMENT_URL,
   pgDatabase: process.env.PGDATABASE,
   pgHost: process.env.PGHOST,
   pgPassFile: process.env.PGPASSFILE,
@@ -42,8 +42,8 @@ export class ConfigService {
     return Wallet.fromMnemonic(mnemonic, `m/44'/60'/0'/0/${index}`).connect(this.ethProvider);
   }
 
-  get linkBaseUrl(): string {
-    return env.linkBaseUrl || 'https://rinkeby.indra.connext.network/redeem';
+  get paymentUrl(): string {
+    return env.paymentUrl;
   }
 
   get wallet(): Wallet {

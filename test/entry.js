@@ -3,6 +3,8 @@ const https = require('https');
 const eth = require('ethers');
 const axios = require('axios');
 
+const paymentIdRegex = /paymentId=(0x[0-9a-fA-F]{64})/;
+const secretRegex = /secret=(0x[0-9a-fA-F]{64})/;
 const { setupChannel } = require('./channel');
 const { baseUrl, cfPath, provider } = require('./constants');
 
@@ -87,6 +89,25 @@ const axio = axios.create({
   })).data;
   console.log(`\n==========\n${res}`);
   if (!res.match(/\$0.05/i)) { throw new Error(`Balance should have tip amount subtracted`); }
+
+  const paymentId = res.match(paymentIdRegex)[1]
+  const secret = res.match(secretRegex)[1]
+  console.log(`paymentId: ${paymentId}`)
+  console.log(`secret: ${secret}`)
+  res = await channel.resolveCondition({
+    conditionType: 'LINKED_TRANSFER',
+    paymentId,
+    preImage: secret,
+  });
+  console.log(`\n==========\n${res}`);
+
+  res = (await axio.post(`${baseUrl}/message/public`, {
+    address: wallet.address ,
+    message: `@TipFakeDai send @user $0.05`,
+    recipientId: 3,
+    token,
+  })).data;
+  console.log(`\n==========\n${res}`);
 
   process.exit(0);
 

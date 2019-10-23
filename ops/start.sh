@@ -11,7 +11,7 @@ docker swarm init 2> /dev/null || true
 # External Env Vars
 
 if [[ -f .env ]]
-then source .env
+then export $(cat .env | xargs)
 fi
 
 TIPDAI_DOMAINNAME="${TIPDAI_DOMAINNAME:-localhost}"

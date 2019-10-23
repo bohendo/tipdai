@@ -4,6 +4,7 @@ import * as qs from 'qs';
 
 import { ConfigService } from '../config/config.service';
 import { UserRepository } from '../user/user.repository';
+import { User } from '../user/user.entity';
 
 import { Twitter } from './twitter.client';
 
@@ -20,6 +21,7 @@ export class TwitterService {
   private twitterBot: any;
   private twitterDev: any;
   private webhookId: string | undefined;
+  private user: Promise<User> | undefined;
 
   public authUrl: string | undefined;
 
@@ -39,9 +41,18 @@ export class TwitterService {
       } else {
         this.twitterBot = new Twitter(this.config.twitterBot);
         this.subscribe(this.config.twitterBotUserId);
-        this.userRepo.getByTwitterId(this.config.twitterBotUserId);
+        this.getUser();
       }
     }
+  }
+
+  public getUser = async (): Promise<User> => {
+    if (!this.user) {
+      const screenName = (await this.getUserById(this.config.twitterBotUserId)).screen_name;
+      this.user = this.userRepo.getTwitterUser(this.config.twitterBotUserId, screenName);
+      console.log(`Got bot user: ${JSON.stringify(await this.user)}`);
+    }
+    return await this.user;
   }
 
   public triggerCRC = async (): Promise<boolean> => {
@@ -117,7 +128,7 @@ export class TwitterService {
     console.log(`Twitter bot successfully connected!`);
     await this.subscribe(data.user_id);
     console.log(`Account activity subscription successfully configured!`);
-    await this.userRepo.getByTwitterId(this.config.twitterBotUserId);
+    await this.getUser();
     return;
   }
 

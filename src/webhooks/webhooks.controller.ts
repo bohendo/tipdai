@@ -38,7 +38,7 @@ export class WebhooksController {
     if (body.tweet_create_events) {
       body.tweet_create_events.forEach(async tweet => {
         const sender = await this.userRepo.getTwitterUser(tweet.user.id_str, tweet.user.screen_name);
-        const tipInfo = tweet.text.match(tipRegex);
+        const tipInfo = tweet.text.match(tipRegex((await this.twitter.getUser()).twitterName));
         if (tipInfo && tipInfo[1]) {
           const recipientUser = tweet.extended_tweet.entities.user_mentions.find(
             user => user.screen_name === tipInfo[1],

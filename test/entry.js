@@ -6,7 +6,7 @@ const axios = require('axios');
 const paymentIdRegex = /paymentId=(0x[0-9a-fA-F]{64})/;
 const secretRegex = /secret=(0x[0-9a-fA-F]{64})/;
 const { setupChannel } = require('./channel');
-const { baseUrl, cfPath, provider } = require('./constants');
+const { baseUrl, cfPath, provider, screenName } = require('./constants');
 
 const sender = eth.Wallet.fromMnemonic(eth.Wallet.createRandom().mnemonic, cfPath).connect(provider);
 const recipient = eth.Wallet.fromMnemonic(eth.Wallet.createRandom().mnemonic, cfPath).connect(provider);
@@ -75,7 +75,7 @@ const axio = axios.create({
 
   res = (await axio.post(`${baseUrl}/message/public`, {
     address: sender.address ,
-    message: `@TipFakeDai send @user $0.11`,
+    message: `@${screenName} send @user $0.11`,
     recipientId: recipientUser.id,
     token: senderToken,
   })).data;
@@ -84,7 +84,7 @@ const axio = axios.create({
 
   res = (await axio.post(`${baseUrl}/message/public`, {
     address: sender.address ,
-    message: `@TipFakeDai send @user $0.05`,
+    message: `@${screenName} send @user $0.05`,
     recipientId: recipientUser.id,
     token: senderToken,
   })).data;
@@ -116,11 +116,13 @@ const axio = axios.create({
 
   res = (await axio.post(`${baseUrl}/message/public`, {
     address: sender.address ,
-    message: `@TipFakeDai send @user $0.05`,
+    message: `@${screenName} send @user $0.05`,
     recipientId: 3,
     token: senderToken,
   })).data;
   console.log(`\n==========\n${res}`);
+
+  console.log(`\nTests completed successfully :)`);
 
   process.exit(0);
 

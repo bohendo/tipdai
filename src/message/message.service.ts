@@ -31,7 +31,7 @@ export class MessageService {
     message: string,
   ): Promise<string | undefined> => {
     if (sender.twitterId === this.config.twitterBotUserId) { return; }
-    const tipInfo = message.match(tipRegex);
+    const tipInfo = message.match(tipRegex());
     if (!tipInfo || !tipInfo[2]) {
       console.log(`Improperly formatted public message, ignoring`);
       console.log(JSON.stringify(tipInfo));

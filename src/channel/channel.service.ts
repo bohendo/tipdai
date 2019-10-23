@@ -29,6 +29,15 @@ export class ChannelService {
         console.log(`Got swap rate upate: ${oldRate} -> ${this.swapRate}`);
       });
 
+      // Wait for channel to be available
+      const channelIsAvailable = async () => {
+        const chan = await channel.getChannel();
+        return chan && chan.available;
+      };
+      while (!(await channelIsAvailable())) {
+        await new Promise(res => setTimeout(() => res(), 1000));
+      }
+
       console.log(`Client created successfully!`);
       console.log(` - Public Identifier: ${channel.publicIdentifier}`);
       console.log(` - Account multisig address: ${channel.opts.multisigAddress}`);

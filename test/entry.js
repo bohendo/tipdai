@@ -122,6 +122,44 @@ const axio = axios.create({
   })).data;
   console.log(`\n==========\n${res}`);
 
+  ////////////////////////////////////////
+  // Concurrency test
+
+  const results = {};
+
+  results.depositOne = axio.post(`${baseUrl}/message/private`, {
+    address: sender.address ,
+    message: ``,
+    token: senderToken,
+    urls: [`${baseUrl}/redeem?paymentId=${paymentIds[1]}&secret=${secrets[1]}`],
+  });
+
+  results.depositTwo = axio.post(`${baseUrl}/message/private`, {
+    address: sender.address ,
+    message: ``,
+    token: senderToken,
+    urls: [`${baseUrl}/redeem?paymentId=${paymentIds[2]}&secret=${secrets[2]}`],
+  });
+
+  results.tipOne = axio.post(`${baseUrl}/message/public`, {
+    address: sender.address ,
+    message: `@${screenName} send @user $0.05`,
+    recipientId: recipientUser.id,
+    token: senderToken,
+  });
+
+  results.tipTwo = axio.post(`${baseUrl}/message/public`, {
+    address: sender.address ,
+    message: `@${screenName} send @user $0.05`,
+    recipientId: recipientUser.id,
+    token: senderToken,
+  });
+
+  console.log(`\n==========\n${await results.depositOne}`);
+  console.log(`\n==========\n${await results.depositTwo}`);
+  console.log(`\n==========\n${await results.tipOne}`);
+  console.log(`\n==========\n${await results.tipTwo}`);
+
   console.log(`\nTests completed successfully :)`);
 
   process.exit(0);

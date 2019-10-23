@@ -12,9 +12,15 @@ export class AddTwitterName1571652347467 implements MigrationInterface {
         await queryRunner.query(`
           ALTER TABLE "user" ALTER COLUMN "twitterId" DROP NOT NULL
         `, undefined);
+        await queryRunner.query(`
+          ALTER TABLE "user" DROP COLUMN "balance"
+        `, undefined);
     }
 
     public async down(queryRunner: QueryRunner): Promise<any> {
+        await queryRunner.query(`
+          ALTER TABLE "user" ADD "balance" text NOT NULL
+        `, undefined);
         await queryRunner.query(`
           ALTER TABLE "user" ALTER COLUMN "twitterId" SET NOT NULL
         `, undefined);

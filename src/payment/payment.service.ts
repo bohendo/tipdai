@@ -62,8 +62,9 @@ export class PaymentService {
       if (e.message.match(/already been redeemed/i)) {
         console.warn(`Failed to redeem link payment, already redeemed.`);
         redeemedAmount = '0.0';
+      } else {
+        throw e;
       }
-      throw e;
     }
     payment.status = 'REDEEMED';
     await this.paymentRepo.save(payment);
@@ -73,6 +74,7 @@ export class PaymentService {
   public updatePayment = async (payment: Payment): Promise<Payment> => {
     const channel = await this.channelService.getChannel();
     const result = await channel.getLinkedTransfer(payment.paymentId);
+    console.log(`Got info for payment ${payment.paymentId} from hub: ${JSON.stringify(result)}`);
     if (result) {
       let saveFlag = false;
       if (payment.status !== result.status) {

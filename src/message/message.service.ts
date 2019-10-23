@@ -89,17 +89,18 @@ export class MessageService {
     }
 
     if (message.match(/^balance/i) || message.match(/^refresh/i)) {
-      sender.cashout = await this.payment.updatePayment(sender.cashout);
-      if (sender.cashout && sender.cashout.status === 'PENDING') {
-        return [
-          `Balance: $${sender.cashout.amount}. Cashout anytime by clicking the following link:\n\n` +
-          `${this.config.paymentUrl}?paymentId=${sender.cashout.paymentId}&secret=${sender.cashout.secret}`,
-        ];
-      } else {
-        return [
-          `Your balance is $0.00. Send a link payment to get started.`,
-        ];
+      if (sender.cashout) {
+        sender.cashout = await this.payment.updatePayment(sender.cashout);
+        if (sender.cashout.status === 'PENDING') {
+          return [
+            `Balance: $${sender.cashout.amount}. Cashout anytime by clicking the following link:\n\n` +
+            `${this.config.paymentUrl}?paymentId=${sender.cashout.paymentId}&secret=${sender.cashout.secret}`,
+          ];
+        }
       }
+      return [
+        `Your balance is $0.00. Send a link payment to get started.`,
+      ];
     }
   }
 

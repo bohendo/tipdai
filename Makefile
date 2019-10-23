@@ -58,7 +58,7 @@ restart-prod: stop
 push-latest: prod
 	bash ops/push-images.sh latest bot proxy
 
-test:
+test: dev
 	node test/entry.js
 
 ########################################

@@ -73,12 +73,12 @@ export class TwitterService {
 
   public getUserById = async (user_id) => {
     if (this.invalid) { return; }
-    return await this.twitterBot.getUser(user_id);
+    return await this.twitterBot.getUserById(user_id);
   }
 
   public getUserByName = async (screen_name) => {
     if (this.invalid) { return; }
-    return await this.twitterBot.getUser(screen_name);
+    return await this.twitterBot.getUserByName(screen_name);
   }
 
   public getMentions = async (options) => {
@@ -150,11 +150,11 @@ export class TwitterService {
     await Promise.all(webhooks.environments.map(async env =>
       Promise.all(env.webhooks.map(async webhook => {
         console.log(`Unsubscribing from ${env.environment_name} webhook: ${webhook.id}..`);
-        return await this.twitterBot.removeWebhook(webhook.id);
+        return this.twitterBot.removeWebhook(webhook.id);
       })),
     ));
     console.log(`Done unsubscribing, time to do some subscribing`);
-    const newWebhook = await this.twitterApp.createWebhook();
+    const newWebhook = await this.twitterApp.createWebhook('/webhooks/twitter');
     console.log(`Created webhook: ${JSON.stringify(newWebhook, null, 2)}`);
     // 3. Create a new subscription
     const newSubscription = await this.twitterBot.createSubscription();

@@ -29,12 +29,11 @@ export class AppService {
 
   async triggerCRC(): Promise<string> {
     console.log(`Triggering Twitter CRC`);
-    try {
-      await this.twitter.triggerCRC();
+    if (await this.twitter.triggerCRC()) {
       console.log(`Success`);
       return 'success';
-    } catch (e) {
-      console.log(`Failure: ${e}`);
+    } else {
+      console.log(`CRC Failed`);
       return 'failure';
     }
   }

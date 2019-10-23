@@ -57,9 +57,11 @@ export class Twitter {
     );
   }
 
-  createWebhook = async (): Promise<any> => {
+  createWebhook = async (callbackPath): Promise<any> => {
     const path = `/account_activity/all/${this.webhook.env}/webhooks.json`;
-    const url = this._encodeUrl(this.baseUrl + path + this._buildQS({ url: this.callbackUrl }));
+    const url = this._encodeUrl(this.baseUrl + path + this._buildQS({
+      url: `${this.callbackUrl}${callbackPath}`,
+    }));
     return this._post(url);
   }
 
@@ -74,7 +76,6 @@ export class Twitter {
   }
 
   getAccessToken = async (params: any): Promise<any> => {
-    // params = { oauth_consumer_key: consumer_key, oauth_token: token, oauth_verifier: verifier }
     const url = `https://api.twitter.com/oauth/access_token`;
     return this._post(url + this._buildQS(params));
   }

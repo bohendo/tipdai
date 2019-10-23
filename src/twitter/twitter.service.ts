@@ -11,7 +11,7 @@ import { Twitter } from './twitter.client';
 /*
 const bohendo_id = '259539164'
 const tipdai_id = '1154313992141099008'
-const tipdai_reborn_id = '1167103783056367616'
+const tipfakedai_id = '1167103783056367616'
 */
 
 @Injectable()
@@ -147,11 +147,12 @@ export class TwitterService {
     }
     console.log(`Ok let's try to remove the old webhook subscriptions`);
     // 2. Remove all webhook subscriptions
-    await webhooks.environments.forEach(async env => env.webhooks.forEach(async webhook => {
-      console.log(`Unsubscribing from ${env.environment_name} webhook: ${webhook.id}..`);
-      const delRes = await this.twitterBot.removeWebhook(webhook.id);
-      console.log(`Unsubscribed successfully! ${JSON.stringify(delRes)}`);
-    }));
+    await Promise.all(webhooks.environments.map(async env =>
+      Promise.all(env.webhooks.map(async webhook => {
+        console.log(`Unsubscribing from ${env.environment_name} webhook: ${webhook.id}..`);
+        return await this.twitterBot.removeWebhook(webhook.id);
+      })),
+    ));
     console.log(`Done unsubscribing, time to do some subscribing`);
     const newWebhook = await this.twitterApp.createWebhook();
     console.log(`Created webhook: ${JSON.stringify(newWebhook, null, 2)}`);

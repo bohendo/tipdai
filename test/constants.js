@@ -8,7 +8,7 @@ const cfPath = "m/44'/60'/0'/25446"
 const ethProviderUrl = env('eth_provider') || 'http://localhost:8545';
 const nodeUrl = env('payment_hub') || 'nats://localhost:4222';
 const provider = new eth.providers.JsonRpcProvider(ethProviderUrl);
-const screenName = env('bot_screen_name') || 'TipFakeDai';
+const screenName = 'TipDai';
 const sugarDaddy = eth.Wallet.fromMnemonic('candy maple cake sugar pudding cream honey rich smooth crumble sweet treat').connect(provider);
 
 module.exports = {

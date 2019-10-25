@@ -3,7 +3,7 @@ import { Body, Controller, Get, Post, Query } from '@nestjs/common';
 
 import { ConfigService } from '../config/config.service';
 import { tipRegex } from '../constants';
-import { MessageService } from '../message/message.service';
+import { QueueService } from '../queue/queue.service';
 import { TwitterService } from '../twitter/twitter.service';
 import { UserRepository } from '../user/user.repository';
 
@@ -15,7 +15,7 @@ type TwitterCRCResponse = {
 export class WebhooksController {
   constructor(
     private readonly config: ConfigService,
-    private readonly message: MessageService,
+    private readonly queueService: QueueService,
     private readonly twitter: TwitterService,
     private readonly userRepo: UserRepository,
   ) {}
@@ -36,47 +36,11 @@ export class WebhooksController {
     console.debug(`Got twitter events: ${JSON.stringify(keys)}`);
 
     if (body.tweet_create_events) {
-      body.tweet_create_events.forEach(async tweet => {
-        const sender = await this.userRepo.getTwitterUser(tweet.user.id_str, tweet.user.screen_name);
-        const tipInfo = tweet.text.match(tipRegex((await this.twitter.getUser()).twitterName));
-        if (tipInfo && tipInfo[1]) {
-          const recipientUser = tweet.extended_tweet.entities.user_mentions.find(
-            user => user.screen_name === tipInfo[1],
-          );
-          const recipient = await this.userRepo.getTwitterUser(recipientUser.id_str, tipInfo[1]);
-          const response = await this.message.handlePublicMessage(sender, recipient, tweet.text);
-          if (response) {
-            await this.twitter.tweet(
-             `@${tweet.user.screen_name} ${response}`,
-              tweet.id_str,
-            );
-          }
-        } else {
-          console.log(`Tweet isn't a well formatted tip, ignoring: ${tweet.text}`);
-        }
-      });
+      body.tweet_create_events.forEach(this.twitter.parseTweet);
     }
 
     if (body.direct_message_events) {
-      body.direct_message_events.forEach(async dm => {
-        const senderId = dm.message_create.sender_id;
-        let sender = await this.userRepo.getByTwitterId(senderId);
-        if (!sender) {
-          const twitterUser = await this.twitter.getUserById(senderId);
-          console.log(`twitterUser: ${JSON.stringify(twitterUser)}`);
-          sender = await this.userRepo.getTwitterUser(senderId, twitterUser.screen_name);
-        }
-        const responses = await this.message.handlePrivateMessage(
-          sender,
-          dm.message_create.message_data.text,
-          dm.message_create.message_data.entities.urls.map(url => url.expanded_url),
-        );
-        if (responses && responses.length) {
-          responses.forEach(
-            async response => await this.twitter.sendDM(dm.message_create.sender_id, response),
-          );
-        }
-      });
+      body.direct_message_events.forEach(this.twitter.parseDM);
     }
 
   }

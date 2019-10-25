@@ -1,7 +1,8 @@
 import { Body, Controller, Get, Post } from '@nestjs/common';
 
-import { UserService } from '../user/user.service';
+import { QueueService } from '../queue/queue.service';
 import { UserRepository } from '../user/user.repository';
+import { UserService } from '../user/user.service';
 import { isValidHex } from '../utils';
 
 import { MessageService } from './message.service';
@@ -10,6 +11,7 @@ import { MessageService } from './message.service';
 export class MessageController {
   constructor(
     private readonly messageService: MessageService,
+    private readonly queueService: QueueService,
     private readonly userRepo: UserRepository,
     private readonly userService: UserService,
   ) {}
@@ -29,7 +31,10 @@ export class MessageController {
     }
     const sender = await this.userRepo.getByAddress(address);
     const recipient = await this.userRepo.findOne({ id: recipientId });
-    return this.messageService.handlePublicMessage(sender, recipient, message);
+    return await this.queueService.enqueue(
+      `Public message: ${message}`,
+      async () => this.messageService.handlePublicMessage(sender, recipient, message),
+    );
   }
 
   @Post('private')
@@ -46,7 +51,10 @@ export class MessageController {
       return 'Invalid Token';
     }
     const sender = await this.userRepo.getByAddress(address);
-    const response = await this.messageService.handlePrivateMessage(sender, message, urls || []);
+    const response = await this.queueService.enqueue(
+      `Private message: ${message}`,
+      async () => this.messageService.handlePrivateMessage(sender, message, urls || []),
+    );
     if (response) {
       return response.join('\n\n');
     }

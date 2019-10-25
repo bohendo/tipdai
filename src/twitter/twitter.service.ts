@@ -3,6 +3,8 @@ import { OAuth } from 'oauth';
 import * as qs from 'qs';
 
 import { ConfigService } from '../config/config.service';
+import { tipRegex } from '../constants';
+import { MessageService } from '../message/message.service';
 import { UserRepository } from '../user/user.repository';
 import { User } from '../user/user.entity';
 
@@ -28,6 +30,7 @@ export class TwitterService {
   constructor(
     private readonly config: ConfigService,
     private readonly userRepo: UserRepository,
+    private readonly message: MessageService,
   ) {
     if (!this.config.twitterDev.consumerKey || !this.config.twitterDev.consumerSecret) {
       console.warn(`[Twitter] Missing consumer token and/or secret, twitter stuff won't work.`);
@@ -43,6 +46,46 @@ export class TwitterService {
         this.subscribe(this.config.twitterBotUserId);
         this.getUser();
       }
+    }
+  }
+
+  public parseTweet = async (tweet: any): Promise<any> => {
+    const sender = await this.userRepo.getTwitterUser(tweet.user.id_str, tweet.user.screen_name);
+    const tipInfo = tweet.text.match(tipRegex((await this.getUser()).twitterName));
+    if (tipInfo && tipInfo[1]) {
+      const recipientUser = tweet.extended_tweet.entities.user_mentions.find(
+        user => user.screen_name === tipInfo[1],
+      );
+      const recipient = await this.userRepo.getTwitterUser(recipientUser.id_str, tipInfo[1]);
+      const response = await this.message.handlePublicMessage(sender, recipient, tweet.text);
+      if (response) {
+        await this.tweet(
+         `@${tweet.user.screen_name} ${response}`,
+          tweet.id_str,
+        );
+      }
+    } else {
+      console.log(`Tweet isn't a well formatted tip, ignoring: ${tweet.text}`);
+    }
+  }
+
+  public parseDM = async (dm: any): Promise<any> => {
+    const senderId = dm.message_create.sender_id;
+    let sender = await this.userRepo.getByTwitterId(senderId);
+    if (!sender) {
+      const twitterUser = await this.getUserById(senderId);
+      console.log(`twitterUser: ${JSON.stringify(twitterUser)}`);
+      sender = await this.userRepo.getTwitterUser(senderId, twitterUser.screen_name);
+    }
+    const responses = await this.message.handlePrivateMessage(
+      sender,
+      dm.message_create.message_data.text,
+      dm.message_create.message_data.entities.urls.map(url => url.expanded_url),
+    );
+    if (responses && responses.length) {
+      responses.forEach(
+        async response => await this.sendDM(dm.message_create.sender_id, response),
+      );
     }
   }
 

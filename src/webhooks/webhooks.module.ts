@@ -2,7 +2,7 @@ import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 
 import { ConfigModule } from '../config/config.module';
-import { MessageModule } from '../message/message.module';
+import { QueueModule } from '../queue/queue.module';
 import { TwitterModule } from '../twitter/twitter.module';
 import { UserRepository } from '../user/user.repository';
 
@@ -12,7 +12,7 @@ import { WebhooksController } from './webhooks.controller';
   controllers: [WebhooksController],
   imports: [
     ConfigModule,
-    MessageModule,
+    QueueModule,
     TwitterModule,
     TypeOrmModule.forFeature([UserRepository]),
   ],

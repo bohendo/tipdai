@@ -8,7 +8,10 @@ import { ConfigModule } from '../config/config.module';
 
 @Module({
   exports: [ChannelService],
-  imports: [ConfigModule, TypeOrmModule.forFeature([ChannelRecordRepository])],
+  imports: [
+    ConfigModule,
+    TypeOrmModule.forFeature([ChannelRecordRepository]),
+  ],
   providers: [ChannelService],
 })
 export class ChannelModule {}

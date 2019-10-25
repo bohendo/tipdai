@@ -2,26 +2,22 @@ import { Injectable } from '@nestjs/common';
 import { bigNumberify, formatEther, parseEther } from 'ethers/utils';
 import { Zero } from 'ethers/constants';
 
-import { ChannelService } from '../channel/channel.service';
 import { ConfigService } from '../config/config.service';
 import { paymentIdRegex, secretRegex, tipRegex } from '../constants';
 import { DepositService } from '../deposit/deposit.service';
 import { PaymentService } from '../payment/payment.service';
+import { QueueService } from '../queue/queue.service';
 import { TipService } from '../tip/tip.service';
-import { TwitterService } from '../twitter/twitter.service';
 import { User } from '../user/user.entity';
-import { UserRepository } from '../user/user.repository';
 
 @Injectable()
 export class MessageService {
   constructor(
-    private readonly channel: ChannelService,
     private readonly config: ConfigService,
     private readonly deposit: DepositService,
     private readonly payment: PaymentService,
-    private readonly twitter: TwitterService,
+    private readonly queue: QueueService,
     private readonly tip: TipService,
-    private readonly userRepo: UserRepository,
   ) {
   }
 
@@ -52,15 +48,6 @@ export class MessageService {
   ): Promise<string[] | undefined> => {
     if (sender.twitterId === this.config.twitterBotUserId) { return; }
     const messageUrl = messageUrls && messageUrls.length ? messageUrls[0] : undefined;
-
-    if (message.match(/^crc/i)) {
-      try {
-        await this.twitter.triggerCRC();
-        return ['Successfully triggered CRC!'];
-      } catch (e) {
-        return [`CRC didn't go so well..`];
-      }
-    }
 
     if (messageUrl && messageUrl.match(paymentIdRegex) && messageUrl.match(secretRegex)) {
       return [await this.payment.depositPayment(messageUrl, sender)];

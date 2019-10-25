@@ -4,11 +4,11 @@ import { AddressZero, Zero } from 'ethers/constants';
 
 import { ChannelService } from '../channel/channel.service';
 import { ConfigService } from '../config/config.service';
-
 import { Payment } from '../payment/payment.entity';
 import { PaymentRepository } from '../payment/payment.repository';
 import { User } from '../user/user.entity';
 import { UserRepository } from '../user/user.repository';
+import { Logger } from '../utils';
 
 const LINK_LIMIT = parseEther('10');
 const paymentIdRegex = /paymentId=0x[0-9a-fA-F]{64}/;
@@ -17,6 +17,7 @@ const secretRegex = /secret=0x[0-9a-fA-F]{64}/;
 @Injectable()
 export class PaymentService {
   private botUser: Promise<User>;
+  private log: Logger;
 
   constructor(
     private readonly channelService: ChannelService,
@@ -25,17 +26,18 @@ export class PaymentService {
     private readonly userRepo: UserRepository,
   ) {
     this.botUser = this.userRepo.getByTwitterId(this.config.twitterBotUserId);
+    this.log = new Logger('PaymentService', this.config.logLevel);
   }
 
   public redeemPayment = async (payment: Payment): Promise<string> => {
-    console.log(`Redeeming payment: ${JSON.stringify(payment)}`);
+    this.log.info(`Redeeming payment: ${JSON.stringify(payment)}`);
     const channel = await this.channelService.getChannel();
     const freeTokenBalance = await channel.getFreeBalance(this.channelService.tokenAddress);
     const hubFreeBalanceAddress = Object.keys(freeTokenBalance).find(
       addr => addr.toLowerCase() !== channel.freeBalanceAddress.toLowerCase(),
     );
     const collateral = freeTokenBalance[hubFreeBalanceAddress];
-    console.log(`We've been collateralized with ${formatEther(collateral)}, need ${payment.amount}`);
+    this.log.info(`We've been collateralized with ${formatEther(collateral)}, need ${payment.amount}`);
 
     // TODO: compare to default collateralization?
     if (bigNumberify(collateral).lt(parseEther(payment.amount))) {
@@ -46,7 +48,7 @@ export class PaymentService {
         assetId: this.channelService.tokenAddress,
       });
       await channel.requestCollateral(this.channelService.tokenAddress);
-      console.log(`Requested more collateral successfully`);
+      this.log.info(`Requested more collateral successfully`);
     }
 
     let redeemedAmount;
@@ -56,14 +58,14 @@ export class PaymentService {
         paymentId: payment.paymentId,
         preImage: payment.secret,
       });
-      console.debug(`Redeemed payment with result: ${JSON.stringify(result, null, 2)}`);
+      this.log.debug(`Redeemed payment with result: ${JSON.stringify(result, null, 2)}`);
       redeemedAmount = payment.amount;
     } catch (e) {
       if (e.message.match(/already been redeemed/i)) {
-        console.warn(`Failed to redeem link payment, already redeemed.`);
+        this.log.warn(`Failed to redeem link payment, already redeemed.`);
         redeemedAmount = '0.0';
       } else if (e.message.match(/has not been installed/i)) {
-        console.warn(`Failed to redeem link payment, node has uninstalled this app.`);
+        this.log.warn(`Failed to redeem link payment, node has uninstalled this app.`);
         redeemedAmount = '0.0';
       } else {
         throw e;
@@ -77,22 +79,22 @@ export class PaymentService {
   public updatePayment = async (payment: Payment): Promise<Payment> => {
     const channel = await this.channelService.getChannel();
     const result = await channel.getLinkedTransfer(payment.paymentId);
-    console.log(`Got info for payment ${payment.paymentId} from hub: ${JSON.stringify(result)}`);
+    this.log.info(`Got info for payment ${payment.paymentId} from hub: ${JSON.stringify(result)}`);
     if (result) {
       let saveFlag = false;
       if (payment.status !== result.status) {
-        console.log(`Updating status of payment ${payment.paymentId} from ${payment.status} to ${result.status}`);
+        this.log.info(`Updating status of payment ${payment.paymentId} from ${payment.status} to ${result.status}`);
         payment.status = result.status;
         saveFlag = true;
       }
       const amount = formatEther(bigNumberify(result.amount));
       if (payment.amount !== amount) {
-        console.log(`Updating amount of payment ${payment.paymentId} from ${payment.amount} to ${amount}`);
+        this.log.info(`Updating amount of payment ${payment.paymentId} from ${payment.amount} to ${amount}`);
         payment.amount = amount;
         saveFlag = true;
       }
       if (saveFlag) {
-        console.log(`Saving updated link payment: ${JSON.stringify(payment)}`);
+        this.log.info(`Saving updated link payment: ${JSON.stringify(payment)}`);
         await this.paymentRepo.save(payment);
       }
     } else {
@@ -103,7 +105,7 @@ export class PaymentService {
   }
 
   public createPayment = async (amount: string, recipient: User): Promise<Payment> => {
-    console.log(`Creating payment for ${amount}`);
+    this.log.info(`Creating payment for ${amount}`);
     const amountBN = parseEther(amount);
     const channel = await this.channelService.getChannel();
     const linkResult = await channel.conditionalTransfer({
@@ -113,7 +115,7 @@ export class PaymentService {
       paymentId: hexlify(randomBytes(32)),
       preImage: hexlify(randomBytes(32)),
     });
-    console.log(`Created link transfer, result: ${JSON.stringify(linkResult, null, 2)}`);
+    this.log.info(`Created link transfer, result: ${JSON.stringify(linkResult, null, 2)}`);
     const payment = new Payment();
     payment.paymentId = linkResult.paymentId;
     payment.recipient = recipient;
@@ -122,9 +124,9 @@ export class PaymentService {
     payment.amount = amount;
     payment.status = 'PENDING';
     recipient.cashout = payment;
-    console.log(`Saving new payment`);
+    this.log.info(`Saving new payment`);
     await this.paymentRepo.save(payment);
-    console.log(`Saving updated cashout link`);
+    this.log.info(`Saving updated cashout link`);
     await this.userRepo.save(recipient);
     return payment;
   }
@@ -157,18 +159,19 @@ export class PaymentService {
     }
 
     let senderBalance = parseEther(await this.redeemPayment(payment));
-    let cashout = '0.0';
+    let cashoutAmt = '0.00';
     if (sender.cashout) {
-      cashout = parseEther(await this.redeemPayment(await this.updatePayment(sender.cashout)));
+      const cashout = await this.updatePayment(sender.cashout);
       if (cashout.status === 'PENDING') {
-        senderBalance = senderBalance.add(cashout);
+        cashoutAmt = await this.redeemPayment(cashout);
+        senderBalance = senderBalance.add(parseEther(cashoutAmt));
       }
     }
     sender.cashout = senderBalance.gt(Zero)
       ? await this.createPayment(formatEther(senderBalance), sender)
       : null;
     await this.userRepo.save(sender);
-    return `Link payment has been redeemed. Old balance: ${formatEther(cashout)}, New balance: $${sender.cashout.amount}.\n` +
+    return `Link payment has been redeemed. Old balance: ${cashoutAmt}, New balance: $${sender.cashout.amount}.\n` +
       `Cashout anytime by clicking the following link:` +
       `\n\n${this.config.paymentUrl}?paymentId=${sender.cashout.paymentId}&` +
       `secret=${sender.cashout.secret}`;

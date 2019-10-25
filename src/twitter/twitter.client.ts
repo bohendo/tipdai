@@ -6,6 +6,7 @@ import { OAuth } from 'oauth';
 import * as qs from 'qs';
 
 import { TwitterConfig } from '../types';
+import { Logger } from '../utils';
 
 type OAuthError = {
   statusCode: number;
@@ -35,6 +36,7 @@ export class Twitter {
   callbackUrl: string;
   consumerKey: string;
   consumerSecret: string;
+  log: Logger;
   oauth: OAuth;
   webhook: any;
 
@@ -45,6 +47,7 @@ export class Twitter {
     this.callbackUrl = config.callbackUrl;
     this.consumerKey = config.consumerKey;
     this.consumerSecret = config.consumerSecret;
+    this.log = config.logger;
     this.webhook = config.webhook;
     this.oauth = new OAuth(
       'https://api.twitter.com/oauth/request_token',
@@ -138,7 +141,7 @@ export class Twitter {
   // Private Methods
 
   _get = (url: string): Promise<any> => {
-    console.log(`GET URL: ${url}`);
+    this.log.info(`GET URL: ${url}`);
     return new Promise((resolve, reject) => {
       this.oauth.get(url, this.accessToken, this.accessSecret, (
         err: OAuthError,
@@ -146,14 +149,14 @@ export class Twitter {
         res: OAuthResponse,
       ) => {
         if (err) {
-          console.error(`GET failed: ${err.data}`);
+          this.log.error(`GET failed: ${err.data}`);
           reject(err);
         }
         if (res.statusCode === 204) { return resolve(); }
         try {
           resolve(JSON.parse(body));
         } catch (e) {
-          console.warn(`GET ${url} yielded body not parsable as JSON: [${typeof body}] ${body}`);
+          this.log.warn(`GET ${url} yielded body not parsable as JSON: [${typeof body}] ${body}`);
           resolve(body);
         }
       });
@@ -161,7 +164,7 @@ export class Twitter {
   }
 
   _post = (url: string, data: any = {}): Promise<any> => {
-    console.log(`POST URL: ${url}`);
+    this.log.info(`POST URL: ${url}`);
     return new Promise((resolve, reject) => {
       this.oauth.post(url, this.accessToken, this.accessSecret, data, 'application/json', (
         err: OAuthError,
@@ -169,14 +172,14 @@ export class Twitter {
         res: OAuthResponse,
       ) => {
         if (err) {
-          console.error(`POST failed: ${err.data}`);
+          this.log.error(`POST failed: ${err.data}`);
           reject(err);
         }
         if (res.statusCode === 204) { return resolve(); }
         try {
           resolve(JSON.parse(body));
         } catch (e) {
-          console.warn(`POST ${url} yielded body not parsable as JSON: [${typeof body}] ${body}`);
+          this.log.warn(`POST ${url} yielded body not parsable as JSON: [${typeof body}] ${body}`);
           resolve(body);
         }
       });
@@ -184,7 +187,7 @@ export class Twitter {
   }
 
   _put = (url: string, data: any = {}): Promise<any> => {
-    console.log(`PUT URL: ${url}`);
+    this.log.info(`PUT URL: ${url}`);
     return new Promise((resolve, reject) => {
       this.oauth.put(url, this.accessToken, this.accessSecret, data, 'application/json', (
         err: OAuthError,
@@ -192,14 +195,14 @@ export class Twitter {
         res: OAuthResponse,
       ) => {
         if (err) {
-          console.error(`PUT failed: ${err.data}`);
+          this.log.error(`PUT failed: ${err.data}`);
           reject(err);
         }
         if (res.statusCode === 204) { return resolve(); }
         try {
           resolve(JSON.parse(body));
         } catch (e) {
-          console.warn(`PUT ${url} yielded body not parsable as JSON: [${typeof body}] ${body}`);
+          this.log.warn(`PUT ${url} yielded body not parsable as JSON: [${typeof body}] ${body}`);
           resolve(body);
         }
       });
@@ -207,7 +210,7 @@ export class Twitter {
   }
 
   _delete = (url: string): Promise<any> => {
-    console.log(`DEL URL: ${url}`);
+    this.log.info(`DEL URL: ${url}`);
     return new Promise((resolve, reject) => {
       this.oauth.delete(url, this.accessToken, this.accessSecret, (
         err: OAuthError,
@@ -215,14 +218,14 @@ export class Twitter {
         res: OAuthResponse,
       ) => {
         if (err) {
-          console.error(`DEL failed: ${err.data}`);
+          this.log.error(`DEL failed: ${err.data}`);
           reject(err);
         }
         if (res.statusCode === 204) { return resolve(); }
         try {
           resolve(JSON.parse(body));
         } catch (e) {
-          console.warn(`DEL ${url} yielded body not parsable as JSON: [${typeof body}] ${body}`);
+          this.log.warn(`DEL ${url} yielded body not parsable as JSON: [${typeof body}] ${body}`);
           resolve(body);
         }
       });

@@ -1,5 +1,4 @@
-import { Injectable } from '@nestjs/common';
-import { OAuth } from 'oauth';
+import { Injectable } from '@nestjs/common'; import { OAuth } from 'oauth';
 import * as qs from 'qs';
 
 import { ConfigService } from '../config/config.service';
@@ -7,6 +6,7 @@ import { tipRegex } from '../constants';
 import { MessageService } from '../message/message.service';
 import { UserRepository } from '../user/user.repository';
 import { User } from '../user/user.entity';
+import { Logger } from '../utils';
 
 import { Twitter } from './twitter.client';
 
@@ -19,6 +19,7 @@ const tipfakedai_id = '1167103783056367616'
 @Injectable()
 export class TwitterService {
   private invalid: boolean = false;
+  private log: Logger;
   private twitterApp: any;
   private twitterBot: any;
   private twitterDev: any;
@@ -32,14 +33,15 @@ export class TwitterService {
     private readonly userRepo: UserRepository,
     private readonly message: MessageService,
   ) {
+    this.log = new Logger('TwitterService', this.config.logLevel);
     if (!this.config.twitterDev.consumerKey || !this.config.twitterDev.consumerSecret) {
-      console.warn(`[Twitter] Missing consumer token and/or secret, twitter stuff won't work.`);
+      this.log.warn(`[Twitter] Missing consumer token and/or secret, twitter stuff won't work.`);
       this.invalid = true;
     } else {
       this.twitterDev = new Twitter(this.config.twitterDev);
       this.twitterApp = new Twitter(this.config.twitterApp);
       if (!config.twitterBot.accessToken) {
-        console.log(`Bot credentials not found, requesting a new access token..`);
+        this.log.info(`Bot credentials not found, requesting a new access token..`);
         this.botLogin();
       } else {
         this.twitterBot = new Twitter(this.config.twitterBot);
@@ -65,7 +67,7 @@ export class TwitterService {
         );
       }
     } else {
-      console.log(`Tweet isn't a well formatted tip, ignoring: ${tweet.text}`);
+      this.log.info(`Tweet isn't a well formatted tip, ignoring: ${tweet.text}`);
     }
   }
 
@@ -74,7 +76,7 @@ export class TwitterService {
     let sender = await this.userRepo.getByTwitterId(senderId);
     if (!sender) {
       const twitterUser = await this.getUserById(senderId);
-      console.log(`twitterUser: ${JSON.stringify(twitterUser)}`);
+      this.log.info(`twitterUser: ${JSON.stringify(twitterUser)}`);
       sender = await this.userRepo.getTwitterUser(senderId, twitterUser.screen_name);
     }
     const responses = await this.message.handlePrivateMessage(
@@ -93,7 +95,7 @@ export class TwitterService {
     if (!this.user) {
       const screenName = (await this.getUserById(this.config.twitterBotUserId)).screen_name;
       this.user = this.userRepo.getTwitterUser(this.config.twitterBotUserId, screenName);
-      console.log(`Got bot user: ${JSON.stringify(await this.user)}`);
+      this.log.info(`Got bot user: ${JSON.stringify(await this.user)}`);
     }
     return await this.user;
   }
@@ -104,7 +106,7 @@ export class TwitterService {
       await this.twitterApp.triggerCRC(this.webhookId);
       return true;
     } catch (e) {
-      console.warn(e);
+      this.log.warn(e);
       return false;
     }
   }
@@ -140,10 +142,10 @@ export class TwitterService {
     if (this.invalid) { return; }
     const res = await this.twitterApp.requestToken();
     const data = qs.parse(res);
-    console.log(`Got token data: ${JSON.stringify(data)}`);
+    this.log.info(`Got token data: ${JSON.stringify(data)}`);
     const baseUrl = 'https://api.twitter.com/oauth/authorize';
     this.authUrl = `${baseUrl}?oauth_token=${data.oauth_token}`;
-    console.log(`Login at: ${this.authUrl}`);
+    this.log.info(`Login at: ${this.authUrl}`);
     return this.authUrl;
   }
 
@@ -157,20 +159,20 @@ export class TwitterService {
       oauth_verifier: verifier,
     });
     const data = qs.parse(res);
-    console.log(`Authentication Success!`);
-    console.log(`Got access tokens for ${data.screen_name}`);
-    console.log(`Access tokens (You should save these for later):`);
-    console.log(`TIPDAI_TWITTER_BOT_ACCESS_SECRET=${data.oauth_token_secret}`);
-    console.log(`TIPDAI_TWITTER_BOT_ACCESS_TOKEN=${data.oauth_token}`);
-    console.log(`TIPDAI_TWITTER_BOT_USER_ID=${data.user_id}`);
+    this.log.info(`Authentication Success!`);
+    this.log.info(`Got access tokens for ${data.screen_name}`);
+    this.log.info(`Access tokens (You should save these for later):`);
+    this.log.info(`TIPDAI_TWITTER_BOT_ACCESS_SECRET=${data.oauth_token_secret}`);
+    this.log.info(`TIPDAI_TWITTER_BOT_ACCESS_TOKEN=${data.oauth_token}`);
+    this.log.info(`TIPDAI_TWITTER_BOT_USER_ID=${data.user_id}`);
     this.twitterBot = new Twitter({
       ...this.config.twitterBot,
       accessToken: data.oauth_token,
       accessSecret: data.oauth_token_secret,
     });
-    console.log(`Twitter bot successfully connected!`);
+    this.log.info(`Twitter bot successfully connected!`);
     await this.subscribe(data.user_id);
-    console.log(`Account activity subscription successfully configured!`);
+    this.log.info(`Account activity subscription successfully configured!`);
     await this.getUser();
     return;
   }
@@ -179,32 +181,32 @@ export class TwitterService {
     if (this.invalid) { return; }
     const webhooks = await this.twitterApp.getWebhooks();
     const subscriptions = await this.twitterDev.getSubscriptions();
-    console.log(`Got subscriptions: ${JSON.stringify(subscriptions.subscriptions)}`);
+    this.log.info(`Got subscriptions: ${JSON.stringify(subscriptions.subscriptions)}`);
     let crcRes;
     if (subscriptions.subscriptions.find(e => e.user_id === botId)) {
       this.webhookId = webhooks.environments[0].webhooks[0].id;
       crcRes = await this.triggerCRC();
-      console.log(`CRC succeeded: ${crcRes}`);
-      console.log(`Already subscribed to user ${botId}. We're good to go!`);
+      this.log.info(`CRC succeeded: ${crcRes}`);
+      this.log.info(`Already subscribed to user ${botId}. We're good to go!`);
       return;
     }
-    console.log(`Ok let's try to remove the old webhook subscriptions`);
+    this.log.info(`Ok let's try to remove the old webhook subscriptions`);
     // 2. Remove all webhook subscriptions
     await Promise.all(webhooks.environments.map(async env =>
       Promise.all(env.webhooks.map(async webhook => {
-        console.log(`Unsubscribing from ${env.environment_name} webhook: ${webhook.id}..`);
+        this.log.info(`Unsubscribing from ${env.environment_name} webhook: ${webhook.id}..`);
         return this.twitterBot.removeWebhook(webhook.id);
       })),
     ));
-    console.log(`Done unsubscribing, time to do some subscribing`);
+    this.log.info(`Done unsubscribing, time to do some subscribing`);
     const newWebhook = await this.twitterApp.createWebhook('/webhooks/twitter');
-    console.log(`Created webhook: ${JSON.stringify(newWebhook, null, 2)}`);
+    this.log.info(`Created webhook: ${JSON.stringify(newWebhook, null, 2)}`);
     // 3. Create a new subscription
     const newSubscription = await this.twitterBot.createSubscription();
-    console.log(`Activated subscription: ${JSON.stringify(newSubscription, null, 2)}`);
+    this.log.info(`Activated subscription: ${JSON.stringify(newSubscription, null, 2)}`);
     this.webhookId = newWebhook.id;
     crcRes = await this.triggerCRC();
-    console.log(`CRC succeeded: ${crcRes}`);
+    this.log.info(`CRC succeeded: ${crcRes}`);
     return(newSubscription);
   }
 

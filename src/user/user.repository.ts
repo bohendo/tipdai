@@ -11,7 +11,6 @@ export class UserRepository extends Repository<User> {
       user = new User();
       user.address = address;
       await this.save(user);
-      console.log(`Saved new user: ${JSON.stringify(user)}`);
     }
     return user;
   }
@@ -27,7 +26,6 @@ export class UserRepository extends Repository<User> {
       user.twitterId = twitterId;
       user.twitterName = twitterName;
       await this.save(user);
-      console.log(`Saved new user: ${JSON.stringify(user)}`);
     }
     return user;
   }

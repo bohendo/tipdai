@@ -9,9 +9,12 @@ import { PaymentService } from '../payment/payment.service';
 import { QueueService } from '../queue/queue.service';
 import { TipService } from '../tip/tip.service';
 import { User } from '../user/user.entity';
+import { Logger } from '../utils';
 
 @Injectable()
 export class MessageService {
+  private log: Logger;
+
   constructor(
     private readonly config: ConfigService,
     private readonly deposit: DepositService,
@@ -19,6 +22,7 @@ export class MessageService {
     private readonly queue: QueueService,
     private readonly tip: TipService,
   ) {
+    this.log = new Logger('MessageService', this.config.logLevel);
   }
 
   public handlePublicMessage = async (
@@ -29,12 +33,12 @@ export class MessageService {
     if (sender.twitterId === this.config.twitterBotUserId) { return; }
     const tipInfo = message.match(tipRegex());
     if (!tipInfo || !tipInfo[2]) {
-      console.log(`Improperly formatted public message, ignoring`);
-      console.log(JSON.stringify(tipInfo));
+      this.log.info(`Improperly formatted public message, ignoring`);
+      this.log.info(JSON.stringify(tipInfo));
       return;
     }
     let result = await this.tip.handleTip(sender, recipient, tipInfo[2], message);
-    console.log(`Got tip result: ${JSON.stringify(result)}`);
+    this.log.info(`Got tip result: ${JSON.stringify(result)}`);
     if (result.indexOf('XXX') !== -1) {
       result = result.replace('XXX', tipInfo[1]);
     }

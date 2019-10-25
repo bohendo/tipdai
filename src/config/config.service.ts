@@ -4,6 +4,7 @@ import { Wallet } from 'ethers';
 import * as fs from 'fs';
 
 import { PostgresConfig, TwitterConfig } from '../types';
+import { Logger } from '../utils';
 
 const env = {
   ethProvider: process.env.ETH_PROVIDER,
@@ -82,6 +83,7 @@ export class ConfigService {
       accessSecret: env.twitterAppAccessSecret,
       accessToken: env.twitterAppAccessToken,
       ...this.twitterDev,
+      logger: new Logger('TwitterApp', this.logLevel),
     };
   }
 
@@ -90,6 +92,7 @@ export class ConfigService {
       accessSecret: env.twitterBotAccessSecret,
       accessToken: env.twitterBotAccessToken,
       ...this.twitterDev,
+      logger: new Logger('TwitterBot', this.logLevel),
     };
   }
 
@@ -98,6 +101,7 @@ export class ConfigService {
       callbackUrl: env.twitterCallbackUrl,
       consumerKey: env.twitterConsumerKey,
       consumerSecret: env.twitterConsumerSecret,
+      logger: new Logger('TwitterDev', this.logLevel),
       webhook: this.webhooks.twitter,
     };
   }

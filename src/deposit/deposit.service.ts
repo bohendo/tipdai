@@ -5,6 +5,7 @@ import { formatEther, parseEther } from 'ethers/utils';
 import { ChannelService } from '../channel/channel.service';
 import { ConfigService } from '../config/config.service';
 import { PaymentService } from '../payment/payment.service';
+import { Logger } from '../utils';
 
 import { Deposit } from './deposit.entity';
 import { DepositRepository } from './deposit.repository';
@@ -15,6 +16,8 @@ const timeout = 1000 * 60 * 25;
 
 @Injectable()
 export class DepositService {
+  private log: Logger;
+
   constructor(
     private readonly config: ConfigService,
     private readonly channel: ChannelService,
@@ -22,6 +25,7 @@ export class DepositService {
     private readonly payment: PaymentService,
     private readonly userRepo: UserRepository,
   ) {
+    this.log = new Logger('DepositService', this.config.logLevel);
     this.startDepositPoller();
   }
 
@@ -79,7 +83,7 @@ export class DepositService {
     const channel = await this.channel.getChannel();
     let pendingDeposits = await this.depositRepo.getAllPending();
     if (!pendingDeposits || pendingDeposits === []) {
-      console.log(`No pending deposits`);
+      this.log.info(`No pending deposits`);
       return;
     }
     // Check the balance of each pending deposit address
@@ -98,16 +102,16 @@ export class DepositService {
     // Deal w completed deposits
     const completeDeposits = pendingDeposits.filter(dep => dep.amount);
     if (completeDeposits.length > 0) {
-      console.log(`Completed deposits: ${JSON.stringify(completeDeposits)}`);
+      this.log.info(`Completed deposits: ${JSON.stringify(completeDeposits)}`);
       await Promise.all(
         completeDeposits.map(async dep => {
           pendingDeposits = pendingDeposits.filter(depp => !depp.amount);
           const user = await this.userRepo.findOne(dep.user);
           if (!user) {
-            console.warn(`Got a deposit from a user we've never seen before?!`);
+            this.log.warn(`Got a deposit from a user we've never seen before?!`);
             return;
           }
-          console.log(`Depositing this deposit into our channel`);
+          this.log.info(`Depositing this deposit into our channel`);
           const tokenAddress = this.channel.tokenAddress;
           const swapRate = this.channel.swapRate;
           let expectedDeposit = formatEther(
@@ -116,10 +120,10 @@ export class DepositService {
           expectedDeposit = formatEther(
             expectedDeposit.substring(0, expectedDeposit.indexOf('.')),
           );
-          console.log(`expectedDeposit: ${expectedDeposit}`);
+          this.log.info(`expectedDeposit: ${expectedDeposit}`);
           let tokenBalances = await channel.getFreeBalance(tokenAddress);
           const oldChannelTokens = tokenBalances[channel.freeBalanceAddress];
-          console.log(`Old channel balance: ${oldChannelTokens}`);
+          this.log.info(`Old channel balance: ${oldChannelTokens}`);
 
           /*
           // TODO: Port over daicard's deposit & swap all functions
@@ -135,11 +139,11 @@ export class DepositService {
               toAssetId: tokenAddress,
             });
           } catch (e) {
-            console.error(`Deposit failed :( ${e.message}`);
+            this.log.error(`Deposit failed :( ${e.message}`);
           }
 
           if (false && !user.linkPayment) {
-            console.log(`Attempting to create link payment`);
+            this.log.info(`Attempting to create link payment`);
             const link = await channel.conditionalTransfer({
               amount: parseEther(user.balance),
               assetId: tokenAddress,
@@ -151,17 +155,17 @@ export class DepositService {
           tokenBalances = await channel.getFreeBalance(tokenAddress);
           const newChannelTokens = tokenBalances[channel.freeBalanceAddress];
 
-          console.log(`Depositor old balance: ${user.cashout.amount}`);
+          this.log.info(`Depositor old balance: ${user.cashout.amount}`);
 
           const userBalance = formatEther(parseEther(user.cashout.amount)
             .add(parseEther(expectedDeposit)));
-          console.log(`Sender new balance: ${userBalance}`);
+          this.log.info(`Sender new balance: ${userBalance}`);
           await this.payment.redeemPayment(user.cashout);
-          console.log(`Redeemed old cashout payment`);
+          this.log.info(`Redeemed old cashout payment`);
           user.cashout = await this.payment.createPayment(userBalance, user);
-          console.log(`Gave user new cashout payment`);
+          this.log.info(`Gave user new cashout payment`);
           await this.userRepo.save(user);
-          console.log(`Saved new user data`);
+          this.log.info(`Saved new user data`);
 
           await this.userRepo.save(user);
           await this.depositRepo.remove(dep);
@@ -174,7 +178,7 @@ export class DepositService {
       dep => dep.startTime.valueOf() + timeout <= Date.now(),
     );
     if (expiredDeposits.length > 0) {
-      console.log(`Found expired deposits: ${JSON.stringify(expiredDeposits)}`);
+      this.log.info(`Found expired deposits: ${JSON.stringify(expiredDeposits)}`);
       expiredDeposits.forEach(dep => {
         pendingDeposits = pendingDeposits.filter(
           depp => depp.startTime.valueOf() + timeout > Date.now(),

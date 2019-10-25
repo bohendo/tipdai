@@ -4,12 +4,14 @@ import { AddressZero, Zero } from 'ethers/constants';
 import { formatEther, parseEther } from 'ethers/utils';
 
 import { ConfigService } from '../config/config.service';
+import { Logger } from '../utils';
 
 import { ChannelRecordRepository } from './channel.repository';
 
 @Injectable()
 export class ChannelService {
   private channel: any;
+  private log: Logger;
   public tokenAddress: string;
   public swapRate: string;
 
@@ -17,6 +19,7 @@ export class ChannelService {
     private readonly config: ConfigService,
     private readonly channelRecords: ChannelRecordRepository,
   ) {
+    this.log = new Logger('ChannelService', this.config.logLevel);
     this.channel = new Promise(async (resolve, reject) => {
       const channel = await connext({ ...this.config.channel, store: this.channelRecords });
       this.tokenAddress = channel.config.contractAddresses.Token;
@@ -26,7 +29,7 @@ export class ChannelService {
         if (!res || !res.swapRate) { return; }
         const oldRate = this.swapRate;
         this.swapRate = res.swapRate;
-        console.log(`Got swap rate upate: ${oldRate} -> ${this.swapRate}`);
+        this.log.info(`Got swap rate upate: ${oldRate} -> ${this.swapRate}`);
       });
 
       // Wait for channel to be available
@@ -38,16 +41,16 @@ export class ChannelService {
         await new Promise(res => setTimeout(() => res(), 1000));
       }
 
-      console.log(`Client created successfully!`);
-      console.log(` - Public Identifier: ${channel.publicIdentifier}`);
-      console.log(` - Account multisig address: ${channel.opts.multisigAddress}`);
-      console.log(` - Free balance address: ${channel.freeBalanceAddress}`);
-      console.log(` - Token address: ${this.tokenAddress}`);
-      console.log(` - Swap rate: ${this.swapRate}`);
+      this.log.info(`Client created successfully!`);
+      this.log.info(` - Public Identifier: ${channel.publicIdentifier}`);
+      this.log.info(` - Account multisig address: ${channel.opts.multisigAddress}`);
+      this.log.info(` - Free balance address: ${channel.freeBalanceAddress}`);
+      this.log.info(` - Token address: ${this.tokenAddress}`);
+      this.log.info(` - Swap rate: ${this.swapRate}`);
 
       try {
         const fb = await channel.getFreeBalance(this.tokenAddress);
-        console.log(`Free balance: ${JSON.stringify(fb)}, creating a payment profile..`);
+        this.log.info(`Free balance: ${JSON.stringify(fb)}, creating a payment profile..`);
         await channel.addPaymentProfile({
           amountToCollateralize: parseEther('10').toString(),
           minimumMaintainedCollateral: parseEther('5').toString(),
@@ -55,9 +58,9 @@ export class ChannelService {
         });
       } catch (e) {
         if (e.message.includes('StateChannel does not exist yet')) {
-          console.log(`State channel state is missing, attempting to restore..`);
+          this.log.info(`State channel state is missing, attempting to restore..`);
           await channel.restoreStateFromNode(this.config.wallet.mnemonic);
-          console.log(`State successfully restored!`);
+          this.log.info(`State successfully restored!`);
         }
       }
 
@@ -67,10 +70,10 @@ export class ChannelService {
       )[0];
 
       if (freeTokenBalance[hubFreeBalanceAddress].eq(Zero)) {
-        console.log(`Requesting collateral for token ${this.tokenAddress}`);
+        this.log.info(`Requesting collateral for token ${this.tokenAddress}`);
         await channel.requestCollateral(this.tokenAddress);
       } else {
-        console.log(
+        this.log.info(
           `Hub has collateralized us with ${formatEther(
             freeTokenBalance[hubFreeBalanceAddress],
           )} tokens`,
@@ -78,7 +81,7 @@ export class ChannelService {
       }
 
       const botFreeBalance = freeTokenBalance[channel.freeBalanceAddress];
-      console.log(`Bot has a free balance of ${formatEther(botFreeBalance)} tokens`);
+      this.log.info(`Bot has a free balance of ${formatEther(botFreeBalance)} tokens`);
 
       // TODO: check bot's token & eth balance first and maybe deposit a bit?
       return resolve(channel);

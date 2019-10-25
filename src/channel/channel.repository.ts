@@ -11,7 +11,6 @@ export class ChannelRecordRepository extends Repository<ChannelRecord> {
   }
 
   async get(path: string): Promise<StringKeyValue | string | undefined> {
-    // console.log(`Getting path from store: ${path}`);
     let res;
     // FIXME: this queries for all channels or proposed app instances, which
     // are nested under the respective keywords, hence the 'like' keyword
@@ -41,14 +40,12 @@ export class ChannelRecordRepository extends Repository<ChannelRecord> {
           records[key] = value;
         }
       });
-      // console.log(`Got ${Object.keys(records).length} values: ${JSON.stringify(records)}`);
       return records;
     }
     res = await this.findOne({ path });
     if (!res) {
       return undefined;
     }
-    // console.log(`Got value: ${JSON.stringify(res.value[path])}`);
     return res.value[path];
   }
 
@@ -58,7 +55,6 @@ export class ChannelRecordRepository extends Repository<ChannelRecord> {
       // if you use anything other than JSON (i.e. a raw string).
       // In some cases, the cf core code is inserting strings as values instead of objects :(
       const record = { path: pair.path, value: { [pair.path]: pair.value } };
-      // console.log(`Saving record: ${JSON.stringify(record)}`);
       await this.save(record);
     }
   }

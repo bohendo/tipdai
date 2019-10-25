@@ -2,18 +2,23 @@ import { Injectable } from '@nestjs/common';
 
 import { ConfigService } from './config/config.service';
 import { TwitterService } from './twitter/twitter.service';
+import { Logger } from './utils';
 
 @Injectable()
 export class AppService {
+  private log: Logger;
+
   constructor(
     private readonly config: ConfigService,
     private readonly twitter: TwitterService,
-  ) {}
+  ) {
+    this.log = new Logger('AppService', this.config.logLevel);
+  }
 
   async getHello(query: any): Promise<string> {
     // If we have an authUrl saved, then we have a 3-leg auth in-progress
     if (this.twitter.authUrl && query.oauth_token && query.oauth_verifier) {
-      console.log(`Oauth response detected! Connecting new tip bot.`);
+      this.log.info(`Oauth response detected! Connecting new tip bot.`);
       await this.twitter.connectBot(
         this.config.twitterDev.consumerKey,
         query.oauth_token,
@@ -28,12 +33,12 @@ export class AppService {
   }
 
   async triggerCRC(): Promise<string> {
-    console.log(`Triggering Twitter CRC`);
+    this.log.info(`Triggering Twitter CRC`);
     if (await this.twitter.triggerCRC()) {
-      console.log(`Success`);
+      this.log.info(`Success`);
       return 'success';
     } else {
-      console.log(`CRC Failed`);
+      this.log.info(`CRC Failed`);
       return 'failure';
     }
   }

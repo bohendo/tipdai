@@ -62,6 +62,9 @@ export class PaymentService {
       if (e.message.match(/already been redeemed/i)) {
         console.warn(`Failed to redeem link payment, already redeemed.`);
         redeemedAmount = '0.0';
+      } else if (e.message.match(/has not been installed/i)) {
+        console.warn(`Failed to redeem link payment, node has uninstalled this app.`);
+        redeemedAmount = '0.0';
       } else {
         throw e;
       }
@@ -153,15 +156,19 @@ export class PaymentService {
       return `Link payment not redeemable, status: ${payment.status}. Your balance: $${sender.cashout.amount}`;
     }
 
-    let senderBalance = await this.redeemPayment(payment);
+    let senderBalance = parseEther(await this.redeemPayment(payment));
+    let cashout = '0.0';
     if (sender.cashout) {
-      senderBalance = formatEther(parseEther(senderBalance).add(parseEther(await this.redeemPayment(sender.cashout))));
+      cashout = parseEther(await this.redeemPayment(await this.updatePayment(sender.cashout)));
+      if (cashout.status === 'PENDING') {
+        senderBalance = senderBalance.add(cashout);
+      }
     }
-    sender.cashout = parseEther(senderBalance).gt(Zero)
-      ? await this.createPayment(senderBalance, sender)
+    sender.cashout = senderBalance.gt(Zero)
+      ? await this.createPayment(formatEther(senderBalance), sender)
       : null;
     await this.userRepo.save(sender);
-    return `Link payment has been redeemed. New balance: $${sender.cashout.amount}.\n` +
+    return `Link payment has been redeemed. Old balance: ${formatEther(cashout)}, New balance: $${sender.cashout.amount}.\n` +
       `Cashout anytime by clicking the following link:` +
       `\n\n${this.config.paymentUrl}?paymentId=${sender.cashout.paymentId}&` +
       `secret=${sender.cashout.secret}`;

@@ -7,6 +7,7 @@ import { PostgresConfig, TwitterConfig } from '../types';
 
 const env = {
   ethProvider: process.env.ETH_PROVIDER,
+  logLevel: process.env.LOG_LEVEL,
   mnemonicFile: process.env.MNEMONIC_FILE,
   nodeEnv: process.env.NODE_ENV,
   paymentHub: process.env.PAYMENT_HUB,
@@ -27,8 +28,6 @@ const env = {
   twitterWebhookId: process.env.TWITTER_WEBHOOK_ID,
 };
 
-console.log(`Starting app in env: ${JSON.stringify(env, null, 2)}`);
-
 const cfIndex = '25446';
 
 @Injectable()
@@ -42,12 +41,20 @@ export class ConfigService {
     return Wallet.fromMnemonic(mnemonic, `m/44'/60'/0'/0/${index}`).connect(this.ethProvider);
   }
 
+  get env(): any {
+    return env;
+  }
+
   get paymentUrl(): string {
     return env.paymentUrl;
   }
 
   get wallet(): Wallet {
     return this.getWallet(0);
+  }
+
+  get logLevel(): number {
+    return parseInt(env.logLevel, 10) || 3;
   }
 
   get isDevMode(): boolean {

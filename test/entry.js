@@ -155,10 +155,10 @@ const axio = axios.create({
     token: senderToken,
   });
 
-  console.log(`\n==========\n${await results.depositOne}`);
-  console.log(`\n==========\n${await results.depositTwo}`);
-  console.log(`\n==========\n${await results.tipOne}`);
-  console.log(`\n==========\n${await results.tipTwo}`);
+  console.log(`\n==========\n${(await results.depositOne).data}`);
+  console.log(`\n==========\n${(await results.depositTwo).data}`);
+  console.log(`\n==========\n${(await results.tipOne).data}`);
+  console.log(`\n==========\n${(await results.tipTwo).data}`);
 
   console.log(`\nTests completed successfully :)`);
 

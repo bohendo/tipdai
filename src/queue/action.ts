@@ -1,21 +1,25 @@
 import { EventEmitter } from 'events';
 
+import { Logger } from '../utils';
+
 export class Action extends EventEmitter {
   private callback: any;
+  private log: Logger;
 
-  constructor(callback: any) {
+  constructor(callback: any, logLevel: number) {
     super();
     this.callback = callback;
+    this.log = new Logger('Action', logLevel || 3);
   }
 
   async execute(): Promise<void> {
     try {
-      console.log(`Executing action!`);
+      this.log.info(`Executing action!`);
       const result = await this.callback();
-      console.log(`Executed action successfully! Resolving..`);
+      this.log.info(`Executed action successfully! Resolving..`);
       this.emit('resolve', result);
     } catch (e) {
-      console.log(`Failed to execute action! Rejecting..`);
+      this.log.warn(`Failed to execute action! Rejecting..`);
       this.emit('reject', e);
     }
   }

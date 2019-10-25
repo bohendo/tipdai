@@ -53,12 +53,12 @@ const setupChannel = async (wallet) => {
     swapRate: swapRate.toString(),
     toAssetId: assetId,
   });
-  console.log(`Generating 3 linked payments..`);
   const amount = parseEther('0.1').toString()
   const conditionType = "LINKED_TRANSFER";
   const randHash = () => hexlify(randomBytes(32));
   const paymentIds = [randHash(), randHash(), randHash()];
   const secrets = [randHash(), randHash(), randHash()];
+  console.log(`Generating 3 linked payments: ${JSON.stringify(paymentIds)}`);
   await channel.conditionalTransfer({
     amount,
     assetId,

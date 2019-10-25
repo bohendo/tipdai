@@ -10,6 +10,7 @@ import { DepositModule } from './deposit/deposit.module';
 import { MessageModule } from './message/message.module';
 import { UserModule } from './user/user.module';
 import { TipModule } from './tip/tip.module';
+import { QueueModule } from './queue/queue.module';
 
 @Module({
   imports: [
@@ -22,6 +23,7 @@ import { TipModule } from './tip/tip.module';
     MessageModule,
     UserModule,
     TipModule,
+    QueueModule,
   ],
   controllers: [AppController],
   providers: [AppService],

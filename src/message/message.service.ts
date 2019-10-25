@@ -89,7 +89,7 @@ export class MessageService {
         }
       }
       return [
-        `Your balance is $0.00. Send a link payment to get started.`,
+        `Your balance is $0.00. Send a link payment (generated from rinkeby.daicard.io) to get started.`,
       ];
     }
   }

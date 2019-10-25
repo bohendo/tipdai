@@ -1,7 +1,7 @@
 import { connect as connext } from '@connext/client';
 import { Injectable } from '@nestjs/common';
 import { AddressZero, Zero } from 'ethers/constants';
-import { formatEther, parseEther } from 'ethers/utils';
+import { bigNumberify, formatEther, parseEther } from 'ethers/utils';
 
 import { ConfigService } from '../config/config.service';
 import { Logger } from '../utils';
@@ -41,21 +41,15 @@ export class ChannelService {
         await new Promise(res => setTimeout(() => res(), 1000));
       }
 
-      this.log.info(`Client created successfully!`);
-      this.log.info(` - Public Identifier: ${channel.publicIdentifier}`);
+      this.log.info(`Successfully connected to state channel!`);
+      this.log.info(channel.publicIdentifier);
       this.log.info(` - Account multisig address: ${channel.opts.multisigAddress}`);
       this.log.info(` - Free balance address: ${channel.freeBalanceAddress}`);
       this.log.info(` - Token address: ${this.tokenAddress}`);
       this.log.info(` - Swap rate: ${this.swapRate}`);
 
       try {
-        const fb = await channel.getFreeBalance(this.tokenAddress);
-        this.log.info(`Free balance: ${JSON.stringify(fb)}, creating a payment profile..`);
-        await channel.addPaymentProfile({
-          amountToCollateralize: parseEther('10').toString(),
-          minimumMaintainedCollateral: parseEther('5').toString(),
-          assetId: this.tokenAddress,
-        });
+        await channel.getFreeBalance(this.tokenAddress);
       } catch (e) {
         if (e.message.includes('StateChannel does not exist yet')) {
           this.log.info(`State channel state is missing, attempting to restore..`);
@@ -64,24 +58,30 @@ export class ChannelService {
         }
       }
 
+      await channel.addPaymentProfile({
+        amountToCollateralize: parseEther('10').toString(),
+        minimumMaintainedCollateral: parseEther('5').toString(),
+        assetId: this.tokenAddress,
+      });
+
       const freeTokenBalance = await channel.getFreeBalance(this.tokenAddress);
       const hubFreeBalanceAddress = Object.keys(freeTokenBalance).filter(
         addr => addr.toLowerCase() !== channel.freeBalanceAddress,
       )[0];
 
       if (freeTokenBalance[hubFreeBalanceAddress].eq(Zero)) {
-        this.log.info(`Requesting collateral for token ${this.tokenAddress}`);
+        this.log.info(`Requesting collateral for $${this.tokenAddress}`);
         await channel.requestCollateral(this.tokenAddress);
       } else {
         this.log.info(
-          `Hub has collateralized us with ${formatEther(
+          `Hub has collateralized us with $${formatEther(
             freeTokenBalance[hubFreeBalanceAddress],
-          )} tokens`,
+          )}`,
         );
       }
 
       const botFreeBalance = freeTokenBalance[channel.freeBalanceAddress];
-      this.log.info(`Bot has a free balance of ${formatEther(botFreeBalance)} tokens`);
+      this.log.info(`Bot has a free balance of $${formatEther(botFreeBalance)}`);
 
       // TODO: check bot's token & eth balance first and maybe deposit a bit?
       return resolve(channel);

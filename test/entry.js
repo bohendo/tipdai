@@ -107,23 +107,26 @@ const axio = axios.create({
   console.log(`\n==========\n${res}`);
   if (!res.match(/\$0.05/i)) { throw new Error(`Sender balance should have tip amount subtracted`); }
 
+  paymentId = res.match(paymentIdRegex)[1]
   res = await channel.resolveCondition({
     conditionType: 'LINKED_TRANSFER',
-    paymentId: res.match(paymentIdRegex)[1],
+    paymentId,
     preImage: res.match(secretRegex)[1],
   });
-  console.log(`\n==========\n${JSON.stringify(res)}`);
+  console.log(`\n==========\nPayment ${paymentId} redeemed externally`);
 
   res = (await axio.post(`${baseUrl}/message/public`, {
     address: sender.address ,
     message: `@${screenName} send @user $0.05`,
-    recipientId: 3,
+    recipientId: recipientUser.id,
     token: senderToken,
   })).data;
   console.log(`\n==========\n${res}`);
 
   ////////////////////////////////////////
   // Concurrency test
+  console.log(`\n==========\nBegin Concurrency Tests`);
+  await new Promise((res, rej) => setTimeout(res, 2000))
 
   const results = {};
 

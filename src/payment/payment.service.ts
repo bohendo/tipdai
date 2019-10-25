@@ -30,7 +30,7 @@ export class PaymentService {
   }
 
   public redeemPayment = async (payment: Payment): Promise<string> => {
-    this.log.info(`Redeeming payment: ${JSON.stringify(payment)}`);
+    this.log.info(`Redeeming $${payment.amount} ${payment.status} payment: ${payment.paymentId}`);
     const channel = await this.channelService.getChannel();
     const freeTokenBalance = await channel.getFreeBalance(this.channelService.tokenAddress);
     const hubFreeBalanceAddress = Object.keys(freeTokenBalance).find(
@@ -79,22 +79,22 @@ export class PaymentService {
   public updatePayment = async (payment: Payment): Promise<Payment> => {
     const channel = await this.channelService.getChannel();
     const result = await channel.getLinkedTransfer(payment.paymentId);
-    this.log.info(`Got info for payment ${payment.paymentId} from hub: ${JSON.stringify(result)}`);
+    const amount = formatEther(bigNumberify(result.amount));
+    this.log.info(`Got info for ${payment.paymentId}: status ${result.status}, amount ${amount}`);
     if (result) {
       let saveFlag = false;
       if (payment.status !== result.status) {
-        this.log.info(`Updating status of payment ${payment.paymentId} from ${payment.status} to ${result.status}`);
+        this.log.info(`Updating status of ${payment.paymentId} from ${payment.status} to ${result.status}`);
         payment.status = result.status;
         saveFlag = true;
       }
-      const amount = formatEther(bigNumberify(result.amount));
       if (payment.amount !== amount) {
-        this.log.info(`Updating amount of payment ${payment.paymentId} from ${payment.amount} to ${amount}`);
+        this.log.info(`Updating amount of ${payment.paymentId} from ${payment.amount} to ${amount}`);
         payment.amount = amount;
         saveFlag = true;
       }
       if (saveFlag) {
-        this.log.info(`Saving updated link payment: ${JSON.stringify(payment)}`);
+        this.log.debug(`Saving link payment updates`);
         await this.paymentRepo.save(payment);
       }
     } else {
@@ -105,8 +105,11 @@ export class PaymentService {
   }
 
   public createPayment = async (amount: string, recipient: User): Promise<Payment> => {
-    this.log.info(`Creating payment for ${amount}`);
     const amountBN = parseEther(amount);
+    if (amount.startsWith('-') || amountBN.lte(Zero)) {
+      throw new Error(`Cannot create payment of value <= 0: ${amount}`);
+    }
+    this.log.info(`Creating $${amount} payment for user ${recipient.id}`);
     const channel = await this.channelService.getChannel();
     const linkResult = await channel.conditionalTransfer({
       assetId: this.channelService.tokenAddress,
@@ -115,7 +118,6 @@ export class PaymentService {
       paymentId: hexlify(randomBytes(32)),
       preImage: hexlify(randomBytes(32)),
     });
-    this.log.info(`Created link transfer, result: ${JSON.stringify(linkResult, null, 2)}`);
     const payment = new Payment();
     payment.paymentId = linkResult.paymentId;
     payment.recipient = recipient;
@@ -124,10 +126,8 @@ export class PaymentService {
     payment.amount = amount;
     payment.status = 'PENDING';
     recipient.cashout = payment;
-    this.log.info(`Saving new payment`);
     await this.paymentRepo.save(payment);
-    this.log.info(`Saving updated cashout link`);
-    await this.userRepo.save(recipient);
+    this.log.info(`Saved new payment for user ${recipient.id}: ${payment.paymentId}`);
     return payment;
   }
 
@@ -171,6 +171,8 @@ export class PaymentService {
       ? await this.createPayment(formatEther(senderBalance), sender)
       : null;
     await this.userRepo.save(sender);
+    this.log.info(`Done processing deposit for user ${sender.id}, balance updated from $${cashoutAmt} to $${sender.cashout.amount}`);
+    this.log.info(`New cashout for user ${sender.id}: ${sender.cashout.paymentId}`);
     return `Link payment has been redeemed. Old balance: ${cashoutAmt}, New balance: $${sender.cashout.amount}.\n` +
       `Cashout anytime by clicking the following link:` +
       `\n\n${this.config.paymentUrl}?paymentId=${sender.cashout.paymentId}&` +

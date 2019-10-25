@@ -21,13 +21,13 @@ export class UserService {
 
   getNonce(address: string): string | undefined {
     if (!isValidHex(address, 20)) {
-      this.log.info(`Invalid Address: ${address}`);
+      this.log.warn(`Invalid Address: ${address}`);
       return 'Invalid Address';
     }
     const nonce = hexlify(randomBytes(16));
     const expiry = Date.now() + (2 * 60 * 60 * 1000);
     this.nonces[nonce] = { address, expiry };
-    this.log.info(`getNonce: Gave address ${address} a nonce that expires at ${expiry}: ${nonce}`);
+    this.log.debug(`getNonce: Gave address ${address} a nonce that expires at ${expiry}: ${nonce}`);
     return nonce;
   }
 
@@ -58,7 +58,7 @@ export class UserService {
     // Cache sig recovery calculation
     if (!this.signerCache[token]) {
       this.signerCache[token] = verifyMessage(arrayify(nonce), sig);
-      this.log.info(`Recovered signer ${this.signerCache[token]} from token ${token}`);
+      this.log.debug(`Recovered signer ${this.signerCache[token]} from token ${token}`);
     }
     const signer = this.signerCache[token];
     if (this.signerCache[token] !== address) {

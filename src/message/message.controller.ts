@@ -24,7 +24,7 @@ export class MessageController {
 
   @Post('public')
   async doPublicMessage(@Body() body: any): Promise<string> {
-    this.log.info(`Got body: ${JSON.stringify(body)}`);
+    this.log.debug(`Got body: ${JSON.stringify(body)}`);
     const { address, message, recipientId, token } = body;
     if (!address || !message || !recipientId || !token) {
       return 'Invalid Body, expected fields: address, message, recipientId, token';
@@ -32,20 +32,22 @@ export class MessageController {
     if (!isValidHex(address, 20)) {
       return 'Invalid Address, expected 20 byte hex';
     }
-    if (!this.userService.verifySig(address, token)) {
+    if (!(await this.userService.verifySig(address, token))) {
       return 'Invalid Token';
     }
-    const sender = await this.userRepo.getByAddress(address);
-    const recipient = await this.userRepo.findOne({ id: recipientId });
     return await this.queueService.enqueue(
       `Public message: ${message}`,
-      async () => this.messageService.handlePublicMessage(sender, recipient, message),
+      async () => this.messageService.handlePublicMessage(
+        await this.userRepo.getByAddress(address),
+        await this.userRepo.findOne({ id: recipientId }),
+        message,
+      ),
     );
   }
 
   @Post('private')
   async doPrivateMessage(@Body() body: any): Promise<string> {
-    this.log.info(`Got body: ${JSON.stringify(body)}`);
+    this.log.debug(`Got body: ${JSON.stringify(body)}`);
     const { address, message, token, urls } = body;
     if (!address || (!message && message !== '') || !token) {
       return 'Invalid Body, expected fields: address, message, token';
@@ -56,10 +58,13 @@ export class MessageController {
     if (!(await this.userService.verifySig(address, token))) {
       return 'Invalid Token';
     }
-    const sender = await this.userRepo.getByAddress(address);
     const response = await this.queueService.enqueue(
       `Private message: ${message}`,
-      async () => this.messageService.handlePrivateMessage(sender, message, urls || []),
+      async () => this.messageService.handlePrivateMessage(
+        await this.userRepo.getByAddress(address),
+        message,
+        urls || [],
+      ),
     );
     if (response) {
       return response.join('\n\n');

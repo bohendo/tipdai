@@ -52,6 +52,7 @@ export class TwitterService {
   }
 
   public parseTweet = async (tweet: any): Promise<any> => {
+    this.log.debug(`Parsing tweet: ${JSON.stringify(tweet)}`);
     const sender = await this.userRepo.getTwitterUser(tweet.user.id_str, tweet.user.screen_name);
     const tipInfo = tweet.text.match(tipRegex((await this.getUser()).twitterName));
     if (tipInfo && tipInfo[1]) {
@@ -72,6 +73,7 @@ export class TwitterService {
   }
 
   public parseDM = async (dm: any): Promise<any> => {
+    this.log.debug(`Parsing dm: ${JSON.stringify(dm)}`);
     const senderId = dm.message_create.sender_id;
     let sender = await this.userRepo.getByTwitterId(senderId);
     if (!sender) {

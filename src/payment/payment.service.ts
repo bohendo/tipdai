@@ -29,81 +29,6 @@ export class PaymentService {
     this.log = new Logger('PaymentService', this.config.logLevel);
   }
 
-  public redeemPayment = async (payment: Payment): Promise<string> => {
-    this.log.info(`Redeeming $${payment.amount} ${payment.status} payment: ${payment.paymentId}`);
-    const channel = await this.channelService.getChannel();
-    const freeTokenBalance = await channel.getFreeBalance(this.channelService.tokenAddress);
-    const hubFreeBalanceAddress = Object.keys(freeTokenBalance).find(
-      addr => addr.toLowerCase() !== channel.freeBalanceAddress.toLowerCase(),
-    );
-    const collateral = freeTokenBalance[hubFreeBalanceAddress];
-    this.log.info(`We've been collateralized with ${formatEther(collateral)}, need ${payment.amount}`);
-
-    // TODO: compare to default collateralization?
-    if (bigNumberify(collateral).lt(parseEther(payment.amount))) {
-      await channel.addPaymentProfile({
-        amountToCollateralize:
-          parseEther(payment.amount).sub(freeTokenBalance[hubFreeBalanceAddress]).toString(),
-        minimumMaintainedCollateral: parseEther(payment.amount).toString(),
-        assetId: this.channelService.tokenAddress,
-      });
-      await channel.requestCollateral(this.channelService.tokenAddress);
-      this.log.info(`Requested more collateral successfully`);
-    }
-
-    let redeemedAmount;
-    try {
-      const result = await channel.resolveCondition({
-        conditionType: 'LINKED_TRANSFER',
-        paymentId: payment.paymentId,
-        preImage: payment.secret,
-      });
-      this.log.debug(`Redeemed payment with result: ${JSON.stringify(result, null, 2)}`);
-      redeemedAmount = payment.amount;
-    } catch (e) {
-      if (e.message.match(/already been redeemed/i)) {
-        this.log.warn(`Failed to redeem link payment, already redeemed.`);
-        redeemedAmount = '0.0';
-      } else if (e.message.match(/has not been installed/i)) {
-        this.log.warn(`Failed to redeem link payment, node has uninstalled this app.`);
-        redeemedAmount = '0.0';
-      } else {
-        throw e;
-      }
-    }
-    payment.status = 'REDEEMED';
-    await this.paymentRepo.save(payment);
-    return redeemedAmount;
-  }
-
-  public updatePayment = async (payment: Payment): Promise<Payment> => {
-    const channel = await this.channelService.getChannel();
-    const result = await channel.getLinkedTransfer(payment.paymentId);
-    const amount = formatEther(bigNumberify(result.amount));
-    this.log.info(`Got info for ${payment.paymentId}: status ${result.status}, amount ${amount}`);
-    if (result) {
-      let saveFlag = false;
-      if (payment.status !== result.status) {
-        this.log.info(`Updating status of ${payment.paymentId} from ${payment.status} to ${result.status}`);
-        payment.status = result.status;
-        saveFlag = true;
-      }
-      if (payment.amount !== amount) {
-        this.log.info(`Updating amount of ${payment.paymentId} from ${payment.amount} to ${amount}`);
-        payment.amount = amount;
-        saveFlag = true;
-      }
-      if (saveFlag) {
-        this.log.debug(`Saving link payment updates`);
-        await this.paymentRepo.save(payment);
-      }
-    } else {
-      payment.status = 'UNKNOWN';
-      payment.amount = '0.00';
-    }
-    return payment;
-  }
-
   public createPayment = async (amount: string, recipient: User): Promise<Payment> => {
     const amountBN = parseEther(amount);
     if (amount.startsWith('-') || amountBN.lte(Zero)) {
@@ -159,7 +84,6 @@ export class PaymentService {
     if (payment.status !== 'PENDING') {
       return `Link payment not redeemable, status: ${payment.status}. Your balance: $${sender.cashout.amount}`;
     }
-
     let senderBalance = parseEther(await this.redeemPayment(payment));
     let cashoutAmt = '0.00';
     if (sender.cashout) {
@@ -179,5 +103,78 @@ export class PaymentService {
       `Cashout anytime by clicking the following link:` +
       `\n\n${this.config.paymentUrl}?paymentId=${sender.cashout.paymentId}&` +
       `secret=${sender.cashout.secret}`;
+  }
+
+  public redeemPayment = async (payment: Payment): Promise<string> => {
+    this.log.info(`Redeeming $${payment.amount} ${payment.status} payment: ${payment.paymentId}`);
+    const channel = await this.channelService.getChannel();
+    const freeTokenBalance = await channel.getFreeBalance(this.channelService.tokenAddress);
+    const hubFreeBalanceAddress = Object.keys(freeTokenBalance).find(
+      addr => addr.toLowerCase() !== channel.freeBalanceAddress.toLowerCase(),
+    );
+    const collateral = freeTokenBalance[hubFreeBalanceAddress];
+    this.log.info(`We've been collateralized with ${formatEther(collateral)}, need ${payment.amount}`);
+    // TODO: compare to default collateralization?
+    if (bigNumberify(collateral).lt(parseEther(payment.amount))) {
+      await channel.addPaymentProfile({
+        amountToCollateralize:
+          parseEther(payment.amount).sub(freeTokenBalance[hubFreeBalanceAddress]).toString(),
+        minimumMaintainedCollateral: parseEther(payment.amount).toString(),
+        assetId: this.channelService.tokenAddress,
+      });
+      await channel.requestCollateral(this.channelService.tokenAddress);
+      this.log.info(`Requested more collateral successfully`);
+    }
+    let redeemedAmount;
+    try {
+      const result = await channel.resolveCondition({
+        conditionType: 'LINKED_TRANSFER',
+        paymentId: payment.paymentId,
+        preImage: payment.secret,
+      });
+      this.log.debug(`Redeemed payment with result: ${JSON.stringify(result, null, 2)}`);
+      redeemedAmount = payment.amount;
+    } catch (e) {
+      if (e.message.match(/already been redeemed/i)) {
+        this.log.warn(`Failed to redeem link payment, already redeemed.`);
+        redeemedAmount = '0.0';
+      } else if (e.message.match(/has not been installed/i)) {
+        this.log.warn(`Failed to redeem link payment, node has uninstalled this app.`);
+        redeemedAmount = '0.0';
+      } else {
+        throw e;
+      }
+    }
+    payment.status = 'REDEEMED';
+    await this.paymentRepo.save(payment);
+    return redeemedAmount;
+  }
+
+  public updatePayment = async (payment: Payment): Promise<Payment> => {
+    const channel = await this.channelService.getChannel();
+    const result = await channel.getLinkedTransfer(payment.paymentId);
+    const amount = formatEther(bigNumberify(result.amount));
+    this.log.info(`Got info for ${payment.paymentId}: status ${result.status}, amount ${amount}`);
+    if (result) {
+      let saveFlag = false;
+      if (payment.status !== result.status) {
+        this.log.info(`Updating status of ${payment.paymentId} from ${payment.status} to ${result.status}`);
+        payment.status = result.status;
+        saveFlag = true;
+      }
+      if (payment.amount !== amount) {
+        this.log.info(`Updating amount of ${payment.paymentId} from ${payment.amount} to ${amount}`);
+        payment.amount = amount;
+        saveFlag = true;
+      }
+      if (saveFlag) {
+        this.log.debug(`Saving link payment updates`);
+        await this.paymentRepo.save(payment);
+      }
+    } else {
+      payment.status = 'UNKNOWN';
+      payment.amount = '0.00';
+    }
+    return payment;
   }
 }

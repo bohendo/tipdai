@@ -61,10 +61,12 @@ export class TipService {
       }
 
       this.log.info(`Sender old balance: ${sender.cashout.amount}`);
-      const senderBalance = (await this.payment.redeemPayment(sender.cashout)).sub(amountBN);
+      const senderBalance = formatEther(
+        parseEther(await this.payment.redeemPayment(sender.cashout)).sub(amountBN),
+      );
       this.log.info(`Sender new balance: ${senderBalance}`);
       this.log.info(`Redeemed old cashout payment`);
-      if (senderBalance.gt(Zero)) {
+      if (parseEther(senderBalance).gt(Zero)) {
         sender.cashout = await this.payment.createPayment(
           senderBalance,
           sender,

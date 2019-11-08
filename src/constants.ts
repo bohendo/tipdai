@@ -3,7 +3,7 @@ export const paymentIdRegex = /paymentId=(0x[0-9a-fA-F]{64})/;
 export const secretRegex = /secret=(0x[0-9a-fA-F]{64})/;
 
 export const tipRegex = (screenName?) =>
-  new RegExp(`.*@${screenName || 'TipDai'}.*?@([a-zA-Z0-9]*).*?[$]([0-9]+.?[0-9]{0,2})`, 'i');
+  new RegExp(`.*@${screenName || 'TipDai'}.*?@([a-zA-Z0-9]*).*?[$]([0-9]+\\.?[0-9]{0,2})`, 'i');
 
 const exampleTwitterPrivateMessage = {
   type: 'message_create',

@@ -4,6 +4,10 @@ const constants = require('../dist/constants');
 
 for (const dm of [
   {
+    msg: '@recipient @Bot @Bot send @recipient $5 please.',
+    expected: { recipient: 'recipient', amount: '5' }
+  },
+  {
     msg: '@recipient @Bot @Bot send @recipient $0.10 please.',
     expected: { recipient: 'recipient', amount: '0.10' }
   },
@@ -40,7 +44,7 @@ for (const dm of [
     throw new Error(`Expected ${dm.expected.recipient} to match ${actual[1]}`);
   }
   if (actual[2] !== dm.expected.amount) {
-    throw new Error(`Expected ${dm.expected.amount} to match ${actual[2]}`);
+    throw new Error(`Expected "${dm.expected.amount}" to match "${actual[2]}"`);
   }
 }
 

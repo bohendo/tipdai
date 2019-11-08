@@ -35,8 +35,7 @@ export class MessageService {
       this.log.info(`Improperly formatted tip, ignoring`);
       return;
     }
-    const amount = tipMatch[2].indexOf('.') === -1 ? `${tipMatch[2]}.0` : tipMatch[2];
-    const result = await this.tip.handleTip(sender, recipient, `${amount}0`, message);
+    const result = await this.tip.handleTip(sender, recipient, tipMatch[2], message);
     this.log.debug(`Got tip result: ${JSON.stringify(result)}`);
     return result;
   }

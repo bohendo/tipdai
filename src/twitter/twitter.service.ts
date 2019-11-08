@@ -55,6 +55,10 @@ export class TwitterService {
     this.log.debug(`Parsing tweet: ${JSON.stringify(tweet)}`);
     const sender = await this.userRepo.getTwitterUser(tweet.user.id_str, tweet.user.screen_name);
     const tipInfo = tweet.text.match(tipRegex((await this.getUser()).twitterName));
+    if (tweet.retweeted_status) {
+      this.log.info(`Ignoring retweet`);
+      return;
+    }
     const entities = tweet.extended_tweet ? tweet.extended_tweet : tweet.entities;
     const tweetText = tweet.extended_tweet ? tweet.extended_tweet.full_text : tweet.text;
     if (tipInfo && tipInfo[1]) {

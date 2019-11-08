@@ -35,6 +35,7 @@ export class MessageService {
       this.log.info(`Improperly formatted tip, ignoring`);
       return;
     }
+    this.log.info(`Sending $${tipMatch[2]} tip from ${sender.twitterName || sender.address} to ${recipient.twitterName || recipient.address}`);
     const result = await this.tip.handleTip(sender, recipient, tipMatch[2], message);
     this.log.debug(`Got tip result: ${JSON.stringify(result)}`);
     return result;

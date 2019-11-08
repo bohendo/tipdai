@@ -75,23 +75,19 @@ export class MessageService {
       ];
     }
 
-    if (message.match(/^balance/i) || message.match(/^refresh/i)) {
-      this.log.info(`Handling balance query`);
-      if (sender.cashout) {
-        sender.cashout = await this.payment.updatePayment(sender.cashout);
-        if (sender.cashout.status === 'PENDING') {
-          return [
-            `Balance: $${sender.cashout.amount}. Cashout anytime by clicking the following link:\n\n` +
-            `${this.config.paymentUrl}?paymentId=${sender.cashout.paymentId}&secret=${sender.cashout.secret}`,
-          ];
-        }
+    this.log.info(`Default: handling balance query`);
+    if (sender.cashout) {
+      sender.cashout = await this.payment.updatePayment(sender.cashout);
+      if (sender.cashout.status === 'PENDING') {
+        return [
+          `Balance: $${sender.cashout.amount}. Cashout anytime by clicking the following link:\n\n` +
+          `${this.config.paymentUrl}?paymentId=${sender.cashout.paymentId}&secret=${sender.cashout.secret}`,
+        ];
       }
-      return [
-        `Your balance is $0.00. Send a link payment (generated from rinkeby.daicard.io) to get started.`,
-      ];
     }
-
-    this.log.info(`idk what to do with this: ${message}`);
+    return [
+      `Your balance is $0.00. Send a link payment (generated from rinkeby.daicard.io) to get started.`,
+    ];
   }
 
 }

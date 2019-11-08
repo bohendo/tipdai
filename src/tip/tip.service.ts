@@ -43,19 +43,19 @@ export class TipService {
       if (!sender.cashout) {
         this.log.info(`Sender balance $0.00 (no deposits) is less than tip amount of ${amount}`);
         return `You don't have a high enough balance to send a $${amount} tip, ` +
-        `DM me a link payment to increase your balance & then try again.`;
+          `DM me a link payment to increase your balance & then try again.`;
       }
 
       if (sender.cashout.status !== 'PENDING') {
         this.log.info(`Sender balance $0.00 (prev cashout of $${sender.cashout.amount} ${sender.cashout.status}) is lower than tip amount of ${amount}`);
         return `You don't have a high enough balance to send a $${amount} tip, ` +
-        `DM me a link payment to increase your balance & then try again.`;
+          `DM me a link payment to increase your balance & then try again.`;
       }
 
       if (parseEther(sender.cashout.amount).lt(amountBN)) {
         this.log.info(`Sender balance $${sender.cashout.amount} is lower than tip amount of ${amount}`);
         return `You don't have a high enough balance to send a $${amount} tip, ` +
-        `DM me a link payment to increase your balance & then try again.`;
+          `DM me a link payment to increase your balance & then try again.`;
       }
 
       this.log.info(`Sender old balance: ${sender.cashout.amount}`);
@@ -82,7 +82,7 @@ export class TipService {
       await this.userRepo.save(recipient);
       this.log.info(`Saved new recipient data`);
 
-      return `Success! A tip of $${amount} has been transfered. @XXX, you can tip someone else (use the tweet pattern mentioned in my bio) or DM me "balance" to cashout.`;
+      return `Success! A tip of $${amount} has been transfered. @${recipient.twitterName}, you can now tip someone else (use the tweet pattern mentioned in my bio) or DM me "balance" to cashout.`;
 
     } catch (e) {
       this.log.info(`Failed to handling tip: ${e}`);

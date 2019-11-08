@@ -30,16 +30,13 @@ export class MessageService {
     recipient: User,
     message: string,
   ): Promise<string | undefined> => {
-    const tipInfo = message.match(tipRegex());
-    if (!tipInfo || !tipInfo[2]) {
+    const tipMatch = message.match(tipRegex());
+    if (!tipMatch || !tipMatch[2]) {
       this.log.info(`Improperly formatted tip, ignoring`);
       return;
     }
-    let result = await this.tip.handleTip(sender, recipient, tipInfo[2], message);
+    const result = await this.tip.handleTip(sender, recipient, tipMatch[2], message);
     this.log.debug(`Got tip result: ${JSON.stringify(result)}`);
-    if (result.indexOf('XXX') !== -1) {
-      result = result.replace('XXX', tipInfo[1]);
-    }
     return result;
   }
 

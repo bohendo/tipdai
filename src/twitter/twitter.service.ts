@@ -58,10 +58,10 @@ export class TwitterService {
       return;
     }
     const sender = await this.userRepo.getTwitterUser(tweet.user.id_str, tweet.user.screen_name);
-    const tipInfo = tweet.text.match(tipRegex((await this.getUser()).twitterName));
     this.log.debug(`Got tipInfo ${JSON.stringify(tipInfo)}`);
     const entities = tweet.extended_tweet ? tweet.extended_tweet : tweet.entities;
     const tweetText = tweet.extended_tweet ? tweet.extended_tweet.full_text : tweet.text;
+    const tipInfo = tweetText.match(tipRegex((await this.getUser()).twitterName));
     if (tipInfo && tipInfo[1]) {
       try {
         this.log.debug(`Trying to tip..`);

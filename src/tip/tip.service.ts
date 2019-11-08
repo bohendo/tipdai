@@ -25,35 +25,36 @@ export class TipService {
 
   public handleTip = async (sender: User, recipient: User, amount: string, message: string): Promise<string> => {
     const amountBN = parseEther(amount);
+    this.log.info(`Handling tip from ${sender.twitterId} to ${recipient.twitterId} amount ${amount}`);
+    const newTip = new Tip();
+    newTip.message = message;
+    newTip.sender = sender;
+    newTip.recipient = recipient;
+    newTip.amount = amount;
+    newTip.result = 'PROCESSING';
+    await this.tipRepo.save(newTip);
     try {
-      this.log.info(`Handling tip from ${sender.twitterId} to ${recipient.twitterId} amount ${amount}`);
-
-      const newTip = new Tip();
-      newTip.message = message;
-      newTip.sender = sender;
-      newTip.recipient = recipient;
-      newTip.amount = amount;
-      newTip.result = 'PROCESSING';
-      await this.tipRepo.save(newTip);
-
       if (sender.cashout) {
         sender.cashout = await this.payment.updatePayment(sender.cashout);
       }
-
       if (!sender.cashout) {
         this.log.info(`Sender balance $0.00 (no deposits) is less than tip amount of ${amount}`);
+        newTip.result = 'INSUFFICIENT_BALANCE';
+        await this.tipRepo.save(newTip);
         return `You don't have a high enough balance to send a $${amount} tip, ` +
           `DM me a link payment to increase your balance & then try again.`;
       }
-
       if (sender.cashout.status !== 'PENDING') {
         this.log.info(`Sender balance $0.00 (prev cashout of $${sender.cashout.amount} ${sender.cashout.status}) is lower than tip amount of ${amount}`);
+        newTip.result = 'INSUFFICIENT_BALANCE';
+        await this.tipRepo.save(newTip);
         return `You don't have a high enough balance to send a $${amount} tip, ` +
           `DM me a link payment to increase your balance & then try again.`;
       }
-
       if (parseEther(sender.cashout.amount).lt(amountBN)) {
         this.log.info(`Sender balance $${sender.cashout.amount} is lower than tip amount of ${amount}`);
+        newTip.result = 'INSUFFICIENT_BALANCE';
+        await this.tipRepo.save(newTip);
         return `You don't have a high enough balance to send a $${amount} tip, ` +
           `DM me a link payment to increase your balance & then try again.`;
       }
@@ -69,7 +70,6 @@ export class TipService {
       this.log.info(`Gave sender new cashout payment`);
       await this.userRepo.save(sender);
       this.log.info(`Saved new sender data`);
-
       this.log.info(`Recipient old balance: $${recipient.cashout ? recipient.cashout.amount : '0.00'}`);
       let recipientBalance = amount;
       if (recipient.cashout) {
@@ -81,11 +81,15 @@ export class TipService {
       this.log.info(`Gave recipient new cashout payment`);
       await this.userRepo.save(recipient);
       this.log.info(`Saved new recipient data`);
-
-      return `Success! A tip of $${amount} has been transfered. @${recipient.twitterName}, you can now tip someone else (use the tweet pattern mentioned in my bio) or DM me "balance" to cashout.`;
-
+      newTip.result = 'SUCCESS';
+      await this.tipRepo.save(newTip);
+      return `Success! A tip of $${amount} has been transfered.\n\n` +
+        `@${recipient.twitterName}, you can now send tips or DM me to cashout.\n\n` +
+        `@${sender.twitterName}, your old cashout link has been redeemed, DM me for a new one`;
     } catch (e) {
       this.log.info(`Failed to handling tip: ${e}`);
+      newTip.result = `ERROR: ${e.message}`;
+      await this.tipRepo.save(newTip);
       return `Oops something went wrong, it was probably my fault. Hey @bohendo, can you fix me?`;
     }
   }

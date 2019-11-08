@@ -58,7 +58,7 @@ export class TwitterService {
       return;
     }
     const sender = await this.userRepo.getTwitterUser(tweet.user.id_str, tweet.user.screen_name);
-    const entities = tweet.extended_tweet ? tweet.extended_tweet : tweet.entities;
+    const entities = tweet.extended_tweet ? tweet.extended_tweet.entities : tweet.entities;
     const tweetText = tweet.extended_tweet ? tweet.extended_tweet.full_text : tweet.text;
     const tipInfo = tweetText.match(tipRegex((await this.getUser()).twitterName));
     this.log.debug(`Got tipInfo ${JSON.stringify(tipInfo)}`);

@@ -83,7 +83,7 @@ export class TwitterService {
     }
     let message = dm.message_create.message_data.text;
     dm.message_create.message_data.entities.urls.forEach(url => {
-      message = message.replace(url.display_url, url.expanded_url);
+      message = message.replace(url.url, url.expanded_url);
     });
     const responses = await this.message.handlePrivateMessage(sender, message);
     if (responses && responses.length) {

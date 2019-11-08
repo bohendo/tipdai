@@ -53,16 +53,18 @@ export class TwitterService {
 
   public parseTweet = async (tweet: any): Promise<any> => {
     this.log.debug(`Parsing tweet: ${JSON.stringify(tweet)}`);
-    const sender = await this.userRepo.getTwitterUser(tweet.user.id_str, tweet.user.screen_name);
-    const tipInfo = tweet.text.match(tipRegex((await this.getUser()).twitterName));
     if (tweet.retweeted_status) {
       this.log.info(`Ignoring retweet`);
       return;
     }
+    const sender = await this.userRepo.getTwitterUser(tweet.user.id_str, tweet.user.screen_name);
+    const tipInfo = tweet.text.match(tipRegex((await this.getUser()).twitterName));
+    this.log.debug(`Got tipInfo ${JSON.stringify(tipInfo)}`);
     const entities = tweet.extended_tweet ? tweet.extended_tweet : tweet.entities;
     const tweetText = tweet.extended_tweet ? tweet.extended_tweet.full_text : tweet.text;
     if (tipInfo && tipInfo[1]) {
       try {
+        this.log.debug(`Trying to tip..`);
         const recipientUser = entities.user_mentions.find(
           user => user.screen_name === tipInfo[1],
         );

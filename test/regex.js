@@ -2,6 +2,10 @@ const constants = require('../dist/constants');
 
 for (const dm of [
   {
+    msg: '@recipient @TipDai @TipDai send @recipient_ $5 please.',
+    expected: { recipient: 'recipient_', amount: '5' }
+  },
+  {
     msg: '@nanexcool @antiprosynth Well get there indeed.\n\nHeres a bit of testnet dai to give you a taste of a future where people might give a fuck about Dai w/out leaving the comfort of Twitter.\n\n@TipDai give @nanexcool $1 please.',
     expected: { recipient: 'nanexcool', amount: '1' }
   },

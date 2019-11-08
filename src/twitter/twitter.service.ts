@@ -55,14 +55,15 @@ export class TwitterService {
     this.log.debug(`Parsing tweet: ${JSON.stringify(tweet)}`);
     const sender = await this.userRepo.getTwitterUser(tweet.user.id_str, tweet.user.screen_name);
     const tipInfo = tweet.text.match(tipRegex((await this.getUser()).twitterName));
+    const entities = tweet.extended_tweet ? tweet.extended_tweet : tweet.entities;
+    const tweetText = tweet.extended_tweet ? tweet.extended_tweet.full_text : tweet.text;
     if (tipInfo && tipInfo[1]) {
       try {
-        const entities = tweet.extended_tweet ? tweet.extended_tweet : tweet.entities;
         const recipientUser = entities.user_mentions.find(
           user => user.screen_name === tipInfo[1],
         );
         const recipient = await this.userRepo.getTwitterUser(recipientUser.id_str, tipInfo[1]);
-        const response = await this.message.handlePublicMessage(sender, recipient, tweet.text);
+        const response = await this.message.handlePublicMessage(sender, recipient, tweetText);
         if (response) {
           await this.tweet(
            `@${tweet.user.screen_name} ${response}`,
@@ -77,7 +78,7 @@ export class TwitterService {
         );
       }
     } else {
-      this.log.info(`Tweet isn't a well formatted tip, ignoring: ${tweet.text}`);
+      this.log.info(`Tweet isn't a well formatted tip, ignoring: ${tweetText}`);
     }
   }
 

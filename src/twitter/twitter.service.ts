@@ -78,7 +78,7 @@ export class TwitterService {
     let sender = await this.userRepo.getTwitterUser(senderId);
     if (!sender || !sender.twitterName) {
       const twitterUser = await this.getUserById(senderId);
-      this.log.info(`twitterUser: ${JSON.stringify(twitterUser)}`);
+      this.log.debug(`twitterUser: ${JSON.stringify(twitterUser)}`);
       sender = await this.userRepo.getTwitterUser(senderId, twitterUser.screen_name);
     }
     const responses = await this.message.handlePrivateMessage(

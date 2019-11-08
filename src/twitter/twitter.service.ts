@@ -81,11 +81,11 @@ export class TwitterService {
       this.log.debug(`twitterUser: ${JSON.stringify(twitterUser)}`);
       sender = await this.userRepo.getTwitterUser(senderId, twitterUser.screen_name);
     }
-    const responses = await this.message.handlePrivateMessage(
-      sender,
-      dm.message_create.message_data.text,
-      dm.message_create.message_data.entities.urls.map(url => url.expanded_url),
-    );
+    let message = dm.message_create.message_data.text;
+    dm.message_create.message_data.entities.urls.forEach(url => {
+      message = message.replace(url.display_url, url.expanded_url);
+    });
+    const responses = await this.message.handlePrivateMessage(sender, message);
     if (responses && responses.length) {
       responses.forEach(
         async response => await this.sendDM(dm.message_create.sender_id, response),

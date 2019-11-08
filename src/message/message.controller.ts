@@ -61,7 +61,6 @@ export class MessageController {
       async () => this.messageService.handlePrivateMessage(
         await this.userRepo.getAddressUser(address),
         message,
-        urls || [],
       ),
     );
     if (response) {

@@ -58,9 +58,8 @@ const axio = axios.create({
 
   res = (await axio.post(`${baseUrl}/message/private`, {
     address: sender.address ,
-    message: ``,
+    message: `${baseUrl}/redeem?paymentId=${paymentIds[0]}&secret=${secrets[0]}`,
     token: senderToken,
-    urls: [`${baseUrl}/redeem?paymentId=${paymentIds[0]}&secret=${secrets[0]}`],
   })).data;
   console.log(`\n==========\n${res}`);
   if (!res.match(/has been redeemed/i)) { throw new Error(`Deposit should be accepted`); }
@@ -132,16 +131,14 @@ const axio = axios.create({
 
   results.depositOne = axio.post(`${baseUrl}/message/private`, {
     address: sender.address ,
-    message: ``,
+    message: `${baseUrl}/redeem?paymentId=${paymentIds[1]}&secret=${secrets[1]}`,
     token: senderToken,
-    urls: [`${baseUrl}/redeem?paymentId=${paymentIds[1]}&secret=${secrets[1]}`],
   });
 
   results.depositTwo = axio.post(`${baseUrl}/message/private`, {
     address: sender.address ,
-    message: ``,
+    message: `${baseUrl}/redeem?paymentId=${paymentIds[2]}&secret=${secrets[2]}`,
     token: senderToken,
-    urls: [`${baseUrl}/redeem?paymentId=${paymentIds[2]}&secret=${secrets[2]}`],
   });
 
   results.tipOne = axio.post(`${baseUrl}/message/public`, {

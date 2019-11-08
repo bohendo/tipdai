@@ -30,7 +30,6 @@ export class MessageService {
     recipient: User,
     message: string,
   ): Promise<string | undefined> => {
-    if (sender.twitterId === this.config.twitterBotUserId) { return; }
     const tipInfo = message.match(tipRegex());
     if (!tipInfo || !tipInfo[2]) {
       this.log.info(`Improperly formatted tip, ignoring`);
@@ -47,16 +46,16 @@ export class MessageService {
   public handlePrivateMessage = async (
     sender: User,
     message: string,
-    messageUrls?: string[],
   ): Promise<string[] | undefined> => {
-    if (sender.twitterId === this.config.twitterBotUserId) { return; }
-    const messageUrl = messageUrls && messageUrls.length ? messageUrls[0] : undefined;
-
-    if (messageUrl && messageUrl.match(paymentIdRegex) && messageUrl.match(secretRegex)) {
-      return [await this.payment.depositPayment(messageUrl, sender)];
+    const paymentIdMatch = message.match(paymentIdRegex);
+    const secretMatch = message.match(secretRegex);
+    if (paymentIdMatch && paymentIdMatch[1] && secretMatch && secretMatch[1]) {
+      this.log.info(`Handling link payment`);
+      return [await this.payment.depositPayment(sender, paymentIdMatch[1], secretMatch[1])];
     }
 
     if (false && message.match(/^deposit/i)) {
+      this.log.info(`Handling deposit request`);
       const depositAddress = await this.deposit.newDeposit(sender);
       return [
         `Send up to 30 DAI worth of rinkeby ETH to the following address to deposit. ` +
@@ -67,6 +66,7 @@ export class MessageService {
     }
 
     if (false && message.match(/^wait/i)) {
+      this.log.info(`Handling deposit delay request`);
       const depositAddress = await this.deposit.delayDeposit(sender);
       if (!depositAddress) {
         return [`No deposit found, reply with "deposit" to start a deposit.`];
@@ -79,6 +79,7 @@ export class MessageService {
     }
 
     if (message.match(/^balance/i) || message.match(/^refresh/i)) {
+      this.log.info(`Handling balance query`);
       if (sender.cashout) {
         sender.cashout = await this.payment.updatePayment(sender.cashout);
         if (sender.cashout.status === 'PENDING') {
@@ -92,6 +93,8 @@ export class MessageService {
         `Your balance is $0.00. Send a link payment (generated from rinkeby.daicard.io) to get started.`,
       ];
     }
+
+    this.log.info(`idk what to do with this: ${message}`);
   }
 
 }

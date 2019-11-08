@@ -131,10 +131,12 @@ export class PaymentService {
     return payment;
   }
 
-  public depositPayment = async (linkPayment: string, sender: User): Promise<string> => {
+  public depositPayment = async (
+    sender: User,
+    paymentId: string,
+    secret: string,
+  ): Promise<string> => {
     const channel = await this.channelService.getChannel();
-    const paymentId = linkPayment.match(paymentIdRegex)[0].replace('paymentId=', '');
-    const secret = linkPayment.match(secretRegex)[0].replace('secret=', '');
     let payment = await this.paymentRepo.findByPaymentId(paymentId);
     if (payment) {
       payment = await this.updatePayment(payment);
@@ -173,7 +175,7 @@ export class PaymentService {
     await this.userRepo.save(sender);
     this.log.info(`Done processing deposit for user ${sender.id}, balance updated from $${cashoutAmt} to $${sender.cashout.amount}`);
     this.log.info(`New cashout for user ${sender.id}: ${sender.cashout.paymentId}`);
-    return `Link payment has been redeemed. Old balance: ${cashoutAmt}, New balance: $${sender.cashout.amount}.\n` +
+    return `Link payment has been redeemed!\nOld balance: $${cashoutAmt}\nNew balance: $${sender.cashout.amount}.\n` +
       `Cashout anytime by clicking the following link:` +
       `\n\n${this.config.paymentUrl}?paymentId=${sender.cashout.paymentId}&` +
       `secret=${sender.cashout.secret}`;

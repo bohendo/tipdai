@@ -32,18 +32,11 @@ export class ChannelService {
         this.log.info(`Got swap rate upate: ${oldRate} -> ${this.swapRate}`);
       });
 
-      // Wait for channel to be available
-      const channelIsAvailable = async () => {
-        const chan = await channel.getChannel();
-        return chan && chan.available;
-      };
-      while (!(await channelIsAvailable())) {
-        await new Promise(res => setTimeout(() => res(), 1000));
-      }
+      await channel.isAvailable();
 
       this.log.info(`Successfully connected to state channel!`);
       this.log.info(channel.publicIdentifier);
-      this.log.info(` - Account multisig address: ${channel.opts.multisigAddress}`);
+      this.log.info(` - Account multisig address: ${channel.multisigAddress}`);
       this.log.info(` - Free balance address: ${channel.freeBalanceAddress}`);
       this.log.info(` - Token address: ${this.tokenAddress}`);
       this.log.info(` - Swap rate: ${this.swapRate}`);
@@ -53,8 +46,10 @@ export class ChannelService {
       } catch (e) {
         if (e.message.includes('StateChannel does not exist yet')) {
           this.log.info(`State channel state is missing, attempting to restore..`);
-          await channel.restoreStateFromNode(this.config.wallet.mnemonic);
+          await channel.restoreState('TODO: remove this string');
           this.log.info(`State successfully restored!`);
+        } else {
+          throw new Error(e);
         }
       }
 

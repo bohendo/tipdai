@@ -1,6 +1,12 @@
 const constants = require('../dist/constants');
 
+
+
 for (const dm of [
+  {
+    msg: '@recipient @Bot @Bot send @recipient $0.10 please.',
+    expected: { recipient: 'recipient', amount: '0.10' }
+  },
   {
     msg: '@Bot Hi, send @recipient (not @invalid) some money: $0.101.',
     expected: { recipient: 'recipient', amount: '0.10' }

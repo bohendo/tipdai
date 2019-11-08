@@ -64,7 +64,7 @@ const axio = axios.create({
     token: senderToken,
   })).data;
   console.log(`\n==========\n${res}`);
-  if (!res.match(/has been redeemed/i)) { throw new Error(`Deposit should be accepted`); }
+  if (!res.match(/success/i)) { throw new Error(`Deposit should be accepted`); }
 
   res = (await axio.post(`${baseUrl}/message/private`, {
     address: sender.address ,

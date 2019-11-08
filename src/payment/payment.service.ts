@@ -99,9 +99,11 @@ export class PaymentService {
     await this.userRepo.save(sender);
     this.log.info(`Done processing deposit for user ${sender.id}, balance updated from $${cashoutAmt} to $${sender.cashout.amount}`);
     this.log.info(`New cashout for user ${sender.id}: ${sender.cashout.paymentId}`);
-    return `Link payment has been redeemed!\nOld balance: $${cashoutAmt}\nNew balance: $${sender.cashout.amount}.\n` +
-      `Cashout anytime by clicking the following link:` +
-      `\n\n${this.config.paymentUrl}?paymentId=${sender.cashout.paymentId}&` +
+    return `Successfully redeemed $${payment.amount} link payment!\n` +
+      `Old balance: $${cashoutAmt}\n` +
+      `New balance: $${sender.cashout.amount}\n` +
+      `Cashout anytime by clicking the following link:\n\n` +
+      `${this.config.paymentUrl}?paymentId=${sender.cashout.paymentId}&` +
       `secret=${sender.cashout.secret}`;
   }
 

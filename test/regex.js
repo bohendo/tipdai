@@ -2,6 +2,10 @@ const constants = require('../dist/constants');
 
 for (const dm of [
   {
+    msg: '@Bot Hi, send @recipient (not @invalid) some money: $0.101.',
+    expected: { recipient: 'recipient', amount: '0.10' }
+  },
+  {
     msg: '@Bot Hi, send @recipient (not @invalid) some money: $0.10.',
     expected: { recipient: 'recipient', amount: '0.10' }
   },
@@ -34,4 +38,4 @@ for (const dm of [
   }
 }
 
-console.log(`Tests Passed :)`);
+console.log(`Regex tests Passed :)`);

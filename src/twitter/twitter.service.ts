@@ -56,14 +56,23 @@ export class TwitterService {
     const sender = await this.userRepo.getTwitterUser(tweet.user.id_str, tweet.user.screen_name);
     const tipInfo = tweet.text.match(tipRegex((await this.getUser()).twitterName));
     if (tipInfo && tipInfo[1]) {
-      const recipientUser = tweet.extended_tweet.entities.user_mentions.find(
-        user => user.screen_name === tipInfo[1],
-      );
-      const recipient = await this.userRepo.getTwitterUser(recipientUser.id_str, tipInfo[1]);
-      const response = await this.message.handlePublicMessage(sender, recipient, tweet.text);
-      if (response) {
+      try {
+        const entities = tweet.extended_tweet ? tweet.extended_tweet : tweet.entities;
+        const recipientUser = entities.user_mentions.find(
+          user => user.screen_name === tipInfo[1],
+        );
+        const recipient = await this.userRepo.getTwitterUser(recipientUser.id_str, tipInfo[1]);
+        const response = await this.message.handlePublicMessage(sender, recipient, tweet.text);
+        if (response) {
+          await this.tweet(
+           `@${tweet.user.screen_name} ${response}`,
+            tweet.id_str,
+          );
+        }
+      } catch (e) {
+        this.log.error(e);
         await this.tweet(
-         `@${tweet.user.screen_name} ${response}`,
+         `@${tweet.user.screen_name} Oh no, something went wrong. @bohendo can you please fix me?`,
           tweet.id_str,
         );
       }

@@ -36,7 +36,6 @@ export class MessageController {
       return 'Invalid Token';
     }
     return await this.queueService.enqueue(
-      `Public message: ${message}`,
       async () => this.messageService.handlePublicMessage(
         await this.userRepo.getAddressUser(address),
         await this.userRepo.findOne({ id: recipientId }),
@@ -59,7 +58,6 @@ export class MessageController {
       return 'Invalid Token';
     }
     const response = await this.queueService.enqueue(
-      `Private message: ${message}`,
       async () => this.messageService.handlePrivateMessage(
         await this.userRepo.getAddressUser(address),
         message,

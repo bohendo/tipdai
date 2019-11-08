@@ -41,17 +41,15 @@ export class WebhooksController {
     this.log.debug(`Got twitter events: ${JSON.stringify(keys)}`);
 
     if (body.tweet_create_events) {
-      body.tweet_create_events.forEach(tweet => this.queueService.enqueue(
-        `Tweet`,
-        async () => this.twitter.parseTweet(tweet),
-      ));
+      body.tweet_create_events.forEach(tweet => {
+        this.queueService.enqueue(async () => this.twitter.parseTweet(tweet));
+      });
     }
 
     if (body.direct_message_events) {
-      body.direct_message_events.forEach(dm => this.queueService.enqueue(
-        `Twitter DM`,
-        async () => this.twitter.parseDM(dm),
-      ));
+      body.direct_message_events.forEach(dm => {
+        this.queueService.enqueue(async () => this.twitter.parseDM(dm));
+      });
     }
 
   }

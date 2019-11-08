@@ -17,7 +17,7 @@ export class QueueService {
     this.log = new Logger('QueueService', this.config.logLevel);
   }
 
-  public enqueue = (label: string, callback: any): Promise<any> => {
+  public enqueue = (callback: any): Promise<any> => {
     return new Promise((resolve: any, reject: any): any => {
       const action = new Action(callback);
       action.once('resolve', resolve);

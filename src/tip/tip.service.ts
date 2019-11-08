@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import { Zero } from 'ethers/constants';
 import { formatEther, parseEther } from 'ethers/utils';
 
 import { ConfigService } from '../config/config.service';
@@ -60,16 +61,18 @@ export class TipService {
       }
 
       this.log.info(`Sender old balance: ${sender.cashout.amount}`);
-      const senderBalance = parseEther(await this.payment.redeemPayment(sender.cashout));
-      this.log.info(`Sender new balance: ${formatEther(senderBalance.sub(amountBN))}`);
+      const senderBalance = (await this.payment.redeemPayment(sender.cashout)).sub(amountBN);
+      this.log.info(`Sender new balance: ${senderBalance}`);
       this.log.info(`Redeemed old cashout payment`);
-      sender.cashout = await this.payment.createPayment(
-        formatEther(senderBalance.sub(amountBN)),
-        sender,
-      );
-      this.log.info(`Gave sender new cashout payment`);
-      await this.userRepo.save(sender);
-      this.log.info(`Saved new sender data`);
+      if (senderBalance.gt(Zero)) {
+        sender.cashout = await this.payment.createPayment(
+          senderBalance,
+          sender,
+        );
+        this.log.info(`Gave sender new cashout payment`);
+        await this.userRepo.save(sender);
+        this.log.info(`Saved new sender data`);
+      }
       this.log.info(`Recipient old balance: $${recipient.cashout ? recipient.cashout.amount : '0.00'}`);
       let recipientBalance = amount;
       if (recipient.cashout) {

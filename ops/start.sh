@@ -18,6 +18,7 @@ TIPDAI_DOMAINNAME="${TIPDAI_DOMAINNAME:-localhost}"
 TIPDAI_EMAIL="${TIPDAI_EMAIL:-noreply@gmail.com}" # for notifications when ssl certs expire
 TIPDAI_ETH_PROVIDER="${TIPDAI_ETH_PROVIDER:-http://localhost:8545}"
 TIPDAI_MODE="${TIPDAI_MODE:-development}"
+TIPDAI_LOG_LEVEL="${TIPDAI_LOG_LEVEL:-3}"
 TIPDAI_PAYMENT_HUB="${TIPDAI_PAYMENT_HUB:-nats://localhost:4222}"
 TIPDAI_PAYMENT_URL="${TIPDAI_PAYMENT_URL:-http://localhost}"
 TIPDAI_TWITTER_APP_ACCESS_SECRET="${TIPDAI_TWITTER_APP_ACCESS_SECRET}"
@@ -35,7 +36,6 @@ TIPDAI_TWITTER_WEBHOOK_ID="${TIPDAI_TWITTER_WEBHOOK_ID}"
 ####################
 # Internal Config
 
-log_level="3" # set to 5 for all logs or to 0 for none
 version=latest
 
 ####################
@@ -179,6 +179,7 @@ services:
     image: $bot_image
     environment:
       ETH_PROVIDER: $TIPDAI_ETH_PROVIDER
+      LOG_LEVEL: $TIPDAI_LOG_LEVEL
       MNEMONIC_FILE: /run/secrets/$mnemonic
       NODE_ENV: $TIPDAI_MODE
       PAYMENT_HUB: $TIPDAI_PAYMENT_HUB

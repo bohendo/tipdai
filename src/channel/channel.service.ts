@@ -41,18 +41,6 @@ export class ChannelService {
       this.log.info(` - Token address: ${this.tokenAddress}`);
       this.log.info(` - Swap rate: ${this.swapRate}`);
 
-      try {
-        await channel.getFreeBalance(this.tokenAddress);
-      } catch (e) {
-        if (e.message.includes('StateChannel does not exist yet')) {
-          this.log.info(`State channel state is missing, attempting to restore..`);
-          await channel.restoreState('TODO: remove this string');
-          this.log.info(`State successfully restored!`);
-        } else {
-          throw new Error(e);
-        }
-      }
-
       await channel.addPaymentProfile({
         amountToCollateralize: parseEther('10').toString(),
         minimumMaintainedCollateral: parseEther('5').toString(),

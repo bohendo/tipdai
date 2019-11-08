@@ -2,7 +2,6 @@ import * as crypto from 'crypto';
 import { Body, Controller, Get, Post, Query } from '@nestjs/common';
 
 import { ConfigService } from '../config/config.service';
-import { tipRegex } from '../constants';
 import { QueueService } from '../queue/queue.service';
 import { TwitterService } from '../twitter/twitter.service';
 import { UserRepository } from '../user/user.repository';

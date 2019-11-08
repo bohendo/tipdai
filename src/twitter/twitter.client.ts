@@ -141,7 +141,7 @@ export class Twitter {
   // Private Methods
 
   _get = (url: string): Promise<any> => {
-    this.log.info(`GET URL: ${url}`);
+    this.log.debug(`GET URL: ${url}`);
     return new Promise((resolve, reject) => {
       this.oauth.get(url, this.accessToken, this.accessSecret, (
         err: OAuthError,
@@ -164,7 +164,7 @@ export class Twitter {
   }
 
   _post = (url: string, data: any = {}): Promise<any> => {
-    this.log.info(`POST URL: ${url}`);
+    this.log.debug(`POST URL: ${url}`);
     return new Promise((resolve, reject) => {
       this.oauth.post(url, this.accessToken, this.accessSecret, data, 'application/json', (
         err: OAuthError,
@@ -187,7 +187,7 @@ export class Twitter {
   }
 
   _put = (url: string, data: any = {}): Promise<any> => {
-    this.log.info(`PUT URL: ${url}`);
+    this.log.debug(`PUT URL: ${url}`);
     return new Promise((resolve, reject) => {
       this.oauth.put(url, this.accessToken, this.accessSecret, data, 'application/json', (
         err: OAuthError,
@@ -210,7 +210,7 @@ export class Twitter {
   }
 
   _delete = (url: string): Promise<any> => {
-    this.log.info(`DEL URL: ${url}`);
+    this.log.debug(`DEL URL: ${url}`);
     return new Promise((resolve, reject) => {
       this.oauth.delete(url, this.accessToken, this.accessSecret, (
         err: OAuthError,

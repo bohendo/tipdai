@@ -75,7 +75,7 @@ export class TwitterService {
   public parseDM = async (dm: any): Promise<any> => {
     this.log.debug(`Parsing dm: ${JSON.stringify(dm)}`);
     const senderId = dm.message_create.sender_id;
-    let sender = await this.userRepo.getByTwitterId(senderId);
+    let sender = await this.userRepo.getTwitterUser(senderId);
     if (!sender) {
       const twitterUser = await this.getUserById(senderId);
       this.log.info(`twitterUser: ${JSON.stringify(twitterUser)}`);

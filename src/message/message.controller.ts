@@ -38,7 +38,7 @@ export class MessageController {
     return await this.queueService.enqueue(
       `Public message: ${message}`,
       async () => this.messageService.handlePublicMessage(
-        await this.userRepo.getByAddress(address),
+        await this.userRepo.getAddressUser(address),
         await this.userRepo.findOne({ id: recipientId }),
         message,
       ),
@@ -61,7 +61,7 @@ export class MessageController {
     const response = await this.queueService.enqueue(
       `Private message: ${message}`,
       async () => this.messageService.handlePrivateMessage(
-        await this.userRepo.getByAddress(address),
+        await this.userRepo.getAddressUser(address),
         message,
         urls || [],
       ),

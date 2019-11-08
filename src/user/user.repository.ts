@@ -5,26 +5,27 @@ import { User } from './user.entity';
 @EntityRepository(User)
 export class UserRepository extends Repository<User> {
 
-  async getByAddress(address: string): Promise<User> {
+  async getAddressUser(address: string): Promise<User> {
     let user = await this.findOne({ where: { address } });
     if (!user) {
-      user = new User();
-      user.address = address;
+      user = await this.create({ address });
       await this.save(user);
     }
     return user;
   }
 
-  async getByTwitterId(twitterId: string): Promise<User> {
-    return this.findOne({ where: { twitterId } });
-  }
-
-  async getTwitterUser(twitterId: string, twitterName: string): Promise<User> {
-    let user = await this.findOne({ where: { twitterId, twitterName } });
+  async getTwitterUser(twitterId: string, twitterName?: string): Promise<User> {
+    let user = await this.findOne({ where: { twitterId } });
+    let shouldSave = false;
     if (!user) {
-      user = new User();
-      user.twitterId = twitterId;
+      user = await this.create({ twitterId });
+      shouldSave = true;
+    }
+    if (twitterName && !user.twitterName) {
       user.twitterName = twitterName;
+      shouldSave = true;
+    }
+    if (shouldSave) {
       await this.save(user);
     }
     return user;

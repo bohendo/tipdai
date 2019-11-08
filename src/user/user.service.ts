@@ -64,7 +64,7 @@ export class UserService {
     if (this.signerCache[token] !== address) {
       return this.badToken(`Bad sig for ${nonce}: Got ${this.signerCache[token]}, expected ${address}`);
     }
-    return await this.userRepo.getByAddress(givenAddress);
+    return await this.userRepo.getAddressUser(givenAddress);
   }
 
   private badToken(warning: string): boolean {

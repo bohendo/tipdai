@@ -25,7 +25,7 @@ export class PaymentService {
     private readonly paymentRepo: PaymentRepository,
     private readonly userRepo: UserRepository,
   ) {
-    this.botUser = this.userRepo.getByTwitterId(this.config.twitterBotUserId);
+    this.botUser = this.userRepo.getTwitterUser(this.config.twitterBotUserId);
     this.log = new Logger('PaymentService', this.config.logLevel);
   }
 

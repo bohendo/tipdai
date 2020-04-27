@@ -15,6 +15,7 @@
   },
   "dependencies": {
     "@connext/client": "6.1.0",
+    "@connext/store": "6.1.0",
     "@nestjs/common": "7.0.9",
     "@nestjs/core": "7.0.9",
     "@nestjs/platform-express": "7.0.9",

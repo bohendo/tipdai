@@ -1,4 +1,6 @@
 import { connect as connext } from '@connext/client';
+import { ConnextStore, WrappedPostgresStorage } from "@connext/store";
+import { StoreTypes } from "@connext/types";
 import { Injectable } from '@nestjs/common';
 import { AddressZero, Zero } from 'ethers/constants';
 import { bigNumberify, formatEther, parseEther } from 'ethers/utils';
@@ -21,9 +23,38 @@ export class ChannelService {
   ) {
     this.log = new Logger('ChannelService', this.config.logLevel);
     this.channel = new Promise(async (resolve, reject) => {
-      const channel = await connext({ ...this.config.channel, store: this.channelRecords });
+
+      const dbOpts = this.config.database;
+      const storeOpts = {} as any;
+      const wrappedStore = new WrappedPostgresStorage(
+        "tipdai",
+        "/",
+        undefined,
+        undefined,
+        `postgres://${dbOpts.username}:${dbOpts.password}@${dbOpts.host}:${dbOpts.port}/${dbOpts.database}`,
+      );
+      storeOpts.storage = wrappedStore;
+      await wrappedStore.sequelize.authenticate();
+      await wrappedStore.syncModels(true);
+
+      const channel = await connext({
+        ...this.config.channel,
+        store: new ConnextStore(StoreTypes.Postgres, storeOpts),
+      });
+
+      this.log.info(`Got a store, skipping rest of channel setup`);
+      return resolve();
+
+      this.log.info(`Successfully connected to state channel!`);
+      this.log.info(` - Public identifier: ${channel.publicIdentifier}`);
+      this.log.info(` - Account multisig address: ${channel.multisigAddress}`);
+      this.log.info(` - Signer address: ${channel.signerAddress}`);
+
       this.tokenAddress = channel.config.contractAddresses.Token;
+      this.log.info(` - Token address: ${this.tokenAddress}`);
+
       this.swapRate = await channel.getLatestSwapRate(AddressZero, this.tokenAddress),
+      this.log.info(` - Swap rate: ${this.swapRate}`);
 
       channel.subscribeToSwapRates(AddressZero, this.tokenAddress, async res => {
         if (!res || !res.swapRate) { return; }
@@ -33,13 +64,6 @@ export class ChannelService {
       });
 
       await channel.isAvailable();
-
-      this.log.info(`Successfully connected to state channel!`);
-      this.log.info(channel.publicIdentifier);
-      this.log.info(` - Account multisig address: ${channel.multisigAddress}`);
-      this.log.info(` - Signer address: ${channel.signerAddress}`);
-      this.log.info(` - Token address: ${this.tokenAddress}`);
-      this.log.info(` - Swap rate: ${this.swapRate}`);
 
       const freeTokenBalance = await channel.getFreeBalance(this.tokenAddress);
       const hubFreeBalanceAddress = Object.keys(freeTokenBalance).filter(

@@ -17,7 +17,7 @@ const env = {
   pgHost: process.env.PGHOST,
   pgPassFile: process.env.PGPASSFILE,
   pgPort: process.env.PGPORT,
-  pgUser: process.env.PGUSR,
+  pgUser: process.env.PGUSER,
   twitterBotAccessSecret: process.env.TWITTER_BOT_ACCESS_SECRET,
   twitterBotAccessToken: process.env.TWITTER_BOT_ACCESS_TOKEN,
   twitterAppAccessSecret: process.env.TWITTER_APP_ACCESS_SECRET,
@@ -128,9 +128,8 @@ export class ConfigService {
     return {
       ethProviderUrl: env.ethProvider,
       logLevel: 2,
-      mnemonic: fs.readFileSync(env.mnemonicFile, 'utf8'),
       nodeUrl: env.paymentHub,
-      type: 'postgres',
+      signer: Wallet.fromMnemonic(fs.readFileSync(env.mnemonicFile, 'utf8')).privateKey,
     };
   }
 }

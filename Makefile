@@ -75,7 +75,7 @@ node-modules: builder package.json
 
 tipdai-js: node-modules tsconfig.json $(shell find src $(find_options))
 	$(log_start)
-	$(docker_run) "tsc --project tsconfig.build.json"
+	$(docker_run) "rm -rf dist/* && tsc --project tsconfig.build.json"
 	$(log_finish) && touch $(flags)/$@
 
 tipdai-image-dev: tipdai-js $(shell find ops/core $(find_options))

@@ -19,7 +19,7 @@ TIPDAI_EMAIL="${TIPDAI_EMAIL:-noreply@gmail.com}" # for notifications when ssl c
 TIPDAI_ETH_PROVIDER="${TIPDAI_ETH_PROVIDER:-http://localhost:8545}"
 TIPDAI_MODE="${TIPDAI_MODE:-development}"
 TIPDAI_LOG_LEVEL="${TIPDAI_LOG_LEVEL:-3}"
-TIPDAI_PAYMENT_HUB="${TIPDAI_PAYMENT_HUB:-nats://localhost:4222}"
+TIPDAI_PAYMENT_HUB="${TIPDAI_PAYMENT_HUB:-http://localhost}"
 TIPDAI_PAYMENT_URL="${TIPDAI_PAYMENT_URL:-http://localhost}"
 TIPDAI_TWITTER_APP_ACCESS_SECRET="${TIPDAI_TWITTER_APP_ACCESS_SECRET}"
 TIPDAI_TWITTER_APP_USER_ID="${TIPDAI_TWITTER_APP_USER_ID}"
@@ -95,12 +95,11 @@ else
   exit
 fi
 
-mnemonic="${project}_mnemonic_${ethNetwork}"
+mnemonic="${project}_mnemonic"
 
 if [[ -z "`docker secret ls | grep "$mnemonic"`" ]]
 then
   echo "Missing secret called: $mnemonic, create like with:"
-  echo "echo 'first word second etc' | tr -d '\n\r' | docker secret create $mnemonic -"
   exit
 fi
 

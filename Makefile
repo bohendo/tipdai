@@ -8,7 +8,6 @@ VPATH=$(flags):dist
 SHELL=/bin/bash
 
 cwd=$(shell pwd)
-proxy=$(cwd)/ops/proxy
 
 my_id=$(shell id -u):$(shell id -g)
 
@@ -64,9 +63,9 @@ test: dev
 ########################################
 ## Real Rules
 
-builder: ops/builder.dockerfile
+builder: $(shell find ops/builder $(find_options))
 	$(log_start)
-	docker build --file ops/builder.dockerfile --tag $(project)_builder .
+	docker build --file ops/builder/Dockerfile --tag $(project)_builder ops/builder
 	$(log_finish) && touch $(flags)/$@
 
 node-modules: builder package.json
@@ -74,24 +73,24 @@ node-modules: builder package.json
 	$(docker_run) "npm install"
 	$(log_finish) && touch $(flags)/$@
 
-proxy: $(proxy)/entry.sh $(proxy)/nginx.conf $(proxy)/nginx.dockerfile
-	$(log_start)
-	docker build --file $(proxy)/nginx.dockerfile --tag tipdai_proxy:latest .
-	$(log_finish) && touch $(flags)/$@
-
-tipdai-image-dev: tipdai-js ops/bot-dev.dockerfile
-	$(log_start)
-	docker build --file ops/bot-dev.dockerfile --tag tipdai_bot_dev:latest .
-	touch $(flags)/$@
-	$(log_finish) && touch $(flags)/$@
-
-tipdai-image-prod: tipdai-js node-modules ops/bot.dockerfile $(shell find src $(find_options))
-	$(log_start)
-	docker build --file ops/bot.dockerfile --tag tipdai_bot:latest .
-	touch $(flags)/$@
-	$(log_finish) && touch $(flags)/$@
-
 tipdai-js: node-modules tsconfig.json $(shell find src $(find_options))
 	$(log_start)
 	$(docker_run) "tsc --project tsconfig.build.json"
+	$(log_finish) && touch $(flags)/$@
+
+tipdai-image-dev: tipdai-js $(shell find ops/core $(find_options))
+	$(log_start)
+	docker build --file ops/core/dev.dockerfile --tag tipdai_bot_dev:latest .
+	touch $(flags)/$@
+	$(log_finish) && touch $(flags)/$@
+
+tipdai-image-prod: tipdai-js $(shell find ops/core $(find_options))
+	$(log_start)
+	docker build --file ops/core/prod.dockerfile --tag tipdai_bot:latest .
+	touch $(flags)/$@
+	$(log_finish) && touch $(flags)/$@
+
+proxy: $(shell find ops/proxy $(find_options))
+	$(log_start)
+	docker build --file ops/proxy/nginx.dockerfile --tag tipdai_proxy:latest .
 	$(log_finish) && touch $(flags)/$@

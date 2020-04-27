@@ -37,19 +37,13 @@ export class ChannelService {
       this.log.info(`Successfully connected to state channel!`);
       this.log.info(channel.publicIdentifier);
       this.log.info(` - Account multisig address: ${channel.multisigAddress}`);
-      this.log.info(` - Free balance address: ${channel.freeBalanceAddress}`);
+      this.log.info(` - Signer address: ${channel.signerAddress}`);
       this.log.info(` - Token address: ${this.tokenAddress}`);
       this.log.info(` - Swap rate: ${this.swapRate}`);
 
-      await channel.addPaymentProfile({
-        amountToCollateralize: parseEther('10').toString(),
-        minimumMaintainedCollateral: parseEther('5').toString(),
-        assetId: this.tokenAddress,
-      });
-
       const freeTokenBalance = await channel.getFreeBalance(this.tokenAddress);
       const hubFreeBalanceAddress = Object.keys(freeTokenBalance).filter(
-        addr => addr.toLowerCase() !== channel.freeBalanceAddress,
+        addr => addr.toLowerCase() !== channel.signerAddress,
       )[0];
 
       if (freeTokenBalance[hubFreeBalanceAddress].eq(Zero)) {
@@ -63,7 +57,7 @@ export class ChannelService {
         );
       }
 
-      const botFreeBalance = freeTokenBalance[channel.freeBalanceAddress];
+      const botFreeBalance = freeTokenBalance[channel.signerAddress];
       this.log.info(`Bot has a free balance of $${formatEther(botFreeBalance)}`);
 
       // TODO: check bot's token & eth balance first and maybe deposit a bit?

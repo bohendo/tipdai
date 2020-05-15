@@ -78,15 +78,15 @@ tipdai-js: node-modules tsconfig.json $(shell find src $(find_options))
 	$(docker_run) "rm -rf dist/* && tsc --project tsconfig.build.json"
 	$(log_finish) && touch $(flags)/$@
 
-tipdai-image-dev: tipdai-js $(shell find ops/core $(find_options))
+tipdai-image-dev: tipdai-js $(shell find ops/bot $(find_options))
 	$(log_start)
-	docker build --file ops/core/dev.dockerfile --tag tipdai_bot_dev:latest .
+	docker build --file ops/bot/dev.dockerfile --tag tipdai_bot_dev:latest .
 	touch $(flags)/$@
 	$(log_finish) && touch $(flags)/$@
 
-tipdai-image-prod: tipdai-js $(shell find ops/core $(find_options))
+tipdai-image-prod: tipdai-js $(shell find ops/bot $(find_options))
 	$(log_start)
-	docker build --file ops/core/prod.dockerfile --tag tipdai_bot:latest .
+	docker build --file ops/bot/prod.dockerfile --tag tipdai_bot:latest .
 	touch $(flags)/$@
 	$(log_finish) && touch $(flags)/$@
 

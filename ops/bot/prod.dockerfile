@@ -4,4 +4,5 @@ ENV HOME /root
 RUN apk add bash
 RUN npm install -g npm@6.14.4
 COPY dist dist
-ENTRYPOINT ["node", "dist/main.js"]
+COPY ops/bot/entry.sh /entry.sh
+ENTRYPOINT ["bash", "/entry.sh"]

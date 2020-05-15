@@ -81,7 +81,8 @@ export class ChannelService {
     });
   }
 
-  public async createPayment(amount: string): Promise<PublicResults.LinkedTransfer> {
+  public async createPayment(amount: DecString): Promise<PublicResults.LinkedTransfer> {
+    this.log.info(`Creating $${amount} payment`);
     const channel = await this.channel;
     return channel.conditionalTransfer({
       assetId: this.tokenAddress,
@@ -95,6 +96,7 @@ export class ChannelService {
   public async fetchPayment(
     paymentId: HexString,
   ): Promise<NodeResponses.GetLinkedTransfer> {
+    this.log.info(`Fetching info for payment ${paymentId}`);
     const channel = await this.channel;
     return await channel.getLinkedTransfer(paymentId);
   }
@@ -103,6 +105,7 @@ export class ChannelService {
     paymentId: HexString,
     preImage: HexString,
   ): Promise<PublicResults.ResolveLinkedTransfer> {
+    this.log.info(`Redeeming payment ${paymentId}`);
     const channel = await this.channel;
     const result = await channel.resolveCondition({
       conditionType: ConditionalTransferTypes.LinkedTransfer,
@@ -113,6 +116,7 @@ export class ChannelService {
   }
 
   public async requestCollateral(token?: Address): Promise<void> {
+    this.log.info(`Requesting collateral`);
     const channel = await this.channel;
     await channel.requestCollateral(token || this.tokenAddress);
   }

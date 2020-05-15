@@ -15,7 +15,7 @@ find_options=-type f -not -path "*/node_modules/*" -not -name "*.swp" -not -path
 
 id=$(shell if [[ "`uname`" == "Darwin" ]]; then echo 0:0; else echo $(my_id); fi)
 
-docker_run=docker run --name=$(project)_builder --tty --rm --volume=$(cwd):/root $(project)_builder $(id)
+docker_run=docker run --name=$(project)_builder --interactive --rm --volume=$(cwd):/root $(project)_builder $(id)
 
 log_start=@echo "=============";echo "[Makefile] => Start building $@"; date "+%s" > $(flags)/.timestamp
 log_finish=@echo "[Makefile] => Finished building $@ in $$((`date "+%s"` - `cat $(flags)/.timestamp`)) seconds";echo "=============";echo
@@ -29,10 +29,6 @@ all: dev prod
 dev: tipdai-image-dev proxy
 prod: tipdai-image-prod proxy
 
-clean:
-	rm -rf dist/*
-	rm -rf $(flags)/*
-
 start: all
 	bash ops/start.sh
 
@@ -44,11 +40,15 @@ stop:
 	@while [[ -n "`docker network ls --quiet --filter label=com.docker.stack.namespace=$(project)`" ]]; do echo -n '.' && sleep 3; done
 	@echo ' Goodnight!'
 
+clean: stop
+	rm -rf dist/*
+	rm -rf $(flags)/*
+
 reset: stop
 	docker container prune -f
 	docker volume rm tipdai_database_dev 2> /dev/null || true
 
-restart: all stop
+restart: stop
 	bash ops/start.sh
 
 restart-prod: stop

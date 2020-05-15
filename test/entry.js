@@ -1,4 +1,5 @@
 const connext = require('@connext/client');
+const { ConditionalTransferTypes } = require("@connext/types");
 const https = require('https');
 const eth = require('ethers');
 const axios = require('axios');
@@ -14,6 +15,11 @@ const sender = eth.Wallet.fromMnemonic(eth.Wallet.createRandom().mnemonic, cfPat
 const recipient = eth.Wallet.fromMnemonic(eth.Wallet.createRandom().mnemonic, cfPath).connect(provider);
 
 process.on('unhandledRejection', (e) => {
+  console.error(`\n${e}`);
+  process.exit(1);
+})
+
+process.on('SIGINT', (e) => {
   console.error(`\n${e}`);
   process.exit(1);
 })
@@ -76,7 +82,7 @@ const axio = axios.create({
 
   res = (await axio.post(`${baseUrl}/message/public`, {
     address: sender.address ,
-    message: `@${screenName} send @user $0.11`,
+    message: `@${screenName} send @user $0.11 #TipDai`,
     recipientId: recipientUser.id,
     token: senderToken,
   })).data;
@@ -85,7 +91,7 @@ const axio = axios.create({
 
   res = (await axio.post(`${baseUrl}/message/public`, {
     address: sender.address ,
-    message: `@${screenName} send @user $0.05`,
+    message: `@${screenName} send @user $0.05 #TipDai`,
     recipientId: recipientUser.id,
     token: senderToken,
   })).data;
@@ -110,7 +116,7 @@ const axio = axios.create({
 
   paymentId = res.match(paymentIdRegex)[1]
   res = await channel.resolveCondition({
-    conditionType: 'LINKED_TRANSFER',
+    conditionType: ConditionalTransferTypes.LinkedTransfer,
     paymentId,
     preImage: res.match(secretRegex)[1],
   });
@@ -118,7 +124,7 @@ const axio = axios.create({
 
   res = (await axio.post(`${baseUrl}/message/public`, {
     address: sender.address ,
-    message: `@${screenName} send @user $0.05`,
+    message: `@${screenName} send @user $0.05 #TipDai`,
     recipientId: recipientUser.id,
     token: senderToken,
   })).data;
@@ -145,14 +151,14 @@ const axio = axios.create({
 
   results.tipOne = axio.post(`${baseUrl}/message/public`, {
     address: sender.address ,
-    message: `@${screenName} send @user $0.05`,
+    message: `@${screenName} send @user $0.05 #TipDai`,
     recipientId: recipientUser.id,
     token: senderToken,
   });
 
   results.tipTwo = axio.post(`${baseUrl}/message/public`, {
     address: sender.address ,
-    message: `@${screenName} send @user $0.05`,
+    message: `@${screenName} send @user $0.05 #TipDai`,
     recipientId: recipientUser.id,
     token: senderToken,
   });

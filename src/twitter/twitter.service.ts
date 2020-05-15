@@ -185,8 +185,8 @@ export class TwitterService {
     this.log.info(`TIPDAI_TWITTER_BOT_USER_ID=${data.user_id}`);
     this.twitterBot = new Twitter({
       ...this.config.twitterBot,
-      accessToken: data.oauth_token,
-      accessSecret: data.oauth_token_secret,
+      accessToken: data.oauth_token as string,
+      accessSecret: data.oauth_token_secret as string,
     });
     this.log.info(`Twitter bot successfully connected!`);
     await this.subscribe(data.user_id);

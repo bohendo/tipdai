@@ -1,5 +1,8 @@
-const connext = require('@connext/client');
-const eth = require('ethers');
+const connext = require("@connext/client");
+const { getFileStore } = require("@connext/store");
+const { ConditionalTransferTypes } = require("@connext/types");
+const eth = require("ethers");
+require("sqlite3");
 
 const { store } = require('./store');
 const { ethProviderUrl, nodeUrl, provider, sugarDaddy } = require('./constants');
@@ -12,32 +15,13 @@ const setupChannel = async (wallet) => {
   const channel = await connext.connect({
     ethProviderUrl,
     logLevel: 2,
-    mnemonic: wallet.mnemonic,
+    signer: wallet.privateKey,
     nodeUrl,
-    store,
+    store: getFileStore(".channel-store"),
   });
-  const channelAvailable = async () => {
-    const channelInfo = await channel.getChannel();
-    return channelInfo && channelInfo.available;
-  };
-  while (!(await channelAvailable())) {
-    await new Promise((res) => setTimeout(() => res(), 1 * 1000));
-  }
-  console.log(`Channel is ready & available!`);
+  console.log(`Channel is ready!`);
 
   const assetId = channel.config.contractAddresses.Token
-  await channel.addPaymentProfile({
-    amountToCollateralize: parseEther("0.1").toString(),
-    assetId: AddressZero,
-    minimumMaintainedCollateral: parseEther("0.01").toString(),
-  });
-  await channel.requestCollateral(AddressZero);
-  await channel.addPaymentProfile({
-    amountToCollateralize: parseEther("10").toString(),
-    assetId,
-    minimumMaintainedCollateral: parseEther("5").toString(),
-  });
-  await channel.requestCollateral(assetId);
 
   console.log(`Depositing some money...`);
   let tx
@@ -54,7 +38,7 @@ const setupChannel = async (wallet) => {
     toAssetId: assetId,
   });
   const amount = parseEther('0.1').toString()
-  const conditionType = "LINKED_TRANSFER";
+  const conditionType = ConditionalTransferTypes.LinkedTransfer;
   const randHash = () => hexlify(randomBytes(32));
   const paymentIds = [randHash(), randHash(), randHash()];
   const secrets = [randHash(), randHash(), randHash()];

@@ -1,5 +1,5 @@
 import { connect as connext } from '@connext/client';
-import { ConnextStore, WrappedPostgresStorage } from "@connext/store";
+import { getPostgresStore } from "@connext/store";
 import { StoreTypes } from "@connext/types";
 import { Injectable } from '@nestjs/common';
 import { AddressZero, Zero } from 'ethers/constants';
@@ -25,21 +25,14 @@ export class ChannelService {
     this.channel = new Promise(async (resolve, reject) => {
 
       const dbOpts = this.config.database;
-      const storeOpts = {} as any;
-      const wrappedStore = new WrappedPostgresStorage(
-        "tipdai",
-        "/",
-        undefined,
-        undefined,
+
+      const store = getPostgresStore(
         `postgres://${dbOpts.username}:${dbOpts.password}@${dbOpts.host}:${dbOpts.port}/${dbOpts.database}`,
       );
-      storeOpts.storage = wrappedStore;
-      await wrappedStore.sequelize.authenticate();
-      await wrappedStore.syncModels(true);
 
       const channel = await connext({
         ...this.config.channel,
-        store: new ConnextStore(StoreTypes.Postgres, storeOpts),
+        store,
       });
 
       this.log.info(`Got a store, skipping rest of channel setup`);

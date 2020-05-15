@@ -4,11 +4,11 @@ const eth = require('ethers');
 const axios = require('axios');
 
 require('./regex');
+const { setupChannel } = require('./channel');
+const { baseUrl, cfPath, provider, screenName } = require('./constants');
 
 const paymentIdRegex = /paymentId=(0x[0-9a-fA-F]{64})/;
 const secretRegex = /secret=(0x[0-9a-fA-F]{64})/;
-const { setupChannel } = require('./channel');
-const { baseUrl, cfPath, provider, screenName } = require('./constants');
 
 const sender = eth.Wallet.fromMnemonic(eth.Wallet.createRandom().mnemonic, cfPath).connect(provider);
 const recipient = eth.Wallet.fromMnemonic(eth.Wallet.createRandom().mnemonic, cfPath).connect(provider);

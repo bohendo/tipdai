@@ -4,6 +4,7 @@
 .node-gyp
 .npm
 .store.json
+.channel-store
 
 # Compiled output
 build/

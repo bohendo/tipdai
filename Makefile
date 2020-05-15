@@ -58,7 +58,7 @@ push-latest: prod
 	bash ops/push-images.sh latest bot proxy
 
 test: dev
-	node test/entry.js
+	$(docker_run) "node test/entry.js"
 
 ########################################
 ## Real Rules
@@ -92,5 +92,5 @@ tipdai-image-prod: tipdai-js $(shell find ops/core $(find_options))
 
 proxy: $(shell find ops/proxy $(find_options))
 	$(log_start)
-	docker build --file ops/proxy/nginx.dockerfile --tag tipdai_proxy:latest .
+	docker build --file ops/proxy/Dockerfile --tag tipdai_proxy:latest ops/proxy
 	$(log_finish) && touch $(flags)/$@

@@ -19,8 +19,8 @@ TIPDAI_EMAIL="${TIPDAI_EMAIL:-noreply@gmail.com}" # for notifications when ssl c
 TIPDAI_ETH_PROVIDER="${TIPDAI_ETH_PROVIDER:-http://localhost:8545}"
 TIPDAI_MODE="${TIPDAI_MODE:-development}"
 TIPDAI_LOG_LEVEL="${TIPDAI_LOG_LEVEL:-3}"
-TIPDAI_PAYMENT_HUB="${TIPDAI_PAYMENT_HUB:-http://localhost}"
-TIPDAI_PAYMENT_URL="${TIPDAI_PAYMENT_URL:-http://localhost}"
+TIPDAI_PAYMENT_HUB="${TIPDAI_PAYMENT_HUB:-http://localhost:3000/api}"
+TIPDAI_PAYMENT_URL="${TIPDAI_PAYMENT_URL:-http://localhost:3000/redeem}"
 TIPDAI_TWITTER_APP_ACCESS_SECRET="${TIPDAI_TWITTER_APP_ACCESS_SECRET}"
 TIPDAI_TWITTER_APP_USER_ID="${TIPDAI_TWITTER_APP_USER_ID}"
 TIPDAI_TWITTER_BOT_ACCESS_SECRET="${TIPDAI_TWITTER_BOT_ACCESS_SECRET}"
@@ -68,31 +68,13 @@ function new_secret {
 ####################
 # Ethereum Config
 
-echo "Checking $TIPDAI_ETH_PROVIDER"
-
 if [[ -z "$TIPDAI_ETH_PROVIDER" ]]
 then
   echo "An env var called TIPDAI_ETH_PROVIDER is required"
   exit
 else
   chainId="`curl -q -k -s -H "Content-Type: application/json" -X POST --data '{"id":1,"jsonrpc":"2.0","method":"net_version","params":[]}' $TIPDAI_ETH_PROVIDER | jq .result | tr -d '"'`"
-fi
-
-echo "Got chain id: $chainId"
-
-if [[ "$chainId" == "4" ]]
-then ethNetwork="rinkeby"
-elif [[ "$chainId" == "42" ]]
-then ethNetwork="kovan"
-elif [[ "$chainId" == "4447" ]]
-then ethNetwork="ganache"
-elif [[ "$chainId" == "" ]]
-then
-  echo "Couldn't get chainId for $TIPDAI_ETH_PROVIDER, are you connected to the internet?"
-  exit
-else
-  echo "Ethereum chain \"$chainId\" is not supported yet"
-  exit
+  echo "Got chain id: $chainId"
 fi
 
 mnemonic="${project}_mnemonic"
@@ -167,7 +149,8 @@ services:
     environment:
       DOMAINNAME: $TIPDAI_DOMAINNAME
       EMAIL: $TIPDAI_EMAIL
-      UPSTREAM_URL: http://bot:3000
+      MODE: dev
+      UPSTREAM_URL: bot:3000
     ports:
       - "80:80"
       - "443:443"

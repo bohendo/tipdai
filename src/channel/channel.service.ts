@@ -1,12 +1,21 @@
 import { connect as connext } from "@connext/client";
 import { getPostgresStore } from "@connext/store";
-import { StoreTypes } from "@connext/types";
+import {
+  Address,
+  ConditionalTransferTypes,
+  DecString,
+  HexString,
+  NodeResponses,
+  PublicResults,
+  StoreTypes,
+} from "@connext/types";
 import { Injectable } from "@nestjs/common";
 import { AddressZero, Zero } from "ethers/constants";
 import { bigNumberify, formatEther, parseEther } from "ethers/utils";
 
 import { ConfigService } from "../config/config.service";
 import { LoggerService } from "../logger/logger.service";
+import { getRandomBytes32 } from "../utils";
 
 import { ChannelRecordRepository } from "./channel.repository";
 
@@ -72,8 +81,56 @@ export class ChannelService {
     });
   }
 
-  public async getChannel(): Promise<any> {
-    return await this.channel;
+  public async createPayment(amount: string): Promise<PublicResults.LinkedTransfer> {
+    const channel = await this.channel;
+    return channel.conditionalTransfer({
+      assetId: this.tokenAddress,
+      amount: parseEther(amount),
+      conditionType: ConditionalTransferTypes.LinkedTransfer,
+      paymentId: getRandomBytes32(),
+      preImage: getRandomBytes32(),
+    });
+  }
+
+  public async fetchPayment(
+    paymentId: HexString,
+  ): Promise<NodeResponses.GetLinkedTransfer> {
+    const channel = await this.channel;
+    return await channel.getLinkedTransfer(paymentId);
+  }
+
+  public async redeemPayment(
+    paymentId: HexString,
+    preImage: HexString,
+  ): Promise<PublicResults.ResolveLinkedTransfer> {
+    const channel = await this.channel;
+    const result = await channel.resolveCondition({
+      conditionType: ConditionalTransferTypes.LinkedTransfer,
+      paymentId,
+      preImage,
+    });
+    return result;
+  }
+
+  public async requestCollateral(token?: Address): Promise<void> {
+    const channel = await this.channel;
+    await channel.requestCollateral(token || this.tokenAddress);
+  }
+
+  public async getBalance(token?: Address): Promise<DecString> {
+    const channel = await this.channel;
+    return this.getFreeBalance(channel.signerAddress, token || this.tokenAddress);
+  }
+
+  public async getCollateral(token?: Address): Promise<DecString> {
+    const channel = await this.channel;
+    return this.getFreeBalance(channel.nodeSignerAddress, token || this.tokenAddress);
+  }
+
+  private async getFreeBalance(address: Address, token: Address): Promise<DecString> {
+    const channel = await this.channel;
+    const freeBalance = await channel.getFreeBalance(token);
+    return formatEther(freeBalance[address]);
   }
 
 }

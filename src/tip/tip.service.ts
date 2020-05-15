@@ -98,7 +98,7 @@ export class TipService {
         `@${recipient.twitterName}, you can now send tips or DM me to cashout.\n\n` +
         `@${sender.twitterName}, your old cashout link has been redeemed, DM me for a new one`;
     } catch (e) {
-      this.log.info(`Failed to handling tip: ${e}`);
+      this.log.info(`Failed to handle tip: ${e}`);
       newTip.result = `ERROR: ${e.message}`;
       await this.tipRepo.save(newTip);
       return `Oops something went wrong, it was probably my fault. Hey @bohendo, can you fix me?`;

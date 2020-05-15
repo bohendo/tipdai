@@ -80,7 +80,6 @@ export class DepositService {
   }
 
   public checkForDeposits = async () => {
-    const channel = await this.channel.getChannel();
     let pendingDeposits = await this.depositRepo.getAllPending();
     if (!pendingDeposits || pendingDeposits === []) {
       this.log.info(`No pending deposits`);
@@ -121,39 +120,12 @@ export class DepositService {
             expectedDeposit.substring(0, expectedDeposit.indexOf(".")),
           );
           this.log.info(`expectedDeposit: ${expectedDeposit}`);
-          let tokenBalances = await channel.getFreeBalance(tokenAddress);
-          const oldChannelTokens = tokenBalances[channel.signerAddress];
-          this.log.info(`Old channel balance: ${oldChannelTokens}`);
+          let balanceBefore = await this.channel.getBalance();
+          this.log.info(`Channel balance before deposit: ${balanceBefore}`);
 
-          /*
           // TODO: Port over daicard's deposit & swap all functions
-          try {
-            await channel.deposit({
-              amount: parseEther(dep.amount),
-              assetId: AddressZero,
-            });
-            await channel.swap({
-              amount: parseEther(dep.amount),
-              fromAssetId: AddressZero,
-              swapRate: parseEther(swapRate),
-              toAssetId: tokenAddress,
-            });
-          } catch (e) {
-            this.log.error(`Deposit failed :( ${e.message}`);
-          }
 
-          if (false && !user.linkPayment) {
-            this.log.info(`Attempting to create link payment`);
-            const link = await channel.conditionalTransfer({
-              amount: parseEther(user.balance),
-              assetId: tokenAddress,
-              conditionType: ConditionalTransferTypes.LinkedTransfer,
-            });
-          }
-          */
-
-          tokenBalances = await channel.getFreeBalance(tokenAddress);
-          const newChannelTokens = tokenBalances[channel.signerAddress];
+          const balanceAfter = await this.channel.getBalance();
 
           this.log.info(`Depositor old balance: ${user.cashout.amount}`);
 

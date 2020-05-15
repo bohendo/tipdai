@@ -31,32 +31,21 @@ export class PaymentService {
   }
 
   public createPayment = async (amount: string, recipient: User): Promise<Payment> => {
-    const amountBN = parseEther(amount);
-    if (amount.startsWith("-") || amountBN.lte(Zero)) {
+    if (amount.startsWith("-") || parseEther(amount).lte(Zero)) {
       throw new Error(`Cannot create payment of value <= 0: ${amount}`);
     }
     this.log.info(`Creating $${amount} payment for user ${recipient.id}`);
-    const channel = await this.channelService.getChannel();
-
-    let freeTokenBalance = await channel.getFreeBalance(this.channelService.tokenAddress);
-    this.log.info(`Token balances: Bot ${formatEther(freeTokenBalance[channel.signerAddress])} | Node ${formatEther(freeTokenBalance[channel.nodeSignerAddress])}`);
-    this.log.info(`Bot needs token balance >= ${amount}`);
-    if (bigNumberify(freeTokenBalance[channel.signerAddress]).lt(parseEther(amount))) {
+    const botBalance = await this.channelService.getBalance();
+    this.log.info(`Bot balance ${botBalance} needs to be >= ${amount}`);
+    if (parseEther(botBalance).lt(parseEther(amount))) {
       throw new Error(`User does not have enough free balance to create a $${amount} link payment`);
     }
-
-    const linkResult = await channel.conditionalTransfer({
-      assetId: this.channelService.tokenAddress,
-      amount: amountBN.toString(),
-      conditionType: ConditionalTransferTypes.LinkedTransfer,
-      paymentId: hexlify(randomBytes(32)),
-      preImage: hexlify(randomBytes(32)),
-    });
+    const result = await this.channelService.createPayment(amount);
     const payment = new Payment();
-    payment.paymentId = linkResult.paymentId;
+    payment.paymentId = result.paymentId;
     payment.recipient = recipient;
     payment.sender = await this.botUser;
-    payment.secret = linkResult.preImage;
+    payment.secret = result.preImage;
     payment.amount = amount;
     payment.status = "PENDING";
     recipient.cashout = payment;
@@ -70,7 +59,6 @@ export class PaymentService {
     paymentId: string,
     secret: string,
   ): Promise<string> => {
-    const channel = await this.channelService.getChannel();
     let payment = await this.paymentRepo.findByPaymentId(paymentId);
     if (payment) {
       payment = await this.updatePayment(payment);
@@ -118,23 +106,17 @@ export class PaymentService {
 
   public redeemPayment = async (payment: Payment): Promise<string> => {
     this.log.info(`Redeeming $${payment.amount} ${payment.status} payment: ${payment.paymentId}`);
-    const channel = await this.channelService.getChannel();
-    let freeTokenBalance = await channel.getFreeBalance(this.channelService.tokenAddress);
-    const collateral = formatEther(freeTokenBalance[channel.nodeSignerAddress]);
-    this.log.info(`Token balances: Bot ${formatEther(freeTokenBalance[channel.signerAddress])} | Node ${collateral}`);
+    const collateral = await this.channelService.getCollateral();
+    this.log.info(`Token balances: Bot ${await this.channelService.getBalance()} | Node ${collateral}`);
     this.log.info(`Node needs token balance of >= ${payment.amount}`);
     if (parseEther(collateral).lt(parseEther(payment.amount))) {
       this.log.info(`Requesting more collateral for ${this.channelService.tokenAddress}`);
-      await channel.requestCollateral(this.channelService.tokenAddress);
+      await this.channelService.requestCollateral();
     }
     let redeemedAmount;
     try {
       this.log.info(`Resolving link transfer`);
-      const result = await channel.resolveCondition({
-        conditionType: ConditionalTransferTypes.LinkedTransfer,
-        paymentId: payment.paymentId,
-        preImage: payment.secret,
-      });
+      const result = await this.channelService.redeemPayment(payment.paymentId, payment.secret);
       this.log.debug(`Redeemed payment with result: ${JSON.stringify(result, null, 2)}`);
       redeemedAmount = payment.amount;
     } catch (e) {
@@ -150,14 +132,12 @@ export class PaymentService {
     }
     payment.status = "REDEEMED";
     await this.paymentRepo.save(payment);
-    freeTokenBalance = await channel.getFreeBalance(this.channelService.tokenAddress);
-    this.log.info(`New token balances: Bot ${formatEther(freeTokenBalance[channel.signerAddress])} | Node ${formatEther(freeTokenBalance[channel.nodeSignerAddress])}`);
+    this.log.info(`New token balance: ${await this.channelService.getBalance()}`);
     return redeemedAmount;
   }
 
   public updatePayment = async (payment: Payment): Promise<Payment> => {
-    const channel = await this.channelService.getChannel();
-    const result = await channel.getLinkedTransfer(payment.paymentId);
+    const result = await this.channelService.fetchPayment(payment.paymentId);
     const amount = formatEther(bigNumberify(result.amount));
     this.log.info(`Got info for ${payment.paymentId}: status ${result.status}, amount ${amount}`);
     if (result) {

@@ -1,22 +1,22 @@
-import { Column, Entity, JoinColumn, OneToOne, PrimaryGeneratedColumn } from 'typeorm';
+import { Column, Entity, JoinColumn, OneToOne, PrimaryGeneratedColumn } from "typeorm";
 
-import { User } from '../user/user.entity';
+import { User } from "../user/user.entity";
 
 @Entity()
 export class Deposit {
   @PrimaryGeneratedColumn()
   id!: number;
 
-  @Column('text')
+  @Column("text")
   address!: string;
 
-  @Column({ type: 'text', nullable: true})
+  @Column({ type: "text", nullable: true })
   amount: string;
 
-  @Column('text')
+  @Column("text")
   oldBalance!: string;
 
-  @Column('text')
+  @Column("text")
   startTime!: Date;
 
   @OneToOne(type => User)

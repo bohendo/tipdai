@@ -37,7 +37,7 @@ export class ConfigService {
   }
 
   public getWallet(index: number | string = cfIndex): Wallet {
-    const mnemonic = fs.readFileSync(env.mnemonicFile, 'utf8');
+    const mnemonic = fs.readFileSync(env.mnemonicFile, "utf8");
     return Wallet.fromMnemonic(mnemonic, `m/44'/60'/0'/0/${index}`).connect(this.ethProvider);
   }
 
@@ -58,7 +58,7 @@ export class ConfigService {
   }
 
   get isDevMode(): boolean {
-    return env.nodeEnv === 'development';
+    return env.nodeEnv === "development";
   }
 
   get callbacks(): any {
@@ -70,7 +70,7 @@ export class ConfigService {
   get webhooks(): any {
     return {
       twitter: {
-        env: 'prod',
+        env: "prod",
         id: env.twitterWebhookId,
         url: `${env.twitterCallbackUrl}/webhooks/twitter`,
       },
@@ -117,7 +117,7 @@ export class ConfigService {
     return {
       database: env.pgDatabase,
       host: env.pgHost,
-      password: fs.readFileSync(env.pgPassFile, 'utf8'),
+      password: fs.readFileSync(env.pgPassFile, "utf8"),
       port: parseInt(env.pgPort, 10),
       username: env.pgUser,
     };
@@ -128,7 +128,7 @@ export class ConfigService {
       ethProviderUrl: env.ethProvider,
       logLevel: 2,
       nodeUrl: env.paymentHub,
-      signer: Wallet.fromMnemonic(fs.readFileSync(env.mnemonicFile, 'utf8')).privateKey,
+      signer: Wallet.fromMnemonic(fs.readFileSync(env.mnemonicFile, "utf8")).privateKey,
     };
   }
 }

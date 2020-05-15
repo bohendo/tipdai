@@ -1,11 +1,11 @@
-import { Injectable } from '@nestjs/common';
-import { arrayify, hexlify, randomBytes, verifyMessage } from 'ethers/utils';
+import { Injectable } from "@nestjs/common";
+import { arrayify, hexlify, randomBytes, verifyMessage } from "ethers/utils";
 
-import { ConfigService } from '../config/config.service';
+import { ConfigService } from "../config/config.service";
 import { LoggerService } from "../logger/logger.service";
-import { User } from '../user/user.entity';
-import { UserRepository } from '../user/user.repository';
-import { isValidHex } from '../utils';
+import { User } from "../user/user.entity";
+import { UserRepository } from "../user/user.repository";
+import { isValidHex } from "../utils";
 
 @Injectable()
 export class UserService {
@@ -23,7 +23,7 @@ export class UserService {
   getNonce(address: string): string | undefined {
     if (!isValidHex(address, 20)) {
       this.log.warn(`Invalid Address: ${address}`);
-      return 'Invalid Address';
+      return "Invalid Address";
     }
     const nonce = hexlify(randomBytes(16));
     const expiry = Date.now() + (2 * 60 * 60 * 1000);
@@ -34,11 +34,11 @@ export class UserService {
 
   async verifySig(givenAddress: string, token: string): Promise<boolean | User> {
     // Get & validate the nonce + signature from provided token
-    if (token.indexOf(':') === -1) {
+    if (token.indexOf(":") === -1) {
       return this.badToken(`Missing or malformed token: ${token}`);
     }
-    const nonce = token.split(':')[0];
-    const sig = token.split(':')[1];
+    const nonce = token.split(":")[0];
+    const sig = token.split(":")[1];
     if (!isValidHex(nonce, 16) || !isValidHex(sig, 65)) {
       return this.badToken(`Improperly formatted nonce or sig in token: ${token}`);
     }

@@ -1,8 +1,8 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable } from "@nestjs/common";
 
-import { ConfigService } from './config/config.service';
+import { ConfigService } from "./config/config.service";
 import { LoggerService } from "./logger/logger.service";
-import { TwitterService } from './twitter/twitter.service';
+import { TwitterService } from "./twitter/twitter.service";
 
 @Injectable()
 export class AppService {
@@ -23,22 +23,22 @@ export class AppService {
         query.oauth_token,
         query.oauth_verifier,
       );
-      return 'Hello new tip bot minion!';
+      return "Hello new tip bot minion!";
     }
     if (this.twitter.authUrl) {
       return `Hello World!<br/><a href="${this.twitter.authUrl}">Click to join the tip bot army</a>`;
     }
-    return 'Hello World!';
+    return "Hello World!";
   }
 
   async triggerCRC(): Promise<string> {
     this.log.info(`Triggering Twitter CRC`);
     if (await this.twitter.triggerCRC()) {
       this.log.info(`Success`);
-      return 'success';
+      return "success";
     } else {
       this.log.info(`CRC Failed`);
-      return 'failure';
+      return "failure";
     }
   }
 }

@@ -32,7 +32,7 @@ export class PaymentService {
 
   public createPayment = async (amount: string, recipient: User): Promise<Payment> => {
     const amountBN = parseEther(amount);
-    if (amount.startsWith('-') || amountBN.lte(Zero)) {
+    if (amount.startsWith("-") || amountBN.lte(Zero)) {
       throw new Error(`Cannot create payment of value <= 0: ${amount}`);
     }
     this.log.info(`Creating $${amount} payment for user ${recipient.id}`);
@@ -58,7 +58,7 @@ export class PaymentService {
     payment.sender = await this.botUser;
     payment.secret = linkResult.preImage;
     payment.amount = amount;
-    payment.status = 'PENDING';
+    payment.status = "PENDING";
     recipient.cashout = payment;
     await this.paymentRepo.save(payment);
     this.log.info(`Saved new payment for user ${recipient.id}: ${payment.paymentId}`);
@@ -74,7 +74,7 @@ export class PaymentService {
     let payment = await this.paymentRepo.findByPaymentId(paymentId);
     if (payment) {
       payment = await this.updatePayment(payment);
-      if (payment.status !== 'PENDING') {
+      if (payment.status !== "PENDING") {
         if (sender.cashout) {
           return `Link payment already applied, status: ${payment.status}. Balance: $${sender.cashout.amount}.\n` +
             `Cashout anytime by clicking the following link:\n\n` +
@@ -90,14 +90,14 @@ export class PaymentService {
     payment.paymentId = paymentId;
     payment.secret = secret;
     payment = await this.updatePayment(payment);
-    if (payment.status !== 'PENDING') {
+    if (payment.status !== "PENDING") {
       return `Link payment not redeemable, status: ${payment.status}. Your balance: $${sender.cashout.amount}`;
     }
     let senderBalance = parseEther(await this.redeemPayment(payment));
-    let cashoutAmt = '0.00';
+    let cashoutAmt = "0.00";
     if (sender.cashout) {
       const cashout = await this.updatePayment(sender.cashout);
-      if (cashout.status === 'PENDING') {
+      if (cashout.status === "PENDING") {
         cashoutAmt = await this.redeemPayment(cashout);
         senderBalance = senderBalance.add(parseEther(cashoutAmt));
       }
@@ -140,15 +140,15 @@ export class PaymentService {
     } catch (e) {
       if (e.message.match(/already been redeemed/i)) {
         this.log.warn(`Failed to redeem link payment, already redeemed.`);
-        redeemedAmount = '0.0';
+        redeemedAmount = "0.0";
       } else if (e.message.match(/has not been installed/i)) {
         this.log.warn(`Failed to redeem link payment, node has uninstalled this app.`);
-        redeemedAmount = '0.0';
+        redeemedAmount = "0.0";
       } else {
         throw e;
       }
     }
-    payment.status = 'REDEEMED';
+    payment.status = "REDEEMED";
     await this.paymentRepo.save(payment);
     freeTokenBalance = await channel.getFreeBalance(this.channelService.tokenAddress);
     this.log.info(`New token balances: Bot ${formatEther(freeTokenBalance[channel.signerAddress])} | Node ${formatEther(freeTokenBalance[channel.nodeSignerAddress])}`);
@@ -177,8 +177,8 @@ export class PaymentService {
         await this.paymentRepo.save(payment);
       }
     } else {
-      payment.status = 'UNKNOWN';
-      payment.amount = '0.00';
+      payment.status = "UNKNOWN";
+      payment.amount = "0.00";
     }
     return payment;
   }

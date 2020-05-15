@@ -1,14 +1,14 @@
-import { connect as connext } from '@connext/client';
+import { connect as connext } from "@connext/client";
 import { getPostgresStore } from "@connext/store";
 import { StoreTypes } from "@connext/types";
-import { Injectable } from '@nestjs/common';
-import { AddressZero, Zero } from 'ethers/constants';
-import { bigNumberify, formatEther, parseEther } from 'ethers/utils';
+import { Injectable } from "@nestjs/common";
+import { AddressZero, Zero } from "ethers/constants";
+import { bigNumberify, formatEther, parseEther } from "ethers/utils";
 
-import { ConfigService } from '../config/config.service';
+import { ConfigService } from "../config/config.service";
 import { LoggerService } from "../logger/logger.service";
 
-import { ChannelRecordRepository } from './channel.repository';
+import { ChannelRecordRepository } from "./channel.repository";
 
 @Injectable()
 export class ChannelService {
@@ -33,7 +33,7 @@ export class ChannelService {
       const channel = await connext({
         ...this.config.channel,
         store,
-        loggerService: this.log.newContext("Connext")
+        loggerService: this.log.newContext("Connext"),
       });
 
       this.log.info(`Successfully connected to state channel!`);

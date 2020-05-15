@@ -1,6 +1,6 @@
-import { EntityRepository, IsNull, Not, Repository } from 'typeorm';
+import { EntityRepository, IsNull, Not, Repository } from "typeorm";
 
-import { Deposit } from './deposit.entity';
+import { Deposit } from "./deposit.entity";
 
 @EntityRepository(Deposit)
 export class DepositRepository extends Repository<Deposit> {

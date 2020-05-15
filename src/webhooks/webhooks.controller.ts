@@ -26,16 +26,16 @@ export class WebhooksController {
   @Get("twitter")
   doTwitterCRC(@Query() query: any): TwitterCRCResponse {
     const hmac = crypto
-      .createHmac('sha256', this.config.twitterHmac)
+      .createHmac("sha256", this.config.twitterHmac)
       .update(query.crc_token);
-    const response_token = `sha256=${hmac.digest('base64')}`;
+    const response_token = `sha256=${hmac.digest("base64")}`;
     this.log.info(`Got CRC, responding with: ${response_token}`);
     return { response_token };
   }
 
-  @Post('twitter')
+  @Post("twitter")
   async handleTwitterEvent(@Query() query: any, @Body() body: any): Promise<any> {
-    const keys = Object.keys(body).filter(key => key !== 'for_user_id');
+    const keys = Object.keys(body).filter(key => key !== "for_user_id");
     this.log.debug(`Got twitter events: ${JSON.stringify(keys)}`);
 
     if (body.tweet_create_events) {

@@ -1,15 +1,15 @@
-import { Body, Controller, Get, Post } from '@nestjs/common';
+import { Body, Controller, Get, Post } from "@nestjs/common";
 
-import { ConfigService } from '../config/config.service';
-import { QueueService } from '../queue/queue.service';
-import { UserRepository } from '../user/user.repository';
-import { UserService } from '../user/user.service';
-import { isValidHex } from '../utils';
+import { ConfigService } from "../config/config.service";
+import { QueueService } from "../queue/queue.service";
+import { UserRepository } from "../user/user.repository";
+import { UserService } from "../user/user.service";
+import { isValidHex } from "../utils";
 
 import { LoggerService } from "../logger/logger.service";
-import { MessageService } from './message.service';
+import { MessageService } from "./message.service";
 
-@Controller('message')
+@Controller("message")
 export class MessageController {
   constructor(
     private readonly config: ConfigService,
@@ -22,18 +22,18 @@ export class MessageController {
     this.log.setContext("MessageController");
   }
 
-  @Post('public')
+  @Post("public")
   async doPublicMessage(@Body() body: any): Promise<string> {
     this.log.debug(`Got body: ${JSON.stringify(body)}`);
     const { address, message, recipientId, token } = body;
     if (!address || !message || !recipientId || !token) {
-      return 'Invalid Body, expected fields: address, message, recipientId, token';
+      return "Invalid Body, expected fields: address, message, recipientId, token";
     }
     if (!isValidHex(address, 20)) {
-      return 'Invalid Address, expected 20 byte hex';
+      return "Invalid Address, expected 20 byte hex";
     }
     if (!(await this.userService.verifySig(address, token))) {
-      return 'Invalid Token';
+      return "Invalid Token";
     }
     return await this.queueService.enqueue(
       async () => this.messageService.handlePublicMessage(
@@ -44,18 +44,18 @@ export class MessageController {
     );
   }
 
-  @Post('private')
+  @Post("private")
   async doPrivateMessage(@Body() body: any): Promise<string> {
     this.log.debug(`Got body: ${JSON.stringify(body)}`);
     const { address, message, token, urls } = body;
-    if (!address || (!message && message !== '') || !token) {
-      return 'Invalid Body, expected fields: address, message, token';
+    if (!address || (!message && message !== "") || !token) {
+      return "Invalid Body, expected fields: address, message, token";
     }
     if (!isValidHex(address, 20)) {
-      return 'Invalid Address, expected 20 byte hex';
+      return "Invalid Address, expected 20 byte hex";
     }
     if (!(await this.userService.verifySig(address, token))) {
-      return 'Invalid Token';
+      return "Invalid Token";
     }
     const response = await this.queueService.enqueue(
       async () => this.messageService.handlePrivateMessage(
@@ -64,9 +64,9 @@ export class MessageController {
       ),
     );
     if (response) {
-      return response.join('\n\n');
+      return response.join("\n\n");
     }
-    return '';
+    return "";
   }
 
 }

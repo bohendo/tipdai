@@ -1,14 +1,15 @@
-import { Injectable } from '@nestjs/common'; import { OAuth } from 'oauth';
-import * as qs from 'qs';
+import { Injectable } from "@nestjs/common";
+import { OAuth } from "oauth";
+import * as qs from "qs";
 
-import { ConfigService } from '../config/config.service';
+import { ConfigService } from "../config/config.service";
 import { LoggerService } from "../logger/logger.service";
-import { tipRegex } from '../constants';
-import { MessageService } from '../message/message.service';
-import { UserRepository } from '../user/user.repository';
-import { User } from '../user/user.entity';
+import { tipRegex } from "../constants";
+import { MessageService } from "../message/message.service";
+import { UserRepository } from "../user/user.repository";
+import { User } from "../user/user.entity";
 
-import { Twitter } from './twitter.client';
+import { Twitter } from "./twitter.client";
 
 /*
 const bohendo_id = '259539164'
@@ -146,7 +147,7 @@ export class TwitterService {
 
   public getMentions = async (options) => {
     if (this.invalid) { return; }
-    const defaults = { count: '5', trim_user: true, include_entities: true };
+    const defaults = { count: "5", trim_user: true, include_entities: true };
     const res = await this.twitterBot.getMentions({ ...defaults, ...options });
     return res.map(tweet => tweet.text);
   }
@@ -161,7 +162,7 @@ export class TwitterService {
     const res = await this.twitterApp.requestToken();
     const data = qs.parse(res);
     this.log.info(`Got token data: ${JSON.stringify(data)}`);
-    const baseUrl = 'https://api.twitter.com/oauth/authorize';
+    const baseUrl = "https://api.twitter.com/oauth/authorize";
     this.authUrl = `${baseUrl}?oauth_token=${data.oauth_token}`;
     this.log.info(`Login at: ${this.authUrl}`);
     return this.authUrl;
@@ -217,7 +218,7 @@ export class TwitterService {
       })),
     ));
     this.log.info(`Done unsubscribing, time to do some subscribing`);
-    const newWebhook = await this.twitterApp.createWebhook('/webhooks/twitter');
+    const newWebhook = await this.twitterApp.createWebhook("/webhooks/twitter");
     this.log.info(`Created webhook: ${JSON.stringify(newWebhook, null, 2)}`);
     // 3. Create a new subscription
     const newSubscription = await this.twitterBot.createSubscription();

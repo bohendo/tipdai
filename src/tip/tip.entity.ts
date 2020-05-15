@@ -1,6 +1,6 @@
-import { Column, Entity, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
+import { Column, Entity, ManyToOne, PrimaryGeneratedColumn } from "typeorm";
 
-import { User } from '../user/user.entity';
+import { User } from "../user/user.entity";
 
 @Entity()
 export class Tip {
@@ -13,12 +13,12 @@ export class Tip {
   @ManyToOne(type => User, { cascade: true })
   recipient: User;
 
-  @Column('text')
+  @Column("text")
   amount!: string;
 
-  @Column('text')
+  @Column("text")
   message!: string;
 
-  @Column('text')
+  @Column("text")
   result!: string;
 }

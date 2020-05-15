@@ -1,6 +1,6 @@
-import { Controller, Get, Query } from '@nestjs/common';
+import { Controller, Get, Query } from "@nestjs/common";
 
-import { AppService } from './app.service';
+import { AppService } from "./app.service";
 
 @Controller()
 export class AppController {
@@ -11,7 +11,7 @@ export class AppController {
     return await this.appService.getHello(query);
   }
 
-  @Get('crc')
+  @Get("crc")
   async triggerCRC(): Promise<string> {
     return await this.appService.triggerCRC();
   }

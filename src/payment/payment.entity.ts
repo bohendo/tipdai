@@ -1,22 +1,22 @@
-import { Column, Entity, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
+import { Column, Entity, ManyToOne, PrimaryGeneratedColumn } from "typeorm";
 
-import { User } from '../user/user.entity';
+import { User } from "../user/user.entity";
 
 @Entity()
 export class Payment {
   @PrimaryGeneratedColumn()
   id!: number;
 
-  @Column('text')
+  @Column("text")
   paymentId!: string;
 
-  @Column('text')
+  @Column("text")
   secret!: string;
 
-  @Column('text')
+  @Column("text")
   amount!: string;
 
-  @Column('text')
+  @Column("text")
   status!: string;
 
   @ManyToOne(type => User, { cascade: true })

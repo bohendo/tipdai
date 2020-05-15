@@ -78,7 +78,7 @@ export class MessageService {
     this.log.info(`Default: handling balance query`);
     if (sender.cashout) {
       sender.cashout = await this.payment.updatePayment(sender.cashout);
-      if (sender.cashout.status === 'PENDING') {
+      if (sender.cashout.status === "PENDING") {
         return [
           `Balance: $${sender.cashout.amount}. Cashout anytime by clicking the following link:\n\n` +
           `${this.config.paymentUrl}?paymentId=${sender.cashout.paymentId}&secret=${sender.cashout.secret}`,

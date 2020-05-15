@@ -1,9 +1,9 @@
-import { Module } from '@nestjs/common';
+import { Module } from "@nestjs/common";
 
-import { ConfigModule } from '../config/config.module';
-import { LoggerModule } from '../logger/logger.module';
+import { ConfigModule } from "../config/config.module";
+import { LoggerModule } from "../logger/logger.module";
 
-import { QueueService } from './queue.service';
+import { QueueService } from "./queue.service";
 
 @Module({
   exports: [QueueService],

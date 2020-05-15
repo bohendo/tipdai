@@ -118,7 +118,7 @@ export class DepositService {
             parseEther(dep.amount).mul(parseEther(swapRate)),
           );
           expectedDeposit = formatEther(
-            expectedDeposit.substring(0, expectedDeposit.indexOf('.')),
+            expectedDeposit.substring(0, expectedDeposit.indexOf(".")),
           );
           this.log.info(`expectedDeposit: ${expectedDeposit}`);
           let tokenBalances = await channel.getFreeBalance(tokenAddress);

@@ -1,4 +1,4 @@
-import { EventEmitter } from 'events';
+import { EventEmitter } from "events";
 
 export class Action extends EventEmitter {
   private callback: any;
@@ -11,9 +11,9 @@ export class Action extends EventEmitter {
   async execute(): Promise<void> {
     try {
       const result = await this.callback();
-      this.emit('resolve', result);
+      this.emit("resolve", result);
     } catch (e) {
-      this.emit('reject', e);
+      this.emit("reject", e);
     }
   }
 }

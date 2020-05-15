@@ -1,6 +1,6 @@
-import { EntityManager, EntityRepository, Repository } from 'typeorm';
+import { EntityManager, EntityRepository, Repository } from "typeorm";
 
-import { ChannelRecord } from './channel.entity';
+import { ChannelRecord } from "./channel.entity";
 
 type StringKeyValue = { [path: string]: StringKeyValue };
 
@@ -16,13 +16,13 @@ export class ChannelRecordRepository extends Repository<ChannelRecord> {
     // are nested under the respective keywords, hence the 'like' keyword
     // Action item: this hack won't be needed when a more robust schema around
     // node records is implemented
-    if (path.endsWith('channel') || path.endsWith('appInstanceIdToProposedAppInstance')) {
-      res = await this.createQueryBuilder('node_records')
-        .where('node_records.path like :path', { path: `%${path}%` })
+    if (path.endsWith("channel") || path.endsWith("appInstanceIdToProposedAppInstance")) {
+      res = await this.createQueryBuilder("node_records")
+        .where("node_records.path like :path", { path: `%${path}%` })
         .getMany();
       const nestedRecords = res.map((record: ChannelRecord) => {
         const existingKey = Object.keys(record.value)[0];
-        const leafKey = existingKey.split('/').pop()!;
+        const leafKey = existingKey.split("/").pop()!;
         const nestedValue = record.value[existingKey];
         delete record.value[existingKey];
         record.value[leafKey] = nestedValue;

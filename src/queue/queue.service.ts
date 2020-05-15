@@ -20,8 +20,8 @@ export class QueueService {
   public enqueue = (callback: any): Promise<any> => {
     return new Promise((resolve: any, reject: any): any => {
       const action = new Action(callback);
-      action.once('resolve', resolve);
-      action.once('reject', reject);
+      action.once("resolve", resolve);
+      action.once("reject", reject);
       this.log.info(`Adding action to queue. There are ${this.queue.length} other actions pending.`);
       this.queue.push(action);
       this.process();

@@ -1,6 +1,6 @@
-import { EntityRepository, Repository } from 'typeorm';
+import { EntityRepository, Repository } from "typeorm";
 
-import { Payment } from './payment.entity';
+import { Payment } from "./payment.entity";
 
 @EntityRepository(Payment)
 export class PaymentRepository extends Repository<Payment> {

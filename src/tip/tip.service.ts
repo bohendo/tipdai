@@ -46,21 +46,21 @@ export class TipService {
         this.log.info(`Sender balance $0.00 (no deposits) is less than tip amount of ${amount}`);
         newTip.result = "INSUFFICIENT_BALANCE";
         await this.tipRepo.save(newTip);
-        return `You don"t have a high enough balance to send a $${amount} tip, ` +
+        return `You don't have a high enough balance to send a $${amount} tip, ` +
           `DM me a link payment to increase your balance & then try again.`;
       }
       if (sender.cashout.status !== "PENDING") {
         this.log.info(`Sender balance $0.00 (prev cashout of $${sender.cashout.amount} ${sender.cashout.status}) is lower than tip amount of ${amount}`);
         newTip.result = "INSUFFICIENT_BALANCE";
         await this.tipRepo.save(newTip);
-        return `You don"t have a high enough balance to send a $${amount} tip, ` +
+        return `You don't have a high enough balance to send a $${amount} tip, ` +
           `DM me a link payment to increase your balance & then try again.`;
       }
       if (parseEther(sender.cashout.amount).lt(amountBN)) {
         this.log.info(`Sender balance $${sender.cashout.amount} is lower than tip amount of ${amount}`);
         newTip.result = "INSUFFICIENT_BALANCE";
         await this.tipRepo.save(newTip);
-        return `You don"t have a high enough balance to send a $${amount} tip, ` +
+        return `You don't have a high enough balance to send a $${amount} tip, ` +
           `DM me a link payment to increase your balance & then try again.`;
       }
 

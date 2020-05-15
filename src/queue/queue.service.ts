@@ -1,20 +1,20 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable } from "@nestjs/common";
 
-import { ConfigService } from '../config/config.service';
-import { Logger } from '../utils';
+import { ConfigService } from "../config/config.service";
+import { LoggerService } from "../logger/logger.service";
 
-import { Action } from './action';
+import { Action } from "./action";
 
 @Injectable()
 export class QueueService {
   private queue: Action[] = [];
   private current: any;
-  private log: Logger;
 
   public constructor(
     private readonly config: ConfigService,
+    private readonly log: LoggerService,
   ) {
-    this.log = new Logger('QueueService', this.config.logLevel);
+    this.log.setContext("QueueService");
   }
 
   public enqueue = (callback: any): Promise<any> => {

@@ -1,31 +1,31 @@
-import { Injectable } from '@nestjs/common';
-import { AddressZero } from 'ethers/constants';
-import { formatEther, parseEther } from 'ethers/utils';
+import { ConditionalTransferTypes } from "@connext/types";
+import { Injectable } from "@nestjs/common";
+import { AddressZero } from "ethers/constants";
+import { formatEther, parseEther } from "ethers/utils";
 
-import { ChannelService } from '../channel/channel.service';
-import { ConfigService } from '../config/config.service';
-import { PaymentService } from '../payment/payment.service';
-import { Logger } from '../utils';
+import { ChannelService } from "../channel/channel.service";
+import { ConfigService } from "../config/config.service";
+import { LoggerService } from "../logger/logger.service";
+import { PaymentService } from "../payment/payment.service";
 
-import { Deposit } from './deposit.entity';
-import { DepositRepository } from './deposit.repository';
-import { User } from '../user/user.entity';
-import { UserRepository } from '../user/user.repository';
+import { Deposit } from "./deposit.entity";
+import { DepositRepository } from "./deposit.repository";
+import { User } from "../user/user.entity";
+import { UserRepository } from "../user/user.repository";
 
 const timeout = 1000 * 60 * 25;
 
 @Injectable()
 export class DepositService {
-  private log: Logger;
-
   constructor(
     private readonly config: ConfigService,
     private readonly channel: ChannelService,
     private readonly depositRepo: DepositRepository,
+    private readonly log: LoggerService,
     private readonly payment: PaymentService,
     private readonly userRepo: UserRepository,
   ) {
-    this.log = new Logger('DepositService', this.config.logLevel);
+    this.log.setContext("DepositService");
     this.startDepositPoller();
   }
 
@@ -122,7 +122,7 @@ export class DepositService {
           );
           this.log.info(`expectedDeposit: ${expectedDeposit}`);
           let tokenBalances = await channel.getFreeBalance(tokenAddress);
-          const oldChannelTokens = tokenBalances[channel.freeBalanceAddress];
+          const oldChannelTokens = tokenBalances[channel.signerAddress];
           this.log.info(`Old channel balance: ${oldChannelTokens}`);
 
           /*
@@ -147,13 +147,13 @@ export class DepositService {
             const link = await channel.conditionalTransfer({
               amount: parseEther(user.balance),
               assetId: tokenAddress,
-              conditionType: 'LINKED_TRANSFER',
+              conditionType: ConditionalTransferTypes.LinkedTransfer,
             });
           }
           */
 
           tokenBalances = await channel.getFreeBalance(tokenAddress);
-          const newChannelTokens = tokenBalances[channel.freeBalanceAddress];
+          const newChannelTokens = tokenBalances[channel.signerAddress];
 
           this.log.info(`Depositor old balance: ${user.cashout.amount}`);
 

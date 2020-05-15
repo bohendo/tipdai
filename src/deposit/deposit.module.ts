@@ -3,6 +3,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 
 import { ChannelModule } from '../channel/channel.module';
 import { ConfigModule } from '../config/config.module';
+import { LoggerModule } from '../logger/logger.module';
 import { PaymentModule } from '../payment/payment.module';
 
 import { DepositRepository } from './deposit.repository';
@@ -14,6 +15,7 @@ import { UserRepository } from '../user/user.repository';
   exports: [DepositService],
   imports: [
     ConfigModule,
+    LoggerModule,
     ChannelModule,
     PaymentModule,
     TypeOrmModule.forFeature([DepositRepository, UserRepository]),

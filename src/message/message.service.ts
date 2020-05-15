@@ -1,28 +1,27 @@
-import { Injectable } from '@nestjs/common';
-import { bigNumberify, formatEther, parseEther } from 'ethers/utils';
-import { Zero } from 'ethers/constants';
+import { Injectable } from "@nestjs/common";
+import { bigNumberify, formatEther, parseEther } from "ethers/utils";
+import { Zero } from "ethers/constants";
 
-import { ConfigService } from '../config/config.service';
-import { paymentIdRegex, secretRegex, tipRegex } from '../constants';
-import { DepositService } from '../deposit/deposit.service';
-import { PaymentService } from '../payment/payment.service';
-import { QueueService } from '../queue/queue.service';
-import { TipService } from '../tip/tip.service';
-import { User } from '../user/user.entity';
-import { Logger } from '../utils';
+import { ConfigService } from "../config/config.service";
+import { LoggerService } from "../logger/logger.service";
+import { paymentIdRegex, secretRegex, tipRegex } from "../constants";
+import { DepositService } from "../deposit/deposit.service";
+import { PaymentService } from "../payment/payment.service";
+import { QueueService } from "../queue/queue.service";
+import { TipService } from "../tip/tip.service";
+import { User } from "../user/user.entity";
 
 @Injectable()
 export class MessageService {
-  private log: Logger;
-
   constructor(
     private readonly config: ConfigService,
     private readonly deposit: DepositService,
+    private readonly log: LoggerService,
     private readonly payment: PaymentService,
     private readonly queue: QueueService,
     private readonly tip: TipService,
   ) {
-    this.log = new Logger('MessageService', this.config.logLevel);
+    this.log.setContext("MessageService");
   }
 
   public handlePublicMessage = async (

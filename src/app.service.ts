@@ -1,18 +1,17 @@
 import { Injectable } from '@nestjs/common';
 
 import { ConfigService } from './config/config.service';
+import { LoggerService } from "./logger/logger.service";
 import { TwitterService } from './twitter/twitter.service';
-import { Logger } from './utils';
 
 @Injectable()
 export class AppService {
-  private log: Logger;
-
   constructor(
     private readonly config: ConfigService,
+    private readonly log: LoggerService,
     private readonly twitter: TwitterService,
   ) {
-    this.log = new Logger('AppService', this.config.logLevel);
+    this.log.setContext("AppService");
   }
 
   async getHello(query: any): Promise<string> {

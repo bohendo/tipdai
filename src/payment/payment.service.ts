@@ -1,32 +1,33 @@
-import { Injectable } from '@nestjs/common';
-import { bigNumberify, formatEther, hexlify, parseEther, randomBytes } from 'ethers/utils';
-import { AddressZero, Zero } from 'ethers/constants';
+import { ConditionalTransferTypes } from "@connext/types";
+import { Injectable } from "@nestjs/common";
+import { bigNumberify, formatEther, hexlify, parseEther, randomBytes } from "ethers/utils";
+import { AddressZero, Zero } from "ethers/constants";
 
-import { ChannelService } from '../channel/channel.service';
-import { ConfigService } from '../config/config.service';
-import { Payment } from '../payment/payment.entity';
-import { PaymentRepository } from '../payment/payment.repository';
-import { User } from '../user/user.entity';
-import { UserRepository } from '../user/user.repository';
-import { Logger } from '../utils';
+import { ChannelService } from "../channel/channel.service";
+import { ConfigService } from "../config/config.service";
+import { LoggerService } from "../logger/logger.service";
+import { Payment } from "../payment/payment.entity";
+import { PaymentRepository } from "../payment/payment.repository";
+import { User } from "../user/user.entity";
+import { UserRepository } from "../user/user.repository";
 
-const LINK_LIMIT = parseEther('10');
+const LINK_LIMIT = parseEther("10");
 const paymentIdRegex = /paymentId=0x[0-9a-fA-F]{64}/;
 const secretRegex = /secret=0x[0-9a-fA-F]{64}/;
 
 @Injectable()
 export class PaymentService {
   private botUser: Promise<User>;
-  private log: Logger;
 
   constructor(
     private readonly channelService: ChannelService,
     private readonly config: ConfigService,
+    private readonly log: LoggerService,
     private readonly paymentRepo: PaymentRepository,
     private readonly userRepo: UserRepository,
   ) {
     this.botUser = this.userRepo.getTwitterUser(this.config.twitterBotUserId);
-    this.log = new Logger('PaymentService', this.config.logLevel);
+    this.log.setContext("PaymentService");
   }
 
   public createPayment = async (amount: string, recipient: User): Promise<Payment> => {
@@ -36,10 +37,18 @@ export class PaymentService {
     }
     this.log.info(`Creating $${amount} payment for user ${recipient.id}`);
     const channel = await this.channelService.getChannel();
+
+    let freeTokenBalance = await channel.getFreeBalance(this.channelService.tokenAddress);
+    this.log.info(`Token balances: Bot ${formatEther(freeTokenBalance[channel.signerAddress])} | Node ${formatEther(freeTokenBalance[channel.nodeSignerAddress])}`);
+    this.log.info(`Bot needs token balance >= ${amount}`);
+    if (bigNumberify(freeTokenBalance[channel.signerAddress]).lt(parseEther(amount))) {
+      throw new Error(`User does not have enough free balance to create a $${amount} link payment`);
+    }
+
     const linkResult = await channel.conditionalTransfer({
       assetId: this.channelService.tokenAddress,
       amount: amountBN.toString(),
-      conditionType: 'LINKED_TRANSFER',
+      conditionType: ConditionalTransferTypes.LinkedTransfer,
       paymentId: hexlify(randomBytes(32)),
       preImage: hexlify(randomBytes(32)),
     });
@@ -110,27 +119,19 @@ export class PaymentService {
   public redeemPayment = async (payment: Payment): Promise<string> => {
     this.log.info(`Redeeming $${payment.amount} ${payment.status} payment: ${payment.paymentId}`);
     const channel = await this.channelService.getChannel();
-    const freeTokenBalance = await channel.getFreeBalance(this.channelService.tokenAddress);
-    const hubFreeBalanceAddress = Object.keys(freeTokenBalance).find(
-      addr => addr.toLowerCase() !== channel.freeBalanceAddress.toLowerCase(),
-    );
-    const collateral = freeTokenBalance[hubFreeBalanceAddress];
-    this.log.info(`We've been collateralized with ${formatEther(collateral)}, need ${payment.amount}`);
-    // TODO: compare to default collateralization?
-    if (bigNumberify(collateral).lt(parseEther(payment.amount))) {
-      await channel.addPaymentProfile({
-        amountToCollateralize:
-          parseEther(payment.amount).sub(freeTokenBalance[hubFreeBalanceAddress]).toString(),
-        minimumMaintainedCollateral: parseEther(payment.amount).toString(),
-        assetId: this.channelService.tokenAddress,
-      });
+    let freeTokenBalance = await channel.getFreeBalance(this.channelService.tokenAddress);
+    const collateral = formatEther(freeTokenBalance[channel.nodeSignerAddress]);
+    this.log.info(`Token balances: Bot ${formatEther(freeTokenBalance[channel.signerAddress])} | Node ${collateral}`);
+    this.log.info(`Node needs token balance of >= ${payment.amount}`);
+    if (parseEther(collateral).lt(parseEther(payment.amount))) {
+      this.log.info(`Requesting more collateral for ${this.channelService.tokenAddress}`);
       await channel.requestCollateral(this.channelService.tokenAddress);
-      this.log.info(`Requested more collateral successfully`);
     }
     let redeemedAmount;
     try {
+      this.log.info(`Resolving link transfer`);
       const result = await channel.resolveCondition({
-        conditionType: 'LINKED_TRANSFER',
+        conditionType: ConditionalTransferTypes.LinkedTransfer,
         paymentId: payment.paymentId,
         preImage: payment.secret,
       });
@@ -149,6 +150,8 @@ export class PaymentService {
     }
     payment.status = 'REDEEMED';
     await this.paymentRepo.save(payment);
+    freeTokenBalance = await channel.getFreeBalance(this.channelService.tokenAddress);
+    this.log.info(`New token balances: Bot ${formatEther(freeTokenBalance[channel.signerAddress])} | Node ${formatEther(freeTokenBalance[channel.nodeSignerAddress])}`);
     return redeemedAmount;
   }
 

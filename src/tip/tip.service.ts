@@ -1,32 +1,31 @@
-import { Injectable } from '@nestjs/common';
-import { Zero } from 'ethers/constants';
-import { formatEther, parseEther } from 'ethers/utils';
+import { Injectable } from "@nestjs/common";
+import { Zero } from "ethers/constants";
+import { formatEther, parseEther } from "ethers/utils";
 
-import { ConfigService } from '../config/config.service';
-import { PaymentService } from '../payment/payment.service';
-import { User } from '../user/user.entity';
-import { UserRepository } from '../user/user.repository';
-import { Logger } from '../utils';
+import { ConfigService } from "../config/config.service";
+import { LoggerService } from "../logger/logger.service";
+import { PaymentService } from "../payment/payment.service";
+import { User } from "../user/user.entity";
+import { UserRepository } from "../user/user.repository";
 
-import { Tip } from './tip.entity';
-import { TipRepository } from '../tip/tip.repository';
+import { Tip } from "./tip.entity";
+import { TipRepository } from "../tip/tip.repository";
 
 @Injectable()
 export class TipService {
-  private log: Logger;
-
   constructor(
     private readonly config: ConfigService,
+    private readonly log: LoggerService,
     private readonly userRepo: UserRepository,
     private readonly tipRepo: TipRepository,
     private readonly payment: PaymentService,
   ) {
-    this.log = new Logger('TipService', this.config.logLevel);
+    this.log.setContext("TipService");
   }
 
   public handleTip = async (sender: User, recipient: User, amount: string, message: string): Promise<string> => {
     const amountBN = parseEther(amount);
-    this.log.info(`Handling tip from ${sender.twitterId} to ${recipient.twitterId} amount ${amount}`);
+    this.log.info(`Handling tip of ${amount} from ${JSON.stringify(sender)} to ${JSON.stringify(recipient)}`);
     const newTip = new Tip();
     newTip.message = message;
     newTip.sender = sender;

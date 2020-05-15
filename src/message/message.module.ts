@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 
 import { ConfigModule } from '../config/config.module';
+import { LoggerModule } from '../logger/logger.module';
 import { DepositModule } from '../deposit/deposit.module';
 import { PaymentModule } from '../payment/payment.module';
 import { QueueModule } from '../queue/queue.module';
@@ -18,6 +19,7 @@ import { MessageService } from './message.service';
   imports: [
     ConfigModule,
     DepositModule,
+    LoggerModule,
     PaymentModule,
     QueueModule,
     TipModule,

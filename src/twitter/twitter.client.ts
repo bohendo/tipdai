@@ -6,7 +6,6 @@ import { OAuth } from 'oauth';
 import * as qs from 'qs';
 
 import { TwitterConfig } from '../types';
-import { Logger } from '../utils';
 
 type OAuthError = {
   statusCode: number;
@@ -36,7 +35,7 @@ export class Twitter {
   callbackUrl: string;
   consumerKey: string;
   consumerSecret: string;
-  log: Logger;
+  log?: any;
   oauth: OAuth;
   webhook: any;
 
@@ -47,7 +46,7 @@ export class Twitter {
     this.callbackUrl = config.callbackUrl;
     this.consumerKey = config.consumerKey;
     this.consumerSecret = config.consumerSecret;
-    this.log = config.logger;
+    this.log = config.log || console;
     this.webhook = config.webhook;
     this.oauth = new OAuth(
       'https://api.twitter.com/oauth/request_token',

@@ -1,10 +1,10 @@
-import { Column, Entity, PrimaryColumn } from 'typeorm';
+import { Column, Entity, PrimaryColumn } from "typeorm";
 
-@Entity('channel_records')
+@Entity("channel_records")
 export class ChannelRecord {
   @PrimaryColumn()
   path!: string;
 
-  @Column({ type: 'json' })
+  @Column({ type: "json" })
   value!: object;
 }

@@ -2,21 +2,22 @@ import { Injectable } from '@nestjs/common';
 import { arrayify, hexlify, randomBytes, verifyMessage } from 'ethers/utils';
 
 import { ConfigService } from '../config/config.service';
+import { LoggerService } from "../logger/logger.service";
 import { User } from '../user/user.entity';
 import { UserRepository } from '../user/user.repository';
-import { isValidHex, Logger } from '../utils';
+import { isValidHex } from '../utils';
 
 @Injectable()
 export class UserService {
-  private log: Logger;
   private nonces: { [key: string]: { address: string; expiry: number } } = {};
   private signerCache: { [key: string]: string } = {};
 
   constructor(
     private readonly config: ConfigService,
+    private readonly log: LoggerService,
     private readonly userRepo: UserRepository,
   ) {
-    this.log = new Logger('UserService', this.config.logLevel);
+    this.log.setContext("UserService");
   }
 
   getNonce(address: string): string | undefined {

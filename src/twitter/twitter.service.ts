@@ -2,11 +2,11 @@ import { Injectable } from '@nestjs/common'; import { OAuth } from 'oauth';
 import * as qs from 'qs';
 
 import { ConfigService } from '../config/config.service';
+import { LoggerService } from "../logger/logger.service";
 import { tipRegex } from '../constants';
 import { MessageService } from '../message/message.service';
 import { UserRepository } from '../user/user.repository';
 import { User } from '../user/user.entity';
-import { Logger } from '../utils';
 
 import { Twitter } from './twitter.client';
 
@@ -19,7 +19,6 @@ const tipfakedai_id = '1167103783056367616'
 @Injectable()
 export class TwitterService {
   private invalid: boolean = false;
-  private log: Logger;
   private twitterApp: any;
   private twitterBot: any;
   private twitterDev: any;
@@ -30,12 +29,13 @@ export class TwitterService {
 
   constructor(
     private readonly config: ConfigService,
+    private readonly log: LoggerService,
     private readonly userRepo: UserRepository,
     private readonly message: MessageService,
   ) {
-    this.log = new Logger('TwitterService', this.config.logLevel);
+    this.log.setContext("TwitterService");
     if (!this.config.twitterDev.consumerKey || !this.config.twitterDev.consumerSecret) {
-      this.log.warn(`[Twitter] Missing consumer token and/or secret, twitter stuff won't work.`);
+      this.log.warn(`Missing consumer token and/or secret, twitter stuff won't work.`);
       this.invalid = true;
     } else {
       this.twitterDev = new Twitter(this.config.twitterDev);

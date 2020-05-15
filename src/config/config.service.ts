@@ -1,10 +1,9 @@
-import { Injectable } from '@nestjs/common';
-import { JsonRpcProvider } from 'ethers/providers';
-import { Wallet } from 'ethers';
-import * as fs from 'fs';
+import { Injectable } from "@nestjs/common";
+import { JsonRpcProvider } from "ethers/providers";
+import { Wallet } from "ethers";
+import * as fs from "fs";
 
-import { PostgresConfig, TwitterConfig } from '../types';
-import { Logger } from '../utils';
+import { PostgresConfig, TwitterConfig } from "../types";
 
 const env = {
   ethProvider: process.env.ETH_PROVIDER,
@@ -29,7 +28,7 @@ const env = {
   twitterWebhookId: process.env.TWITTER_WEBHOOK_ID,
 };
 
-const cfIndex = '25446';
+const cfIndex = "25446";
 
 @Injectable()
 export class ConfigService {
@@ -83,7 +82,7 @@ export class ConfigService {
       accessSecret: env.twitterAppAccessSecret,
       accessToken: env.twitterAppAccessToken,
       ...this.twitterDev,
-      logger: new Logger('TwitterApp', this.logLevel),
+      // logger: new Logger('TwitterApp', this.logLevel),
     };
   }
 
@@ -92,7 +91,7 @@ export class ConfigService {
       accessSecret: env.twitterBotAccessSecret,
       accessToken: env.twitterBotAccessToken,
       ...this.twitterDev,
-      logger: new Logger('TwitterBot', this.logLevel),
+      // logger: new Logger('TwitterBot', this.logLevel),
     };
   }
 
@@ -101,7 +100,7 @@ export class ConfigService {
       callbackUrl: env.twitterCallbackUrl,
       consumerKey: env.twitterConsumerKey,
       consumerSecret: env.twitterConsumerSecret,
-      logger: new Logger('TwitterDev', this.logLevel),
+      // logger: new Logger('TwitterDev', this.logLevel),
       webhook: this.webhooks.twitter,
     };
   }

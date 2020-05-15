@@ -4,22 +4,22 @@ import { ConfigService } from '../config/config.service';
 import { QueueService } from '../queue/queue.service';
 import { UserRepository } from '../user/user.repository';
 import { UserService } from '../user/user.service';
-import { isValidHex, Logger } from '../utils';
+import { isValidHex } from '../utils';
 
+import { LoggerService } from "../logger/logger.service";
 import { MessageService } from './message.service';
 
 @Controller('message')
 export class MessageController {
-  private log: Logger;
-
   constructor(
     private readonly config: ConfigService,
+    private readonly log: LoggerService,
     private readonly messageService: MessageService,
     private readonly queueService: QueueService,
     private readonly userRepo: UserRepository,
     private readonly userService: UserService,
   ) {
-    this.log = new Logger('MessageController', this.config.logLevel);
+    this.log.setContext("MessageController");
   }
 
   @Post('public')

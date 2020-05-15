@@ -6,22 +6,22 @@ import { AddressZero, Zero } from 'ethers/constants';
 import { bigNumberify, formatEther, parseEther } from 'ethers/utils';
 
 import { ConfigService } from '../config/config.service';
-import { Logger } from '../utils';
+import { LoggerService } from "../logger/logger.service";
 
 import { ChannelRecordRepository } from './channel.repository';
 
 @Injectable()
 export class ChannelService {
   private channel: any;
-  private log: Logger;
   public tokenAddress: string;
   public swapRate: string;
 
   constructor(
     private readonly config: ConfigService,
+    private readonly log: LoggerService,
     private readonly channelRecords: ChannelRecordRepository,
   ) {
-    this.log = new Logger('ChannelService', this.config.logLevel);
+    this.log.setContext("ChannelService");
     this.channel = new Promise(async (resolve, reject) => {
 
       const dbOpts = this.config.database;
@@ -33,15 +33,15 @@ export class ChannelService {
       const channel = await connext({
         ...this.config.channel,
         store,
+        loggerService: this.log.newContext("Connext")
       });
 
-      this.log.info(`Got a store, skipping rest of channel setup`);
-      return resolve();
-
       this.log.info(`Successfully connected to state channel!`);
-      this.log.info(` - Public identifier: ${channel.publicIdentifier}`);
-      this.log.info(` - Account multisig address: ${channel.multisigAddress}`);
-      this.log.info(` - Signer address: ${channel.signerAddress}`);
+      this.log.info(` - Multisig address: ${channel.multisigAddress}`);
+      this.log.info(` - Bot signer address: ${channel.signerAddress}`);
+      this.log.info(` - Bot public identifier: ${channel.publicIdentifier}`);
+      this.log.info(` - Node signer address: ${channel.nodeSignerAddress}`);
+      this.log.info(` - Node public identifier: ${channel.nodeIdentifier}`);
 
       this.tokenAddress = channel.config.contractAddresses.Token;
       this.log.info(` - Token address: ${this.tokenAddress}`);
@@ -56,28 +56,18 @@ export class ChannelService {
         this.log.info(`Got swap rate upate: ${oldRate} -> ${this.swapRate}`);
       });
 
-      await channel.isAvailable();
+      let freeTokenBalance = await channel.getFreeBalance(this.tokenAddress);
+      let freeEthBalance = await channel.getFreeBalance();
 
-      const freeTokenBalance = await channel.getFreeBalance(this.tokenAddress);
-      const hubFreeBalanceAddress = Object.keys(freeTokenBalance).filter(
-        addr => addr.toLowerCase() !== channel.signerAddress,
-      )[0];
-
-      if (freeTokenBalance[hubFreeBalanceAddress].eq(Zero)) {
-        this.log.info(`Requesting collateral for $${this.tokenAddress}`);
+      if (freeTokenBalance[channel.nodeSignerAddress].eq(Zero)) {
+        this.log.info(`Requesting collateral for ${this.tokenAddress}`);
         await channel.requestCollateral(this.tokenAddress);
-      } else {
-        this.log.info(
-          `Hub has collateralized us with $${formatEther(
-            freeTokenBalance[hubFreeBalanceAddress],
-          )}`,
-        );
+        freeTokenBalance = await channel.getFreeBalance(this.tokenAddress);
       }
 
-      const botFreeBalance = freeTokenBalance[channel.signerAddress];
-      this.log.info(`Bot has a free balance of $${formatEther(botFreeBalance)}`);
+      this.log.info(` - Bot Free Balance: ${formatEther(freeEthBalance[channel.signerAddress])} ETH & ${formatEther(freeTokenBalance[channel.signerAddress])} Tokens`);
+      this.log.info(` - Node Free Balance: ${formatEther(freeEthBalance[channel.nodeSignerAddress])} ETH & ${formatEther(freeTokenBalance[channel.nodeSignerAddress])} Tokens`);
 
-      // TODO: check bot's token & eth balance first and maybe deposit a bit?
       return resolve(channel);
     });
   }

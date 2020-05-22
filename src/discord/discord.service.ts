@@ -36,8 +36,21 @@ export class DiscordService {
       this.log.info("Successfully logged in. We're ready to go!");
     });
 
-    this.discord.on("message", message => {
+    this.discord.on("message", async (message) => {
       this.log.info(`Recieved discord message: ${JSON.stringify(message, null, 2)}`);
+      this.log.info(`Mentions: ${JSON.stringify(message.mentions, null, 2)}`);
+      // TODO: support discord users
+      let sender = await this.userRepo.getTwitterUser(message.author.id);
+
+      let response: string;
+      if (message.guild === null) {
+        const responses = await this.message.handlePrivateMessage(sender, message.cleanContent);
+        response = responses.reduce((acc, curr) => {
+          return acc += `${acc}${curr}`;
+        }, "");
+      }
+      message.channel.send(response);
+
     });
 
     this.discord.login(this.config.discordToken);

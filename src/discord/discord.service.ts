@@ -42,14 +42,13 @@ export class DiscordService {
       // TODO: support discord users
       let sender = await this.userRepo.getTwitterUser(message.author.id);
 
-      let response: string;
       if (message.guild === null) {
         const responses = await this.message.handlePrivateMessage(sender, message.cleanContent);
-        response = responses.reduce((acc, curr) => {
+        const response = responses.reduce((acc, curr) => {
           return acc += `${acc}${curr}`;
         }, "");
+        message.channel.send(response);
       }
-      message.channel.send(response);
 
     });
 

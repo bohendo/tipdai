@@ -15,7 +15,9 @@ find_options=-type f -not -path "*/node_modules/*" -not -name "*.swp" -not -path
 
 id=$(shell if [[ "`uname`" == "Darwin" ]]; then echo 0:0; else echo $(my_id); fi)
 
-docker_run=docker run --name=$(project)_builder --interactive --tty --rm --volume=$(cwd):/root $(project)_builder $(id)
+interactive=$(shell if [[ -t 0 && -t 2 ]]; then echo "--interactive"; else echo ""; fi)
+
+docker_run=docker run --name=$(project)_builder $(interactive) --tty --rm --volume=$(cwd):/root $(project)_builder $(id)
 
 log_start=@echo "=============";echo "[Makefile] => Start building $@"; date "+%s" > $(flags)/.timestamp
 log_finish=@echo "[Makefile] => Finished building $@ in $$((`date "+%s"` - `cat $(flags)/.timestamp`)) seconds";echo "=============";echo

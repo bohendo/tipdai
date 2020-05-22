@@ -1,11 +1,13 @@
 import { Module } from "@nestjs/common";
+
 import { AppController } from "./app.controller";
 import { AppService } from "./app.service";
 import { ChannelModule } from "./channel/channel.module";
 import { ConfigModule } from "./config/config.module";
-import { LoggerModule } from "./logger/logger.module";
 import { DatabaseModule } from "./database/database.module";
 import { DepositModule } from "./deposit/deposit.module";
+import { DiscordModule } from "./discord/discord.module";
+import { LoggerModule } from "./logger/logger.module";
 import { MessageModule } from "./message/message.module";
 import { QueueModule } from "./queue/queue.module";
 import { TipModule } from "./tip/tip.module";
@@ -17,9 +19,10 @@ import { WebhooksModule } from "./webhooks/webhooks.module";
   imports: [
     ChannelModule,
     ConfigModule,
-    LoggerModule,
     DatabaseModule,
     DepositModule,
+    DiscordModule,
+    LoggerModule,
     MessageModule,
     QueueModule,
     TipModule,

@@ -1,11 +1,13 @@
 #!/usr/bin/env bash
 set -e
 
+# from which machine should we build & push?
+push="${1:-none}"
+
 prod_server="tipdai.`whoami`.com"
 branch="master"
 user=tipdai
 ssh_key="$HOME/.ssh/`whoami`"
-push="${1:-none}"
 
 if [[ ! -f "$ssh_key" ]]
 then echo "To deploy to $prod_server, you need to have an ssh key at: $ssh_key" && exit

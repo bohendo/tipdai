@@ -44,6 +44,12 @@ clean: stop
 	rm -rf dist/*
 	rm -rf $(flags)/*
 
+deploy:
+	bash ops/deploy.sh remote
+
+deploy-fast:
+	bash ops/deploy.sh none
+
 reset: stop
 	docker container prune -f
 	docker volume rm tipdai_database_dev 2> /dev/null || true

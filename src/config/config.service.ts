@@ -6,7 +6,7 @@ import * as fs from "fs";
 import { PostgresConfig, TwitterConfig } from "../types";
 
 const env = {
-  discordid: process.env.DISCORD_ID,
+  discordId: process.env.DISCORD_ID,
   discordToken: process.env.DISCORD_TOKEN,
   ethProvider: process.env.ETH_PROVIDER,
   logLevel: process.env.LOG_LEVEL,

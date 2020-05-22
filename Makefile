@@ -47,7 +47,10 @@ clean: stop
 	rm -rf $(flags)/*
 
 deploy:
-	bash ops/deploy.sh
+	bash ops/deploy.sh remote
+
+deploy-fast:
+	bash ops/deploy.sh none
 
 reset: stop
 	docker container prune -f

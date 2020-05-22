@@ -14,11 +14,12 @@ if [[ -f .env ]]
 then source .env
 fi
 
+TIPDAI_DISCORD_TOKEN="${TIPDAI_DISCORD_TOKEN}"
 TIPDAI_DOMAINNAME="${TIPDAI_DOMAINNAME:-localhost}"
 TIPDAI_EMAIL="${TIPDAI_EMAIL:-noreply@gmail.com}" # for notifications when ssl certs expire
 TIPDAI_ETH_PROVIDER="${TIPDAI_ETH_PROVIDER:-http://localhost:8545}"
-TIPDAI_MODE="${TIPDAI_MODE:-development}"
 TIPDAI_LOG_LEVEL="${TIPDAI_LOG_LEVEL:-3}"
+TIPDAI_MODE="${TIPDAI_MODE:-development}"
 TIPDAI_PAYMENT_HUB="${TIPDAI_PAYMENT_HUB:-http://localhost:3000/api}"
 TIPDAI_PAYMENT_URL="${TIPDAI_PAYMENT_URL:-http://localhost:3000/redeem}"
 TIPDAI_TWITTER_APP_ACCESS_SECRET="${TIPDAI_TWITTER_APP_ACCESS_SECRET}"
@@ -160,6 +161,7 @@ services:
   bot:
     image: $bot_image
     environment:
+      DISCORD_TOKEN: $TIPDAI_DISCORD_TOKEN
       ETH_PROVIDER: $TIPDAI_ETH_PROVIDER
       LOG_LEVEL: $TIPDAI_LOG_LEVEL
       MNEMONIC_FILE: /run/secrets/$mnemonic

@@ -6,6 +6,7 @@ import * as fs from "fs";
 import { PostgresConfig, TwitterConfig } from "../types";
 
 const env = {
+  discordToken: process.env.DISCORD_TOKEN,
   ethProvider: process.env.ETH_PROVIDER,
   logLevel: process.env.LOG_LEVEL,
   mnemonicFile: process.env.MNEMONIC_FILE,
@@ -48,6 +49,10 @@ export class ConfigService {
 
   get paymentUrl(): string {
     return env.paymentUrl;
+  }
+
+  get discordToken(): any {
+    return env.discordToken;
   }
 
   get wallet(): Wallet {

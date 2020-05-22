@@ -14,6 +14,7 @@ if [[ -f .env ]]
 then source .env
 fi
 
+TIPDAI_DISCORD_ID="${TIPDAI_DISCORD_ID}"
 TIPDAI_DISCORD_TOKEN="${TIPDAI_DISCORD_TOKEN}"
 TIPDAI_DOMAINNAME="${TIPDAI_DOMAINNAME:-localhost}"
 TIPDAI_EMAIL="${TIPDAI_EMAIL:-noreply@gmail.com}" # for notifications when ssl certs expire
@@ -162,6 +163,7 @@ services:
     image: $bot_image
     environment:
       DISCORD_TOKEN: $TIPDAI_DISCORD_TOKEN
+      DISCORD_ID: $TIPDAI_DISCORD_ID
       ETH_PROVIDER: $TIPDAI_ETH_PROVIDER
       LOG_LEVEL: $TIPDAI_LOG_LEVEL
       MNEMONIC_FILE: /run/secrets/$mnemonic

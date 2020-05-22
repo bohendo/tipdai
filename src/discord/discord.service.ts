@@ -37,12 +37,13 @@ export class DiscordService {
     });
 
     this.discord.on("message", async (message) => {
+      if (message.author.bot) return;
       this.log.info(`Recieved discord message: ${JSON.stringify(message, null, 2)}`);
       this.log.info(`Mentions: ${JSON.stringify(message.mentions, null, 2)}`);
-      // TODO: support discord users
-      let sender = await this.userRepo.getTwitterUser(message.author.id);
 
       if (message.guild === null) {
+        // TODO: support discord users
+        let sender = await this.userRepo.getTwitterUser(message.author.id);
         const responses = await this.message.handlePrivateMessage(sender, message.cleanContent);
         const response = responses.reduce((acc, curr) => {
           return acc += `${acc}${curr}`;

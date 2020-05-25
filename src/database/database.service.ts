@@ -18,6 +18,7 @@ import { InitTip1570646855257 } from "../migrations/1570646855257-InitTip";
 import { FixTip1570648530658 } from "../migrations/1570648530658-FixTip";
 import { UpdateTip1570649406343 } from "../migrations/1570649406343-UpdateTip";
 import { AddTwitterName1571652347467 } from "../migrations/1571652347467-AddTwitterName";
+import { addDiscordIdToUser1590380286658 } from "../migrations/1590380286658-addDiscordIdToUser";
 
 const migrations = [
   InitChannelRecords1569189365938,
@@ -29,6 +30,7 @@ const migrations = [
   FixTip1570648530658,
   UpdateTip1570649406343,
   AddTwitterName1571652347467,
+  addDiscordIdToUser1590380286658,
 ];
 
 const entities = [

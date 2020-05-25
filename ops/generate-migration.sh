@@ -13,7 +13,7 @@ id=$(if [[ "`uname`" == "Darwin" ]]; then echo 0:0; else echo `id -u`:`id -g`; f
 
 echo "my id: $id"
 
-docker exec $container bash ops/permissions-fixer.sh $id '
+docker exec $container bash ops/builder/entry.sh $id '
   export TYPEORM_CONNECTION="postgres"
   export TYPEORM_DATABASE="$PGDATABASE"
   export TYPEORM_ENTITIES=dist/*/*.entity.js

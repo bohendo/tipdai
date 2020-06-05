@@ -41,14 +41,31 @@ export class DiscordService {
       this.log.info(`Recieved discord message: ${JSON.stringify(message, null, 2)}`);
       this.log.info(`Mentions: ${JSON.stringify(message.mentions, null, 2)}`);
 
+      const mentions = message.mentions.users.map(user => user.id);
+      const sender = await this.userRepo.getDiscordUser(message.author.id);
+
+      // If this is a private 1-on-1 message
       if (message.guild === null) {
-        // TODO: support discord users
-        let sender = await this.userRepo.getDiscordUser(message.author.id);
         const responses = await this.message.handlePrivateMessage(sender, message.cleanContent);
         const response = responses.reduce((acc, curr) => {
           return acc += `${acc}${curr}`;
         }, "");
         message.channel.send(response);
+
+      // If this is a public message that only mentions TipDai & one other user
+      } else if (
+        !message.mentions.everyone &&
+        mentions.includes(this.config.discordId) &&
+        mentions.length === 2
+      ) {
+        const recipient = await this.userRepo.getDiscordUser(
+          mentions.find(id => id !== this.config.discordId),
+        );
+        const response = await this.message.handlePublicMessage(
+          sender,
+          recipient,
+          message.cleanContent,
+        );
       }
 
     });

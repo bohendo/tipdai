@@ -7,7 +7,6 @@ import {
   HexString,
   NodeResponses,
   PublicResults,
-  StoreTypes,
 } from "@connext/types";
 import { Injectable } from "@nestjs/common";
 import { AddressZero, Zero } from "ethers/constants";
@@ -66,7 +65,7 @@ export class ChannelService {
       });
 
       let freeTokenBalance = await channel.getFreeBalance(this.tokenAddress);
-      let freeEthBalance = await channel.getFreeBalance();
+      const freeEthBalance = await channel.getFreeBalance();
 
       if (freeTokenBalance[channel.nodeSignerAddress].eq(Zero)) {
         this.log.info(`Requesting collateral for ${this.tokenAddress}`);

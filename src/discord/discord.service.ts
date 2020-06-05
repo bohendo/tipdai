@@ -1,3 +1,4 @@
+import { stringify } from "@connext/utils";
 import { Injectable } from "@nestjs/common";
 import { Client as Discord } from "discord.js";
 import { OAuth } from "oauth";
@@ -5,7 +6,7 @@ import * as qs from "qs";
 
 import { ConfigService } from "../config/config.service";
 import { LoggerService } from "../logger/logger.service";
-import { tipRegex } from "../constants";
+import { discordTipRegex } from "../constants";
 import { MessageService } from "../message/message.service";
 import { UserRepository } from "../user/user.repository";
 import { User } from "../user/user.entity";
@@ -14,6 +15,7 @@ import { User } from "../user/user.entity";
 export class DiscordService {
   private inactive: boolean = false;
   private discord: Discord;
+  private botId: string;
 
   constructor(
     private readonly config: ConfigService,
@@ -38,8 +40,8 @@ export class DiscordService {
 
     this.discord.on("message", async (message) => {
       if (message.author.bot) return;
-      this.log.info(`Recieved discord message: ${JSON.stringify(message, null, 2)}`);
-      this.log.info(`Mentions: ${JSON.stringify(message.mentions, null, 2)}`);
+      this.log.info(`Recieved discord message: ${stringify(message)}`);
+      this.log.info(`Mentions: ${stringify(message.mentions)}`);
 
       const mentions = message.mentions.users.map(user => user.id);
       const sender = await this.userRepo.getDiscordUser(message.author.id);
@@ -58,12 +60,20 @@ export class DiscordService {
         mentions.includes(this.config.discordId) &&
         mentions.length === 2
       ) {
+        const messageInfo = message.content.match(discordTipRegex(this.config.discordId));
+        if (!messageInfo || !messageInfo[3]) {
+          this.log.info(`Improperly formatted tip, ignoring`);
+          return;
+        }
+        this.log.info(`Message regex info: ${stringify(messageInfo)}`);
+
         const recipient = await this.userRepo.getDiscordUser(
           mentions.find(id => id !== this.config.discordId),
         );
         const response = await this.message.handlePublicMessage(
           sender,
           recipient,
+          messageInfo[3],
           message.cleanContent,
         );
       }

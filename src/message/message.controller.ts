@@ -1,12 +1,13 @@
 import { Body, Controller, Get, Post } from "@nestjs/common";
 
+import { twitterTipRegex } from "../constants";
 import { ConfigService } from "../config/config.service";
+import { LoggerService } from "../logger/logger.service";
 import { QueueService } from "../queue/queue.service";
 import { UserRepository } from "../user/user.repository";
 import { UserService } from "../user/user.service";
 import { isValidHex } from "../utils";
 
-import { LoggerService } from "../logger/logger.service";
 import { MessageService } from "./message.service";
 
 @Controller("message")
@@ -35,10 +36,16 @@ export class MessageController {
     if (!(await this.userService.verifySig(address, token))) {
       return "Invalid Token";
     }
+    const messageInfo = message.match(twitterTipRegex("TipDai"));
+    if (!messageInfo || !messageInfo[3]) {
+      this.log.info(`Improperly formatted tip, ignoring`);
+      return;
+    }
     return await this.queueService.enqueue(
       async () => this.messageService.handlePublicMessage(
         await this.userRepo.getAddressUser(address),
         await this.userRepo.findOne({ id: recipientId }),
+        messageInfo[3],
         message,
       ),
     );

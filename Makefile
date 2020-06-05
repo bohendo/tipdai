@@ -55,6 +55,7 @@ deploy-fast:
 reset: stop
 	docker container prune -f
 	docker volume rm tipdai_database_dev 2> /dev/null || true
+	rm -rf .channel-store
 
 restart: stop
 	bash ops/start.sh

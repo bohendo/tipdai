@@ -1,10 +1,25 @@
-
 export const paymentIdRegex = /paymentId=(0x[0-9a-fA-F]{64})/;
 export const secretRegex = /secret=(0x[0-9a-fA-F]{64})/;
 
-export const tipRegex = (botName?) =>
+const esc = (str: string): string => str.replace(/[.*+\-?^${}()|[\]\\]/g, "\\$&");
+
+const amountPattern = "[$]\([0-9]+\\.?[0-9]{0,2}\)";
+
+const discordMention = (userId?: string): string =>
+  `<@!?\(${userId || "\d{17,19}"}\)>`;
+
+export const discordTipRegex = (botId?: string): RegExp =>
   new RegExp(
-    `.*@${botName || "TipDai"}.*?@([a-zA-Z0-9_-]*).*?[$]([0-9]+\\.?[0-9]{0,2}).*?#TipDai`,
+    `.*${discordMention(botId)}.*?${discordMention()}.*?${amountPattern}.*?`,
+    "i",
+  );
+
+const twitterMention = (username?: string): string =>
+  `@\(${username || "[a-zA-Z0-9_-]+"}\)`;
+
+export const twitterTipRegex = (botName?) =>
+  new RegExp(
+    `.*${twitterMention(botName)}.*?${twitterMention()}.*?${amountPattern}.*?#TipDai`,
     "i",
   );
 

@@ -4,7 +4,7 @@ import * as qs from "qs";
 
 import { ConfigService } from "../config/config.service";
 import { LoggerService } from "../logger/logger.service";
-import { tipRegex } from "../constants";
+import { twitterTipRegex } from "../constants";
 import { MessageService } from "../message/message.service";
 import { UserRepository } from "../user/user.repository";
 import { User } from "../user/user.entity";
@@ -61,16 +61,21 @@ export class TwitterService {
     const sender = await this.userRepo.getTwitterUser(tweet.user.id_str, tweet.user.screen_name);
     const entities = tweet.extended_tweet ? tweet.extended_tweet.entities : tweet.entities;
     const tweetText = tweet.extended_tweet ? tweet.extended_tweet.full_text : tweet.text;
-    const tipInfo = tweetText.match(tipRegex((await this.getUser()).twitterName));
+    const tipInfo = tweetText.match(twitterTipRegex((await this.getUser()).twitterName));
     this.log.debug(`Got tipInfo ${JSON.stringify(tipInfo)}`);
-    if (tipInfo && tipInfo[1]) {
+    if (tipInfo && tipInfo[3]) {
       try {
         this.log.debug(`Trying to tip..`);
         const recipientUser = entities.user_mentions.find(
           user => user.screen_name === tipInfo[1],
         );
         const recipient = await this.userRepo.getTwitterUser(recipientUser.id_str, tipInfo[1]);
-        const response = await this.message.handlePublicMessage(sender, recipient, tweetText);
+        const response = await this.message.handlePublicMessage(
+          sender,
+          recipient,
+          tipInfo[3],
+          tweetText,
+        );
         if (response) {
           await this.tweet(
            `@${tweet.user.screen_name} ${response}`,

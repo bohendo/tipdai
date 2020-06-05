@@ -1,10 +1,11 @@
+import { DecString } from "@connext/types";
 import { Injectable } from "@nestjs/common";
 import { bigNumberify, formatEther, parseEther } from "ethers/utils";
 import { Zero } from "ethers/constants";
 
 import { ConfigService } from "../config/config.service";
 import { LoggerService } from "../logger/logger.service";
-import { paymentIdRegex, secretRegex, tipRegex } from "../constants";
+import { paymentIdRegex, secretRegex, twitterTipRegex } from "../constants";
 import { DepositService } from "../deposit/deposit.service";
 import { PaymentService } from "../payment/payment.service";
 import { QueueService } from "../queue/queue.service";
@@ -27,15 +28,11 @@ export class MessageService {
   public handlePublicMessage = async (
     sender: User,
     recipient: User,
+    amount: DecString,
     message: string,
   ): Promise<string | undefined> => {
-    const tipMatch = message.match(tipRegex());
-    if (!tipMatch || !tipMatch[2]) {
-      this.log.info(`Improperly formatted tip, ignoring`);
-      return;
-    }
-    this.log.info(`Sending $${tipMatch[2]} tip from ${sender.twitterName || sender.address} to ${recipient.twitterName || recipient.address}`);
-    const result = await this.tip.handleTip(sender, recipient, tipMatch[2], message);
+    this.log.info(`Sending $${amount} tip from ${sender.twitterName || sender.address} to ${recipient.twitterName || recipient.address}`);
+    const result = await this.tip.handleTip(sender, recipient, amount, message);
     this.log.debug(`Got tip result: ${JSON.stringify(result)}`);
     return result;
   }

@@ -6,7 +6,7 @@ const esc = (str: string): string => str.replace(/[.*+\-?^${}()|[\]\\]/g, "\\$&"
 const amountPattern = "[$]\([0-9]+\\.?[0-9]{0,2}\)";
 
 const discordMention = (userId?: string): string =>
-  `<@!?\(${userId || "\d{17,19}"}\)>`;
+  `<@!\?\(${userId || "\\\d{17,19}"}\)>`;
 
 export const discordTipRegex = (botId?: string): RegExp =>
   new RegExp(

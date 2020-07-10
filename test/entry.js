@@ -1,37 +1,37 @@
-const connext = require('@connext/client');
+const connext = require("@connext/client");
 const { ConditionalTransferTypes } = require("@connext/types");
-const https = require('https');
-const eth = require('ethers');
-const axios = require('axios');
+const https = require("https");
+const eth = require("ethers");
+const axios = require("axios");
 
-require('./regex');
-const { setupChannel } = require('./channel');
-const { baseUrl, cfPath, provider, screenName } = require('./constants');
+require("./regex");
+const { setupChannel } = require("./channel");
+const { baseUrl, cfPath, provider, screenName } = require("./constants");
 
 const paymentIdRegex = /paymentId=(0x[0-9a-fA-F]{64})/;
 const secretRegex = /secret=(0x[0-9a-fA-F]{64})/;
 
-const sender = eth.Wallet.fromMnemonic(eth.Wallet.createRandom().mnemonic, cfPath).connect(provider);
-const recipient = eth.Wallet.fromMnemonic(eth.Wallet.createRandom().mnemonic, cfPath).connect(provider);
+const sender = eth.Wallet.createRandom().connect(provider);
+const recipient = eth.Wallet.createRandom().connect(provider);
 
-process.on('unhandledRejection', (e) => {
+process.on("unhandledRejection", (e) => {
   console.error(`\n${e}`);
   process.exit(1);
-})
+});
 
-process.on('SIGINT', (e) => {
+process.on("SIGINT", (e) => {
   console.error(`\n${e}`);
   process.exit(1);
-})
+});
 
 const axio = axios.create({
   httpsAgent: new https.Agent({  
-    rejectUnauthorized: false
-  })
+    rejectUnauthorized: false,
+  }),
 });
 
 (async () => {
-  let nonce
+  let nonce;
 
   nonce = (await axio.get(`${baseUrl}/user/auth?address=${sender.address}`)).data;
   const senderToken = `${nonce}:${await sender.signMessage(eth.utils.arrayify(nonce))}`;
@@ -44,7 +44,7 @@ const axio = axios.create({
     token: senderToken,
   })).data;
   console.log(`Sender: ${JSON.stringify(senderUser)}`);
-  if (!senderUser) { throw new Error('Sig auth failed'); }
+  if (!senderUser) { throw new Error("Sig auth failed"); }
   const recipientUser = (await axio.post(`${baseUrl}/user/auth`, {
     address: recipient.address,
     token: recipientToken,
@@ -52,7 +52,7 @@ const axio = axios.create({
   console.log(`Recipient: ${JSON.stringify(recipientUser)}`);
 
   const { channel, paymentIds, secrets } = await setupChannel(sender);
-  let res
+  let res;
 
   console.log(`Channel all set up`);
 
@@ -114,7 +114,7 @@ const axio = axios.create({
   console.log(`\n==========\n${res}`);
   if (!res.match(/\$0.05/i)) { throw new Error(`Sender balance should have tip amount subtracted`); }
 
-  paymentId = res.match(paymentIdRegex)[1]
+  let paymentId = res.match(paymentIdRegex)[1];
   res = await channel.resolveCondition({
     conditionType: ConditionalTransferTypes.LinkedTransfer,
     paymentId,
@@ -133,7 +133,7 @@ const axio = axios.create({
   ////////////////////////////////////////
   // Concurrency test
   console.log(`\n==========\nBegin Concurrency Tests`);
-  await new Promise((res, rej) => setTimeout(res, 2000))
+  await new Promise((res, rej) => setTimeout(res, 2000));
 
   const results = {};
 
@@ -172,5 +172,4 @@ const axio = axios.create({
 
   process.exit(0);
 
-})()
-
+})();

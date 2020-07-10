@@ -1,4 +1,5 @@
 import { connect as connext } from "@connext/client";
+import { toBN } from "@connext/utils";
 import { getPostgresStore } from "@connext/store";
 import {
   Address,
@@ -9,14 +10,16 @@ import {
   PublicResults,
 } from "@connext/types";
 import { Injectable } from "@nestjs/common";
-import { AddressZero, Zero } from "ethers/constants";
-import { bigNumberify, formatEther, parseEther } from "ethers/utils";
+import { constants, utils } from "ethers";
 
 import { ConfigService } from "../config/config.service";
 import { LoggerService } from "../logger/logger.service";
 import { getRandomBytes32 } from "../utils";
 
 import { ChannelRecordRepository } from "./channel.repository";
+
+const { AddressZero, Zero } = constants;
+const { formatEther, parseEther } = utils;
 
 @Injectable()
 export class ChannelService {

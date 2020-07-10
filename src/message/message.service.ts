@@ -1,7 +1,6 @@
 import { DecString } from "@connext/types";
 import { Injectable } from "@nestjs/common";
-import { bigNumberify, formatEther, parseEther } from "ethers/utils";
-import { Zero } from "ethers/constants";
+import { constants, utils } from "ethers";
 
 import { ConfigService } from "../config/config.service";
 import { LoggerService } from "../logger/logger.service";
@@ -11,6 +10,9 @@ import { PaymentService } from "../payment/payment.service";
 import { QueueService } from "../queue/queue.service";
 import { TipService } from "../tip/tip.service";
 import { User } from "../user/user.entity";
+
+const { Zero } = constants;
+const { formatEther, parseEther } = utils;
 
 @Injectable()
 export class MessageService {

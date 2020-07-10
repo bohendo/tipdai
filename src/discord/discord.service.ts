@@ -41,7 +41,6 @@ export class DiscordService {
     this.discord.on("message", async (message) => {
       if (message.author.bot) return;
       this.log.info(`Recieved discord message: ${stringify(message)}`);
-      this.log.info(`Mentions: ${stringify(message.mentions)}`);
 
       const mentions = message.mentions.users.map(user => user.id);
       const sender = await this.userRepo.getDiscordUser(message.author.id);

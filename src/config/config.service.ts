@@ -1,5 +1,5 @@
 import { Injectable } from "@nestjs/common";
-import { JsonRpcProvider } from "ethers/providers";
+import { providers } from "ethers";
 import { Wallet } from "ethers";
 import * as fs from "fs";
 
@@ -35,8 +35,8 @@ const cfIndex = "25446";
 
 @Injectable()
 export class ConfigService {
-  get ethProvider(): JsonRpcProvider {
-    return new JsonRpcProvider(env.ethProvider);
+  get ethProvider(): providers.JsonRpcProvider {
+    return new providers.JsonRpcProvider(env.ethProvider);
   }
 
   public getWallet(index: number | string = cfIndex): Wallet {

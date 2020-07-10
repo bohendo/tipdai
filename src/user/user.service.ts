@@ -1,11 +1,13 @@
 import { Injectable } from "@nestjs/common";
-import { arrayify, hexlify, randomBytes, verifyMessage } from "ethers/utils";
+import { utils } from "ethers";
 
 import { ConfigService } from "../config/config.service";
 import { LoggerService } from "../logger/logger.service";
 import { User } from "../user/user.entity";
 import { UserRepository } from "../user/user.repository";
 import { isValidHex } from "../utils";
+
+const { arrayify, hexlify, randomBytes, verifyMessage } = utils;
 
 @Injectable()
 export class UserService {

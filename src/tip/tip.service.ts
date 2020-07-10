@@ -1,6 +1,5 @@
 import { Injectable } from "@nestjs/common";
-import { Zero } from "ethers/constants";
-import { formatEther, parseEther } from "ethers/utils";
+import { constants, utils } from "ethers";
 
 import { ConfigService } from "../config/config.service";
 import { LoggerService } from "../logger/logger.service";
@@ -10,6 +9,9 @@ import { UserRepository } from "../user/user.repository";
 
 import { Tip } from "./tip.entity";
 import { TipRepository } from "../tip/tip.repository";
+
+const { Zero } = constants;
+const { formatEther, parseEther } = utils;
 
 @Injectable()
 export class TipService {

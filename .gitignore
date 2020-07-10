@@ -13,12 +13,8 @@ node_modules/
 .makeflags
 
 # Logs
-lerna-debug.log*
-npm-debug.log*
 package.json.lerna_backup
-yarn-debug.log*
-yarn-error.log*
-ops/*.log
+**/*.log
 
 # OS
 .bash_history

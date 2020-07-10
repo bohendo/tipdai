@@ -1,7 +1,6 @@
 import { ConditionalTransferTypes } from "@connext/types";
 import { Injectable } from "@nestjs/common";
-import { AddressZero } from "ethers/constants";
-import { formatEther, parseEther } from "ethers/utils";
+import { constants, utils } from "ethers";
 
 import { ChannelService } from "../channel/channel.service";
 import { ConfigService } from "../config/config.service";
@@ -12,6 +11,9 @@ import { Deposit } from "./deposit.entity";
 import { DepositRepository } from "./deposit.repository";
 import { User } from "../user/user.entity";
 import { UserRepository } from "../user/user.repository";
+
+const { AddressZero } = constants;
+const { formatEther, parseEther } = utils;
 
 const timeout = 1000 * 60 * 25;
 
@@ -120,7 +122,7 @@ export class DepositService {
             expectedDeposit.substring(0, expectedDeposit.indexOf(".")),
           );
           this.log.info(`expectedDeposit: ${expectedDeposit}`);
-          let balanceBefore = await this.channel.getBalance();
+          const balanceBefore = await this.channel.getBalance();
           this.log.info(`Channel balance before deposit: ${balanceBefore}`);
 
           // TODO: Port over daicard's deposit & swap all functions

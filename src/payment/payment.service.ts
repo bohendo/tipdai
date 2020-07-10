@@ -1,7 +1,7 @@
 import { ConditionalTransferTypes } from "@connext/types";
+import { toBN } from "@connext/utils";
 import { Injectable } from "@nestjs/common";
-import { bigNumberify, formatEther, hexlify, parseEther, randomBytes } from "ethers/utils";
-import { AddressZero, Zero } from "ethers/constants";
+import { constants, utils } from "ethers";
 
 import { ChannelService } from "../channel/channel.service";
 import { ConfigService } from "../config/config.service";
@@ -10,6 +10,9 @@ import { Payment } from "../payment/payment.entity";
 import { PaymentRepository } from "../payment/payment.repository";
 import { User } from "../user/user.entity";
 import { UserRepository } from "../user/user.repository";
+
+const { formatEther, hexlify, parseEther, randomBytes } = utils;
+const { AddressZero, Zero } = constants;
 
 const LINK_LIMIT = parseEther("10");
 const paymentIdRegex = /paymentId=0x[0-9a-fA-F]{64}/;
@@ -59,6 +62,7 @@ export class PaymentService {
     paymentId: string,
     secret: string,
   ): Promise<string> => {
+    this.log.info(`Depositing payment ${paymentId}`);
     let payment = await this.paymentRepo.findByPaymentId(paymentId);
     if (payment) {
       payment = await this.updatePayment(payment);
@@ -138,7 +142,7 @@ export class PaymentService {
 
   public updatePayment = async (payment: Payment): Promise<Payment> => {
     const result = await this.channelService.fetchPayment(payment.paymentId);
-    const amount = formatEther(bigNumberify(result.amount));
+    const amount = formatEther(toBN(result.amount));
     this.log.info(`Got info for ${payment.paymentId}: status ${result.status}, amount ${amount}`);
     if (result) {
       let saveFlag = false;
